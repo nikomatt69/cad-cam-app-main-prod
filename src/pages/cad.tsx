@@ -141,7 +141,11 @@ export default function CADPage() {
     );
   }
 
-  
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  }
+
 
   
  

@@ -164,7 +164,11 @@ export default function CAMPage() {
     );
   }
 
-  
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  }
+
  
 
   return (
