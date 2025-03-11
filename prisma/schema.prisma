@@ -1,0 +1,321 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  organizations   UserOrganization[]
+  projects        Project[]
+  accounts        Account[]
+  sessions        Session[]
+  materials       Material[] // Add ownership relationship
+  tools           Tool[] // Add ownership relationship
+  machineConfigs  MachineConfig[]
+  activityLogs    ActivityLog[]
+  aiAnalysisLogs  AIAnalysisLog[]
+  LibraryItem     LibraryItem[]
+  subscription    Subscription?    // Relation to subscription
+}
+
+// Subscription model for Stripe integration
+model Subscription {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  stripePriceId         String?
+  stripeCurrentPeriodEnd DateTime?
+  plan                  String    @default("free") // free, basic, pro, enterprise
+  status                String    @default("active") // active, canceled, incomplete, etc.
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+// Auth models remain unchanged
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Organization related models
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  users       UserOrganization[]
+  projects    Project[]
+  invitations OrganizationInvitation[]
+  materials   Material[] // Add organization materials
+  tools       Tool[] // Add organization tools
+  LibraryItem LibraryItem[]
+}
+
+model OrganizationInvitation {
+  id             String       @id @default(cuid())
+  email          String
+  role           UserRole     @default(MEMBER)
+  token          String       @unique
+  organizationId String
+  createdAt      DateTime     @default(now())
+  expiresAt      DateTime
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model UserOrganization {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           UserRole     @default(MEMBER)
+  joinedAt       DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+// Project related models
+model Project {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ownerId        String
+  organizationId String?
+  isPublic       Boolean  @default(false) // Add public flag
+
+  // Relationships
+  owner        User          @relation(fields: [ownerId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  drawings     Drawing[]
+  components   Component[]
+}
+
+model Drawing {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  data        Json // Stores the drawing elements
+  thumbnail   String? // URL to thumbnail image
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  projectId   String
+
+  // Relationships
+  project   Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versions  DrawingVersion[]
+  toolPaths ToolPath[]
+}
+
+model DrawingVersion {
+  id        String   @id @default(cuid())
+  version   Int
+  data      Json // Stores the drawing elements for this version
+  createdAt DateTime @default(now())
+  drawingId String
+  drawing   Drawing  @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+}
+
+model Component {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  data        Json // Stores the component definition
+  thumbnail   String? // URL to thumbnail image
+  type        String? // Add component type
+  isPublic    Boolean  @default(false) // Add public flag
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  projectId   String
+
+  // Relationships
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Material {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  properties     Json // Density, hardness, etc.
+  isPublic       Boolean  @default(false) // Add public flag
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ownerId        String? // Add owner relationship
+  organizationId String? // Add organization relationship
+
+  // Relationships
+  owner        User?         @relation(fields: [ownerId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  toolPaths    ToolPath[]
+}
+
+model Tool {
+  id             String   @id @default(cuid())
+  name           String
+  type           String // endmill, drillbit, turningTool, etc.
+  diameter       Float
+  material       String // HSS, Carbide, etc.
+  numberOfFlutes Int?
+  maxRPM         Int?
+  coolantType    String? // none, flood, mist
+  cuttingLength  Float?
+  totalLength    Float?
+  shankDiameter  Float?
+  notes          String?
+  isPublic       Boolean  @default(false) // Add public flag
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ownerId        String? // Add owner relationship
+  organizationId String? // Add organization relationship
+
+  // Relationships
+  owner        User?         @relation(fields: [ownerId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  toolPaths    ToolPath[]
+}
+
+model ToolPath {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  data            Json // Stores the toolpath data
+  gcode           String? // Generated G-code
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  drawingId       String
+  materialId      String?
+  machineConfigId String?
+  toolId          String?
+
+  // Relationships
+  drawing       Drawing        @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  material      Material?      @relation(fields: [materialId], references: [id])
+  machineConfig MachineConfig? @relation(fields: [machineConfigId], references: [id])
+  tool          Tool?          @relation(fields: [toolId], references: [id])
+}
+
+model MachineConfig {
+  id          String   @id @default(cuid())
+  name        String
+  type        String // mill, lathe, printer
+  description String?
+  config      Json // Machine configuration parameters
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ownerId     String
+
+  // Relationships
+  owner     User       @relation(fields: [ownerId], references: [id])
+  toolPaths ToolPath[]
+}
+
+// Logging models
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  itemId    String
+  itemType  String // project, drawing, component, etc.
+  action    String // created, updated, deleted, etc.
+  details   Json?
+  timestamp DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id])
+}
+
+model AIAnalysisLog {
+  id           String   @id @default(cuid())
+  userId       String
+  objectId     String
+  objectType   String
+  analysisType String
+  result       Json
+  createdAt    DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id])
+}
+
+model FileUpload {
+  id             String   @id @default(cuid())
+  fileName       String
+  s3Key          String // S3 key for the file
+  s3Bucket       String // S3 bucket name
+  s3ContentType  String // Content type of the file
+  s3Size         Int // Size of the file in bytes
+  objectId       String? // ID of the related object (drawing, component, etc.)
+  objectType     String? // Type of related object
+  ownerId        String
+  organizationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model LibraryItem {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  category       String // 'component', 'tool', 'material', 'machine'
+  type           String
+  data           Json // Store the complex structure with elements
+  properties     Json?
+  tags           String[]
+  thumbnail      String?
+  isPublic       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ownerId        String?
+  organizationId String?
+
+  // Relationships
+  owner        User?         @relation(fields: [ownerId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+}

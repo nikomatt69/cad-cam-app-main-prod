@@ -1,0 +1,7 @@
+.env
+.env.development
+.env.production
+.vercel
+.next
+node-modules
+node_modules
