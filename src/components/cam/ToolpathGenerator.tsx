@@ -4,6 +4,9 @@ import { AlertTriangle, Check, ChevronDown, ChevronUp, Code, Cpu, Edit, Download
 import { useCADStore } from 'src/store/cadStore';
 import { useElementsStore } from 'src/store/elementsStore';
 import { predefinedTools, predefinedMaterials } from 'src/lib/predefinedLibraries';
+import ToolsList from '@/src/pages/tools';
+// Import useLibrary hook at the top of the file
+import { useLibrary } from '../../hooks/useLibrary';
 
 interface ToolpathGeneratorProps {
   onGCodeGenerated: (gcode: string) => void;
@@ -158,6 +161,9 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
   
   // Timer reference for success messages
   const successTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Add this: access the library tools and materials using the hook
+  const { tools: userTools, materials: userMaterials } = useLibrary();
   
   // Update settings when selected library tool changes
   useEffect(() => {
@@ -3027,7 +3033,13 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                 onChange={(e) => {
                   const materialId = e.target.value;
                   if (materialId) {
-                    const material = predefinedMaterials.find(m => m.name === materialId || m.name === materialId);
+                    // Check if it's from predefined materials
+                    const material = predefinedMaterials.find(m => m.name === materialId);
+                    
+                    // Check if it's from user/API materials
+                    const userMaterial = userMaterials.find(m => m.id === materialId);
+                    
+                    // Process the selected material from either source
                     if (material) {
                       // Map library material to our material types
                       let materialType: MaterialType = 'other';
@@ -3048,16 +3060,52 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                       successTimerRef.current = setTimeout(() => {
                         setSuccess(null);
                       }, 3000);
+                    } else if (userMaterial) {
+                      // Map user material to our material types
+                      let materialType: MaterialType = 'other';
+                      
+                      const materialName = userMaterial.name.toLowerCase();
+                      if (materialName.includes('aluminum')) materialType = 'aluminum';
+                      else if (materialName.includes('steel')) materialType = 'steel';
+                      else if (materialName.includes('wood')) materialType = 'wood';
+                      else if (materialName.includes('plastic')) materialType = 'plastic';
+                      else if (materialName.includes('brass')) materialType = 'brass';
+                      else if (materialName.includes('titanium')) materialType = 'titanium';
+                      
+                      setSettings(prev => ({
+                        ...prev,
+                        material: materialType
+                      }));
+                      
+                      setSuccess(`Material "${userMaterial.name}" loaded from library`);
+                      successTimerRef.current = setTimeout(() => {
+                        setSuccess(null);
+                      }, 3000);
                     }
                   }
                 }}
               >
                 <option value="">Select a material</option>
-                {predefinedMaterials.map((material, idx) => (
-                  <option key={material.name || `material-${idx}`} value={material.name || material.name}>
-                    {material.name}
-                  </option>
-                ))}
+                
+                {/* Predefined Materials Section */}
+                <optgroup label="Materiali Predefiniti">
+                  {predefinedMaterials.map((material, idx) => (
+                    <option key={`predefined-${material.name || `material-${idx}`}`} value={material.name}>
+                      {material.name}
+                    </option>
+                  ))}
+                </optgroup>
+                
+                {/* User/Local Materials Section */}
+                {userMaterials.length > 0 && (
+                  <optgroup label="Materiali Locali">
+                    {userMaterials.map((material) => (
+                      <option key={`user-${material.id}`} value={material.id}>
+                        {material.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
           </div>
@@ -3216,31 +3264,65 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                 onChange={(e) => {
                   const toolId = e.target.value;
                   if (toolId) {
-                    const tool = predefinedTools.find(t => t.name === toolId || t.name === toolId);
+                    // Check if it's from predefined tools
+                    const tool = predefinedTools.find(t => t.name === toolId);
+                    
+                    // Check if it's from user/API tools
+                    const userTool = userTools.find(t => t.id === toolId);
+                    
+                    // Set the selected tool from either source
                     if (tool) {
                       setSelectedLibraryTool(tool);
+                    } else if (userTool) {
+                      setSelectedLibraryTool(userTool);
                     }
                   }
                 }}
-                value={selectedLibraryTool?.id || ''}
+                value={selectedLibraryTool?.id || selectedLibraryTool?.name || ''}
               >
                 <option value="">Seleziona un utensile</option>
-                {predefinedTools
-                  .filter(tool => {
-                    // Filter tools by machine type
-                    if (settings.machineType === 'mill') {
-                      return ['endmill', 'ballnose', 'drill', 'vbit', 'chamfer', 'threadmill', 'reamer'].includes(tool.type);
-                    } else if (settings.machineType === 'lathe') {
-                      return ['turning', 'facing', 'boring', 'threading', 'grooving', 'parting'].includes(tool.type);
-                    } else {
-                      return true; // Show all for 3D printer
-                    }
-                  })
-                  .map((tool, idx) => (
-                    <option key={tool.name || `tool-${idx}`} value={tool.name || tool.name}>
-                      {tool.name} - {tool.type} {tool.diameter}mm
-                    </option>
-                  ))}
+                
+                {/* Predefined Tools Section */}
+                <optgroup label="Utensili Predefiniti">
+                  {predefinedTools 
+                    .filter(tool => {
+                      // Filter tools by machine type
+                      if (settings.machineType === 'mill') {
+                        return ['endmill', 'ballnose', 'drill', 'vbit', 'chamfer', 'threadmill', 'reamer'].includes(tool.type);
+                      } else if (settings.machineType === 'lathe') {
+                        return ['turning', 'facing', 'boring', 'threading', 'grooving', 'parting'].includes(tool.type);
+                      } else {
+                        return true; // Show all for 3D printer
+                      }
+                    })
+                    .map((tool, idx) => (
+                      <option key={`predefined-${tool.name || `tool-${idx}`}`} value={tool.name}>
+                        {tool.name} - {tool.type} {tool.diameter}mm
+                      </option>
+                    ))}
+                </optgroup>
+                
+                {/* User/Local Tools Section */}
+                {userTools.length > 0 && (
+                  <optgroup label="Utensili Locali">
+                    {userTools
+                      .filter(tool => {
+                        // Filter tools by machine type
+                        if (settings.machineType === 'mill') {
+                          return ['endmill', 'ballnose', 'drill', 'vbit', 'chamfer', 'threadmill', 'reamer'].includes(tool.type);
+                        } else if (settings.machineType === 'lathe') {
+                          return ['turning', 'facing', 'boring', 'threading', 'grooving', 'parting'].includes(tool.type);
+                        } else {
+                          return true; // Show all for 3D printer
+                        }
+                      })
+                      .map((tool) => (
+                        <option key={`user-${tool.id}`} value={tool.id}>
+                          {tool.name} - {tool.type} {tool.properties.diameter}mm
+                        </option>
+                      ))}
+                  </optgroup>
+                )}
               </select>
             </div>
             
