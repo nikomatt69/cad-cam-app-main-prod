@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { useCADStore } from 'src/store/cadStore';
 import { useElementsStore } from 'src/store/elementsStore';
 import { useLayerStore } from 'src/store/layerStore';
-import { Maximize, Maximize2, Minimize2, Move, RotateCw } from 'react-feather';
+import { HelpCircle, Maximize, Maximize2, Minimize2, Move, RotateCw } from 'react-feather';
 import { predefinedComponents } from '@/src/lib/predefinedLibraries';
 import { transformLibraryItemToCADElement, createComponentPreview } from '@/src/lib/libraryTransform';
 import SnapIndicator from './SnapIndicator';
 import { useSnap } from '@/src/hooks/useSnap';
-import { useLOD } from 'src/hooks/useLOD';
-import { useThreePerformance } from 'src/hooks/useThreePerformance';
+import { useLOD } from 'src/hooks/canvas/useLod';
+import { useThreePerformance } from 'src/hooks/canvas/useThreePerformance';
 import { useKeyboardShortcuts } from 'src/hooks/useKeyboardShortcuts';
 import DragDropIndicator from './DragDropIndicator';
 import KeyboardShortcutsDialog from './KeyboardShortcutsDialog';
@@ -2518,15 +2518,16 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
   // Inizializzazione dei TransformControls
   useEffect(() => {
     if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return;
+    
     // Crea transform controls per manipolazione diretta
-    const transformControls = new THREE.TransformControls(
+    const transformControls = new TransformControls(
       cameraRef.current,
       rendererRef.current.domElement
     );
     transformControls.size = 0.8; // Dimensione ridotta per non intralciare
-    transformControls.addEventListener('dragging-changed', (event) => {
+    transformControls.addEventListener('dragging-changed', (event: THREE.Event) => {
       if (controlsRef.current) {
-        controlsRef.current.enabled = !event.value;
+        controlsRef.current.enabled = !(event as any).value;
       }
     });
     
@@ -2763,13 +2764,21 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
       
       {/* Keyboard shortcuts info - attivato con ? */}
       <div className="absolute bottom-4 left-4">
-        <button 
-          onClick={() => setShowKeyboardShortcuts(true)}
-          className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
-          title="Show keyboard shortcuts"
-        >
-          ?
-        </button>
+        <div>
+      <button 
+        onClick={() => setShowKeyboardShortcuts(true)}
+        className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+        title="Show keyboard shortcuts"
+      >
+        <HelpCircle size={16} />
+      </button>
+      
+      {/* Render dialog outside of button */}
+      <KeyboardShortcutsDialog 
+        isOpen={showKeyboardShortcuts} 
+        onClose={() => setShowKeyboardShortcuts(false)} 
+      />
+      </div>
       </div>
     </div>
   );

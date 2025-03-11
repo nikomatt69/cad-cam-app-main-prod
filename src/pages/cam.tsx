@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import CADCanvas from 'src/components/cad/CADCanvas';
+
 import ToolpathGenerator from 'src/components/cam/ToolpathGenerator';
 import GCodeViewer from 'src/components/cam/GCodeViewer';
 import GCodeEditor from 'src/components/cam/GCodeEditor';
@@ -164,10 +164,7 @@ export default function CAMPage() {
     );
   }
 
-  if (status === 'unauthenticated') {
-    router.push('/auth/signin');
-    return null;
-  }
+  
  
 
   return (
@@ -439,9 +436,7 @@ export default function CAMPage() {
                   controllerType={selectedPostProcessor} 
                   onCycleCodeGenerated={handleCycleCodeGenerated} 
                 />
-                <div className='h-[80vh]'>
-                <AIHub className='h-[80vh] flex-col flex'/>
-                </div>
+                
                 
                 </>
               )}

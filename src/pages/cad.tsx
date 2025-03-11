@@ -2,9 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import CADCanvas from 'src/components/cad/CADCanvas';
-import PropertyPanel from 'src/components/cad/PropertyPanel';
-import StatusBar from 'src/components/cad/StatusBar';
+import PropertyPanel from '../components/cad/PropertyPanel';
+import StatusBar from '../components/cad/StatusBar';
 import TransformToolbar from '../components/cad/TrasformToolbar';
 import FloatingToolbar from '../components/cad/FloatingToolbar';
 
@@ -29,6 +28,7 @@ import AISettingsPanel from '../components/ai/AISettingPanel';
 import AIHub from '../components/ai/AIHub';
 import TextToCADGenerator from '../components/ai/TextToCADGenerator';
 import { useAIAgent } from '../contexts/AIAgentProvider';
+import CADCanvas from '../components/cad/CADCanvas';
 
 export default function CADPage() {
   const { data: session, status } = useSession();
@@ -48,15 +48,10 @@ export default function CADPage() {
   const [showUnifiedLibrary, setShowUnifiedLibrary] = useState(false);
   const [isPlacingComponent, setIsPlacingComponent] = useState(false);
   const [description, setDescription] = useState('');
-  const { textToCAD, state: aiState } = useAIAgent();
+  
   const { addElements } = useElementsStore();
   
-  const handleGenerateElements = async () => {
-    const result = await textToCAD(description);
-    if (result.success && result.data) {
-      addElements(result.data);
-    }
-  };
+ 
   
   // Move the hook call to the top level
   const { loadCadDrawing } = useLocalLibrary();
@@ -147,6 +142,8 @@ export default function CADPage() {
   }
 
   
+
+  
  
   
   return (
@@ -233,18 +230,6 @@ export default function CADPage() {
                   />
                 </div>
       
-                 <button
-                    onClick={handleGenerateElements}
-                    disabled={aiState.isProcessing || !description.trim()}
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md"
-                  >
-                  {aiState.isProcessing ? 'Generating...' : (
-                  <>
-                   <PenTool size={16} className="mr-2" />
-                    Generate CAD Elements
-                 </>
-                  )}
-              </button>
                </div>
               
             </div>

@@ -31,6 +31,10 @@ import { ComponentBrowser } from '../cad/ComponentBroswer';
 import SnapSettings from '../cad/SnapSettings';
 import UnifiedComponentsBrowser from './UnifiedComponentBrowser';
 import { ComponentLibraryItem } from '@/src/hooks/useUnifiedLibrary';
+import ToolOptionsPanel from '../cad/panels/ToolOptionsPanel';
+import { CadTool } from '@/src/types/cad';
+import CanvasToolbar from '../cad/toolbar/CanvasToolbar';
+import LibraryMenu from '../cad/LibraryMenu';
 
 interface EnhancedSidebarProps {
   isOpen: boolean;
@@ -59,9 +63,10 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
   const router = useRouter();
   const [selectedLibraryComponent, setSelectedLibraryComponent] = useState<string | null>(null);
   const [previewComponent, setPreviewComponent] = useState<any | null>(null);
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
   const { data: session } = useSession();
-  const { viewMode, setViewMode, gridVisible, toggleGrid, axisVisible, toggleAxis } = useCADStore();
+  const { viewMode, setViewMode, gridVisible, toggleGrid, axisVisible, toggleAxis, activeTool } = useCADStore();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
     projects: true,
     resources: false,
@@ -386,21 +391,16 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
     <ToolPanel />
     <div className="mt-6 pt-4 border-t border-gray-200">
       <ComponentsBrowserLocal/>
-      <ComponentBrowser/>
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <UnifiedComponentsBrowser 
-          onSelectComponent={(component) => {
-            setSelectedLibraryComponent(component.id);
+      <LibraryMenu onSelectComponent={(component) => {
+            setSelectedLibraryComponent(component);
             // Se la prop onSelectComponent esiste, chiamala
             if (onSelectComponent) {
               onSelectComponent(component);
             }
-          }} 
-        />
-      </div>
-    </div>
-  </>
-)}
+          }} />
+        </div>
+       </>
+        )}
         {activeSidebarTab === 'layers' && <LayerManager />}
         {activeSidebarTab === 'settings' && (
           <div>
