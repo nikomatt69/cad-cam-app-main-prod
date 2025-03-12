@@ -7,7 +7,8 @@ import {
   Menu, Grid, Tool, Layers, Settings, Sliders,
   Copy, Trash2, RotateCcw, Maximize2, Move,
   Package, Search, Cpu, Book, Filter,
-  Type, Triangle, UploadCloud
+  Type, Triangle, UploadCloud,
+  PenTool
 } from 'react-feather';
 import { useCADStore } from 'src/store/cadStore';
 import { useElementsStore } from 'src/store/elementsStore';
@@ -21,6 +22,9 @@ import LocalComponentsLibraryView from '../library/LocalComponentsLibraryView';
 import UnifiedLibraryBrowser from './UnifiedLibraryBrowser';
 import { ComponentLibraryItem } from '@/src/hooks/useUnifiedLibrary';
 import ComponentsLibraryView from '../library/ComponentsLibraryView';
+import DrawingToolbar from '../cam/DrawingToolbar';
+import { useDrawingTools } from '@/src/hooks/useDrawingTools';
+import LibraryMenu from './LibraryMenu';
 
 interface Position {
   x: number;
@@ -32,7 +36,7 @@ interface FloatingToolbarProps {
   onClose?: () => void;
 }
 
-const TOOLBAR_MODES = ['create', 'transform', 'library', 'ai'] as const;
+const TOOLBAR_MODES = ['create', 'transform', 'library', 'ai','drawing'] as const;
 type ToolbarMode = typeof TOOLBAR_MODES[number];
 
 const LIBRARY_CATEGORIES = [
@@ -64,7 +68,9 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   const { addElement, selectedElement, duplicateElement, deleteElement, addElements } = useElementsStore();
   const { toggleGrid, toggleAxis, viewMode, setViewMode } = useCADStore();
   const { activeLayer, layers } = useLayerStore();
-
+  const { toolState, setActiveTool, setPenSize, setEraserSize, setHighlighterSize, 
+    setColor, setTextSize, setDimensionStyle, startDrawing, addDrawingPoint, 
+    finishDrawing, resetDrawing } = useDrawingTools();
   // Check if the active layer is locked
   const isLayerLocked = React.useMemo(() => {
     if (!activeLayer) return true;
@@ -473,7 +479,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
         );
       case 'transform':
         return (
-          <div className="p-2 grid grid-cols-3 gap-2">
+          <div className="p-2 flex flex-col gap-2">
             <button 
               className="p-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
               disabled={!selectedElement || isLayerLocked}
@@ -529,10 +535,35 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
       case 'library':
         return (
           <div className="p-2 flex flex-col">
-            <ComponentsLibraryView
-              onSelectComponent={handleComponentSelection}
+            <LibraryMenu onSelectComponent={(component) => {
+            setSelectedLibraryComponent(component);
+            // Se la prop onSelectComponent esiste, chiamala
+            if (selectedElement) {
+              (component);
+            }
+          }} />
+          </div>
+        );
+        case 'drawing':
+        return (
+          <div className="p-2 flex  h-full">
+            <DrawingToolbar
              
-            />
+             onSelectTool={setActiveTool}
+             activeTool={toolState.activeTool}
+             color={toolState.color}
+             onColorChange={setColor}
+             penSize={toolState.penSize}
+             onPenSizeChange={setPenSize}
+             eraserSize={toolState.eraserSize}
+             onEraserSizeChange={setEraserSize}
+             highlighterSize={toolState.highlighterSize}
+             onHighlighterSizeChange={setHighlighterSize}
+             textSize={toolState.textSize}
+             onTextSizeChange={setTextSize}
+             dimensionStyle={toolState.dimensionStyle}
+             onDimensionStyleChange={setDimensionStyle}
+           /> 
           </div>
         );
       case 'ai':
@@ -645,6 +676,19 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                 <div className="flex items-center justify-center">
                   <Cpu size={12} className="mr-1" />
                   AI
+                </div>
+              </button>
+              <button
+                className={`flex-1 py-2 text-xs font-medium ${
+                  selectedMode === 'drawing' 
+                    ? 'text-blue-600 border-b-2 border-blue-600' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setSelectedMode('drawing')}
+              >
+                <div className="flex items-center justify-center">
+                  <PenTool size={12} className="mr-1" />
+                  Drawing
                 </div>
               </button>
             </div>

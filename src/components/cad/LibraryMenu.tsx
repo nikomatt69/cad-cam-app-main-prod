@@ -9,7 +9,7 @@ interface LibraryMenuProps {
 
 const LibraryMenu: React.FC<LibraryMenuProps> = ({ onSelectComponent, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(['mechanical', 'electronic']);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(['mechanical', 'electronic','structural','geometric','custom','composed']);
   
   // Organizza i componenti per categoria
   const organizeByCategory = () => {

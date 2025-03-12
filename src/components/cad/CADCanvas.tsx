@@ -12,9 +12,10 @@ import SnapIndicator from './SnapIndicator';
 import { useSnap } from '@/src/hooks/useSnap';
 import { useLOD } from 'src/hooks/canvas/useLod';
 import { useThreePerformance } from 'src/hooks/canvas/useThreePerformance';
-import { useKeyboardShortcuts } from 'src/hooks/useKeyboardShortcuts';
+import { useCADKeyboardShortcuts } from 'src/hooks/useCADKeyboardShortcuts';
 import DragDropIndicator from './DragDropIndicator';
 import KeyboardShortcutsDialog from './KeyboardShortcutsDialog';
+import ShortcutsDialog from '../ShortcutsDialog';
 
 
 interface CADCanvasProps {
@@ -70,19 +71,41 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
   const [dropPosition, setDropPosition] = useState<{x: number, y: number, z: number}>({x: 0, y: 0, z: 0});
   const [showPerformanceStats, setShowPerformanceStats] = useState(false);
   const [dropScreenPosition, setDropScreenPosition] = useState<{ x: number, y: number } | undefined>(undefined);
+  const [showShortcutsDialog, setShowShortcutsDialog] = useState(false);
+  const [snapEnabled, setSnapEnabled] = useState(true);
+
+
+  
+
+  useEffect(() => {
+    if (window.exposeCADCanvasAPI) {
+      window.cadCanvasScene = sceneRef.current ?? undefined;
+      window.cadCanvasCamera = cameraRef.current ?? undefined;
+      
+      return () => {
+        window.cadCanvasScene = undefined;
+        window.cadCanvasCamera = undefined;
+      };
+    }
+  }, [sceneRef.current, cameraRef.current, window.exposeCADCanvasAPI]);
+
+  
   
   // Utilizzo dei nuovi hooks
   const { optimizeScene, sceneStatistics } = useThreePerformance(sceneRef);
   const { applyLOD } = useLOD(sceneRef, cameraRef);
-  useKeyboardShortcuts({
+  
+
+   useCADKeyboardShortcuts ({
     onDelete: () => {
       if (selectedElement) {
-        // Elimina l'elemento selezionato
+        // Delete the selected element
         useElementsStore.getState().deleteElement(selectedElement.id);
+        selectElement(null);
       }
     },
     onEscape: () => {
-      // Annulla il posizionamento o la selezione
+      // Cancel placement or deselect
       if (isPlacingComponent) {
         if (previewRef.current && sceneRef.current) {
           sceneRef.current.remove(previewRef.current);
@@ -96,13 +119,61 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
         selectElement(null);
       }
     },
-    onTransformModeToggle: (mode) => {
+    onTransform: (mode: 'translate' | 'rotate' | 'scale') => {
       if (transformControlsRef.current && mode) {
-        if (mode === 'translate' || mode === 'rotate' || mode === 'scale') {
-          setTransformMode(mode);
-          transformControlsRef.current.setMode(mode);
-        }
+        setTransformMode(mode);
+        transformControlsRef.current.setMode(mode);
       }
+    },
+    onToggleFullscreen: () => {
+      toggleFullscreen();
+    },
+    onToggleGrid: () => {
+      useCADStore.getState().toggleGrid();
+    },
+    onToggleAxis: () => {
+      useCADStore.getState().toggleAxis();
+    },
+    onViewModeToggle: (mode: '3d' | '2d') => {
+      useCADStore.getState().setViewMode(mode);
+    },
+    onZoomIn: () => {
+      if (cameraRef.current && controlsRef.current) {
+        // Zoom in by moving the camera closer
+        controlsRef.current.zoom0 = controlsRef.current.zoom0 * 1.2;
+        controlsRef.current.update();
+      }
+    },
+    onZoomOut: () => {
+      if (cameraRef.current && controlsRef.current) {
+        // Zoom out by moving the camera farther
+        controlsRef.current.zoom0 = controlsRef.current.zoom0 / 1.2;
+        controlsRef.current.update();
+      }
+    },
+    onZoomToFit: () => {
+      // Implement zoom to fit selected elements or all elements
+      fitCameraToElements();
+    },
+    onShowShortcuts: () => {
+      // Show keyboard shortcuts dialog
+      setShowKeyboardShortcuts(true);
+    },
+    onToggleSnap: () => {
+      // Toggle snap using local state
+      setSnapEnabled(prev => !prev);
+    },
+    onUndo: () => {
+      // Implement undo functionality
+      console.log("Undo action");
+    },
+    onRedo: () => {
+      // Implement redo functionality
+      console.log("Redo action");
+    },
+    onSave: () => {
+      // Implement save functionality
+      console.log("Save action");
     }
   });
 
@@ -123,6 +194,54 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
         sceneRef.current?.add(point);
         controlPointsRef.current.push(point);
       });
+    }
+  }, [selectedElement]);
+
+  const fitCameraToElements = useCallback(() => {
+    if (!cameraRef.current || !sceneRef.current) return;
+    
+    const elementsToFit = selectedElement 
+      ? [sceneRef.current.children.find(child => child.userData?.elementId === selectedElement.id)]
+      : sceneRef.current.children.filter(child => child.userData?.isCADElement);
+      
+    if (elementsToFit.length === 0) return;
+    
+    // Create a bounding box encompassing all elements
+    const boundingBox = new THREE.Box3();
+    
+    elementsToFit.forEach(element => {
+      if (element) {
+        const elementBox = new THREE.Box3().setFromObject(element);
+        boundingBox.union(elementBox);
+      }
+    });
+    
+    // Get bounding box dimensions and center
+    const center = new THREE.Vector3();
+    boundingBox.getCenter(center);
+    
+    const size = new THREE.Vector3();
+    boundingBox.getSize(size);
+    
+    // Compute the distance needed to fit the box in view
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const fov = cameraRef.current.fov * (Math.PI / 180);
+    const cameraDistance = Math.abs(maxDim / (2 * Math.tan(fov / 2)));
+    
+    // Position the camera to look at the center of the bounding box
+    const direction = cameraRef.current.position.clone()
+      .sub(new THREE.Vector3(0, 0, 0)).normalize();
+      
+    cameraRef.current.position.copy(
+      center.clone().add(direction.multiplyScalar(cameraDistance * 1.25))
+    );
+    
+    cameraRef.current.lookAt(center);
+    
+    // Update controls
+    if (controlsRef.current) {
+      controlsRef.current.target.copy(center);
+      controlsRef.current.update();
     }
   }, [selectedElement]);
 
@@ -2671,6 +2790,10 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
     };
   };
 
+
+
+  
+
   return (
     <div 
       ref={canvasRef} 
@@ -2774,7 +2897,7 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
       </button>
       
       {/* Render dialog outside of button */}
-      <KeyboardShortcutsDialog 
+      <ShortcutsDialog 
         isOpen={showKeyboardShortcuts} 
         onClose={() => setShowKeyboardShortcuts(false)} 
       />
@@ -2785,3 +2908,10 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
 };
 
 export default CADCanvas;
+declare global {
+  interface Window {
+    cadCanvasScene?: THREE.Scene;
+    cadCanvasCamera?: THREE.Camera;
+    exposeCADCanvasAPI?: boolean;
+  }
+}

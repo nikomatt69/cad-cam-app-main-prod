@@ -227,17 +227,6 @@ export default function CAMPage() {
                 {isSimulating ? <Pause size={16} /> : <Play size={16} />}
                 <span className="ml-1">{isSimulating ? "Arresta" : "Simula"}</span>
               </button>
-              
-              {/* CAM Library button */}
-              <button
-                onClick={() => setShowLibrary(true)}
-                className="btn btn-sm btn-outline flex items-center"
-                title="Libreria CAM"
-              >
-                <Folder size={16} className="mr-1" />
-                CAM Libreria
-              </button>
-
               {/* Unified Library button */}
               <button
                 onClick={() => setShowUnifiedLibrary(true)}

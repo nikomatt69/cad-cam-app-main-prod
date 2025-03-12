@@ -29,6 +29,7 @@ import AIHub from '../components/ai/AIHub';
 import TextToCADGenerator from '../components/ai/TextToCADGenerator';
 import { useAIAgent } from '../contexts/AIAgentProvider';
 import CADCanvas from '../components/cad/CADCanvas';
+import DrawingEnabledCADCanvas from '../components/cam/DrawingEnabledCADCanvas';
 
 export default function CADPage() {
   const { data: session, status } = useSession();
@@ -141,10 +142,7 @@ export default function CADPage() {
     );
   }
 
-  if (status === 'unauthenticated') {
-    router.push('/auth/signin');
-    return null;
-  }
+  
 
 
   
@@ -184,16 +182,15 @@ export default function CADPage() {
           
           {/* Main content */}
           <div className="flex-1 flex rounded-xl bg-gradient-to-b from-[#2A2A2A] to-[#303030] relative">
-            <CADCanvas 
-              width="100%" 
-              height="100%" 
-              previewComponent={selectedLibraryComponent}
-              
-              onComponentPlaced={(component, position) => {
-                handleComponentPlacement(component, position);
-                setIsPlacingComponent(false);
-              }}
-            />
+          <DrawingEnabledCADCanvas 
+            width="100%" 
+            height="100%" 
+            previewComponent={selectedLibraryComponent}
+            onComponentPlaced={(component, position) => {
+            handleComponentPlacement(component, position);
+            setIsPlacingComponent(false);
+           }}
+          />
             
             {/* Floating toolbar */}
             {showFloatingToolbar && (
