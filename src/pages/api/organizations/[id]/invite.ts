@@ -3,18 +3,20 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import crypto from 'crypto';
 import { prisma } from 'src/lib/prisma';
 import { requireAuth } from 'src/lib/api/auth';
+import { sendInvitationEmail } from 'src/lib/email';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Authenticate the request
   const userId = await requireAuth(req, res);
   if (!userId) return;
   
+  // Validate the organization ID
   const { id: organizationId } = req.query;
-  
   if (!organizationId || typeof organizationId !== 'string') {
     return res.status(400).json({ message: 'Organization ID is required' });
   }
   
-  // Verify user has permission to invite members
+  // Verify the user has permission to invite members
   const userOrganization = await prisma.userOrganization.findUnique({
     where: {
       userId_organizationId: {
@@ -34,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   
   try {
-    const { email, role } = req.body;
+    const { email, role = 'MEMBER' } = req.body;
     
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
@@ -45,12 +47,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ message: 'Managers cannot invite Admins' });
     }
     
-    // Check if user already exists
+    // Check if user already exists and is already a member
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
     
-    // Check if user is already a member of the organization
     if (existingUser) {
       const existingMembership = await prisma.userOrganization.findUnique({
         where: {
@@ -66,7 +67,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
     
-    // Check if there's already a pending invitation
+    // Get organization and inviter details
+    const [organization, inviter] = await Promise.all([
+      prisma.organization.findUnique({
+        where: { id: organizationId }
+      }),
+      prisma.user.findUnique({
+        where: { id: userId }
+      })
+    ]);
+    
+    if (!organization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+    
+    // Generate a secure token and expiration date (7 days)
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    
+    // Check for existing invitation and update or create as needed
     const existingInvitation = await prisma.organizationInvitation.findFirst({
       where: {
         email,
@@ -74,54 +93,49 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
     
-    if (existingInvitation) {
-      // Update the existing invitation
-      const updatedInvitation = await prisma.organizationInvitation.update({
-        where: { id: existingInvitation.id },
-        data: {
-          role: role || 'MEMBER',
-          token: crypto.randomBytes(32).toString('hex'),
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-        }
+    const invitation = existingInvitation
+      ? await prisma.organizationInvitation.update({
+          where: { id: existingInvitation.id },
+          data: { role, token, expiresAt }
+        })
+      : await prisma.organizationInvitation.create({
+          data: {
+            email,
+            role,
+            token,
+            organizationId,
+            expiresAt
+          }
+        });
+    
+    // Send the invitation email
+    const inviterName = inviter?.name || 'Someone';
+    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invitations/${token}`;
+    
+    try {
+      await sendInvitationEmail({
+        to: email,
+        organizationName: organization.name,
+        inviterName,
+        role: role.toLowerCase(),
+        inviteUrl,
+        expiresAt
       });
-      
-      // Here you would send an email with the invitation link
-      // For now, just return the invitation data
-      
-      return res.status(200).json({
-        message: 'Invitation updated and sent',
-        invitation: {
-          id: updatedInvitation.id,
-          email: updatedInvitation.email,
-          role: updatedInvitation.role,
-          expiresAt: updatedInvitation.expiresAt
-        }
-      });
-    } else {
-      // Create a new invitation
-      const newInvitation = await prisma.organizationInvitation.create({
-        data: {
-          email,
-          role: role || 'MEMBER',
-          token: crypto.randomBytes(32).toString('hex'),
-          organizationId,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-        }
-      });
-      
-      // Here you would send an email with the invitation link
-      // For now, just return the invitation data
-      
-      return res.status(201).json({
-        message: 'Invitation created and sent',
-        invitation: {
-          id: newInvitation.id,
-          email: newInvitation.email,
-          role: newInvitation.role,
-          expiresAt: newInvitation.expiresAt
-        }
-      });
+    } catch (emailError) {
+      console.error('Failed to send invitation email:', emailError);
+      // Continue with the API response since the invitation was created
     }
+    
+    return res.status(existingInvitation ? 200 : 201).json({
+      message: existingInvitation ? 'Invitation updated and sent' : 'Invitation created and sent',
+      invitation: {
+        id: invitation.id,
+        email: invitation.email,
+        role: invitation.role,
+        expiresAt: invitation.expiresAt
+      }
+    });
+    
   } catch (error) {
     console.error('Failed to send invitation:', error);
     return res.status(500).json({ message: 'Failed to send invitation' });
