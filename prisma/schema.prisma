@@ -19,32 +19,34 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relationships
-  organizations   UserOrganization[]
-  projects        Project[]
-  accounts        Account[]
-  sessions        Session[]
-  materials       Material[] // Add ownership relationship
-  tools           Tool[] // Add ownership relationship
-  machineConfigs  MachineConfig[]
-  activityLogs    ActivityLog[]
-  aiAnalysisLogs  AIAnalysisLog[]
-  LibraryItem     LibraryItem[]
-  subscription    Subscription?    // Relation to subscription
+  organizations           UserOrganization[]
+  projects                Project[]
+  accounts                Account[]
+  sessions                Session[]
+  materials               Material[] // Add ownership relationship
+  tools                   Tool[] // Add ownership relationship
+  machineConfigs          MachineConfig[]
+  activityLogs            ActivityLog[]
+  aiAnalysisLogs          AIAnalysisLog[]
+  LibraryItem             LibraryItem[]
+  subscription            Subscription? // Relation to subscription
+  ConversationParticipant ConversationParticipant[]
+  Message                 Message[]
 }
 
 // Subscription model for Stripe integration
 model Subscription {
-  id                    String    @id @default(cuid())
-  userId                String    @unique
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stripeCustomerId      String?   @unique
-  stripeSubscriptionId  String?   @unique
-  stripePriceId         String?
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
   stripeCurrentPeriodEnd DateTime?
-  plan                  String    @default("free") // free, basic, pro, enterprise
-  status                String    @default("active") // active, canceled, incomplete, etc.
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  plan                   String    @default("free") // free, basic, pro, enterprise
+  status                 String    @default("active") // active, canceled, incomplete, etc.
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 }
 
 // Auth models remain unchanged
@@ -83,12 +85,13 @@ model Organization {
   updatedAt   DateTime @updatedAt
 
   // Relationships
-  users       UserOrganization[]
-  projects    Project[]
-  invitations OrganizationInvitation[]
-  materials   Material[] // Add organization materials
-  tools       Tool[] // Add organization tools
-  LibraryItem LibraryItem[]
+  users        UserOrganization[]
+  projects     Project[]
+  invitations  OrganizationInvitation[]
+  materials    Material[] // Add organization materials
+  tools        Tool[] // Add organization tools
+  LibraryItem  LibraryItem[]
+  Conversation Conversation[]
 }
 
 model OrganizationInvitation {
@@ -318,4 +321,45 @@ model LibraryItem {
   // Relationships
   owner        User?         @relation(fields: [ownerId], references: [id])
   organization Organization? @relation(fields: [organizationId], references: [id])
+}
+
+model Conversation {
+  id             String   @id @default(cuid())
+  name           String?
+  organizationId String
+  isGroupChat    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  organization Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             String    @id @default(cuid())
+  userId         String
+  conversationId String
+  joinedAt       DateTime  @default(now())
+  lastReadAt     DateTime?
+
+  // Relationships
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conversationId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  content        String   @db.Text
+  senderId       String
+  conversationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 }
