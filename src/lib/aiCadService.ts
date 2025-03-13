@@ -86,7 +86,7 @@ class CADaiService {
   };
 
   constructor() {
-    this.apiKey = process.env.ANTHROPIC_API_KEY || process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
+    this.apiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY || process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
     this.apiUrl = 'https://api.anthropic.com/v1/messages';
     this.defaultModel = 'claude-3-5-haiku-20241022';
     

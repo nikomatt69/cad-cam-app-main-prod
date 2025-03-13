@@ -14,16 +14,19 @@ const nextConfig = {
       'cadcamfun.xyz',
       'endpoint.4everland.co',
       'cadcamfun.xyz/api/*',
+      'cadcamfun.xyz/api/websocket',
+      'cadcamfun.xyz/favicon.ico',
+      'cadcamfun.xyz/icon.png',
     ], // Domini consentiti per il caricamento delle immagini
   },
   
   // Abilita l'utilizzo dell'attributo script-src nella policy di Content Security
-  'script-src': false,
+  
  
   // Configurazione di webpack per Next.js
   webpack: (config) => {
     // Imposta il fallback di risoluzione dei moduli per il modulo fs su false
-    config.resolve.fallback = { fs: false };
+    config.resolve.fallback = { fs: false ,tls: false,net: false};
     return config;
   },
   async headers() {
@@ -34,7 +37,6 @@ const nextConfig = {
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'Referrer-Policy', value: 'strict-origin' },
           { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
         source: '/(.*)'

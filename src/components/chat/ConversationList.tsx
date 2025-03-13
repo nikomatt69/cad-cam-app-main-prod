@@ -53,7 +53,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ organizationId }) =
     
     // For direct messages, show the other participant's name
     const otherParticipants = conversation.participants.filter(
-      (p: any) => p.id !== '' // Replace with current user ID
+      (p: any) => p.id !== '1' // Replace with current user ID
     );
     if (otherParticipants.length === 1) {
       return otherParticipants[0].name || 'Unnamed User';

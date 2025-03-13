@@ -114,6 +114,9 @@ export default function OrganizationDetailPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.user.id || '' }`,
+          'Accept': 'application/json',
+          
         },
         body: JSON.stringify({
           email: inviteEmail,

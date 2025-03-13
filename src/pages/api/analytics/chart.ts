@@ -6,10 +6,7 @@ import { requireAuth } from '@/src/lib/api/auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Check authentication
-  const session = await getSession({ req });
-  if (!session || !session.user) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
+  
   
   const userId = await requireAuth(req, res);
   if (!userId) return;
@@ -19,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   // Check if user is an admin (add proper admin check for your app)
   const adminEmails = ['nicola.mattioli.95@gmail.com','nicom.19@icloud.com']; // Replace with your actual admin check
-  const isAdmin = adminEmails.includes(session.user.email || '');
+  const isAdmin = adminEmails.includes(userId || '');
   
   if (req.method === 'GET') {
     try {

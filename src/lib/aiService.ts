@@ -8,7 +8,7 @@ class AIService {
 
   constructor() {
     this.client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
       dangerouslyAllowBrowser: true
     });
   }

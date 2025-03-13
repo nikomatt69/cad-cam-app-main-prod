@@ -51,6 +51,7 @@ export default function CADPage() {
   const [description, setDescription] = useState('');
   
   const { addElements } = useElementsStore();
+  const { textToCAD, state: aiState } = useAIAgent();
   
  
   
@@ -126,6 +127,12 @@ export default function CADPage() {
     console.log("Selected tool:", tool);
     setShowUnifiedLibrary(false);
   };
+  const handleGenerateElements = async () => {
+    const result = await textToCAD(description);
+    if (result.success && result.data) {
+      addElements(result.data);
+    }
+  };
 
   // Reset component selection when closing library
   useEffect(() => {
@@ -142,7 +149,11 @@ export default function CADPage() {
     );
   }
 
-  
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  }
+
 
 
   
@@ -230,7 +241,18 @@ export default function CADPage() {
                    placeholder="Describe the 3D model you want to create..."
                   />
                 </div>
-      
+                <button
+                    onClick={handleGenerateElements}
+                    disabled={aiState.isProcessing || !description.trim()}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md"
+                  >
+                  {aiState.isProcessing ? 'Generating...' : (
+                  <>
+                   <PenTool size={16} className="mr-2" />
+                    Generate CAD Elements
+                 </>
+                  )}
+              </button>
                </div>
               
             </div>

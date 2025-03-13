@@ -18,6 +18,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import Image from 'next/image';
 import AIAssistantButton from '../ai/AIAssistantButton';
+import AIModal from '../components/AIModal';
 
 interface EnhancedToolbarProps {
   sidebarOpen: boolean;
@@ -115,7 +116,7 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             title="Unified Library"
           >
             <Book size={16} className="mr-1.5 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm">Unified Library</span>
+            <span className="text-sm">Library</span>
           </button>
           
           {/* Create Component from Selected Element button - only shows when element is selected */}
@@ -158,6 +159,7 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             <Tool size={16} className="mr-1.5" />
             <span className="text-sm">Toolbar</span>
           </button>
+          <AIModal />
         
         </div>
       </div>

@@ -59,6 +59,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
     settings: false
   });
   const [selectedLibraryTool, setSelectedLibraryTool] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   // Generate navigation items with current route indicated
   const getNavigation = (): NavItem[] => {
     return [
@@ -428,7 +429,7 @@ return (
     
     {/* Sidebar */}
     <div
-      className={`flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-2 mr-0.5 rounded-xl border-r transition-all duration-300 ease-in-out h-full flex flex-col ${
+      className={`flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-2 mr-0.5 rounded-xl border-r transition-all duration-300 ease-in-out h-full flex flex-col  ${
         isOpen ? 'w-80' : 'w-20'
       }`}
     >
@@ -518,18 +519,34 @@ return (
       </div>
       
       {/* Sidebar content */}
-      <div className="flex-1 flex-col rounded-xl overflow-y-auto">
+      <div className="flex-1 flex-col  rounded-xl overflow-y-auto">
         {renderSidebarContent()}
       </div>
       
       {/* Navigation from the original sidebar */}
-      <div className="mt-2 p-2 overflow-y-auto rounded-xl border-t border-gray-200">
-        <div className="text-xs rounded-xl text-gray-500 mb-2 px-3">
-          {isOpen ? "Quick Navigation" : ""}
-        </div>
-        <div className="space-y-1 scrollbar overflow-y-auto">
-          {navigation.slice(0, isOpen ? undefined : 0).map(item => renderNavItem(item))}
-        </div>
+      <div className="mt-2 p-2 overflow-y-auto  rounded-xl border-t  border-gray-200">
+        <button 
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-left rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <span className="text-xs text-gray-500">
+            {isOpen ? "Quick Navigation" : ""}
+          </span>
+          <svg 
+            className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`} 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        {isDropdownOpen && (
+          <div className="space-y-1 scrollbar overflow-y-auto mt-2">
+            {navigation.slice(0, isOpen ? undefined : 0).map(item => renderNavItem(item))}
+          </div>
+        )}
       </div>
       
       {/* Toggle sidebar button */}

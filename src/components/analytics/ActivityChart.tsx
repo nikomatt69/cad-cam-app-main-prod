@@ -153,14 +153,14 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({
   
   // Render the appropriate chart type
   return (
-    <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow rounded-lg p-4" role="region" aria-label="Activity Chart">
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Activity Over Time</h3>
-      <div className="h-80">
+    <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow rounded-lg p-3 sm:p-4" role="region" aria-label="Activity Chart">
+      <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">Activity Over Time</h3>
+      <div className="h-60 sm:h-80">
         <ResponsiveContainer width="100%" height="100%">
           {chartType === 'line' ? (
             <LineChart
               data={chartData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 25 }}
+              margin={{ top: 5, right: 10, left: 0, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
               <XAxis 
@@ -168,27 +168,33 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({
                 tickFormatter={formatDate}
                 angle={-45}
                 textAnchor="end"
-                height={70}
+                height={60}
+                tick={{ fontSize: 10 }}
+                padding={{ left: 10, right: 10 }}
               />
-              <YAxis />
+              <YAxis 
+                tick={{ fontSize: 10 }}
+                width={30}
+              />
               <Tooltip
                 formatter={(value: number) => [`${value} activities`, 'Count']}
                 labelFormatter={(label: string) => formatDate(label)}
+                contentStyle={{ fontSize: '12px' }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '12px', marginTop: '10px' }} />
               <Line 
                 type="monotone" 
                 dataKey="count" 
                 name="Activity Count"
                 stroke="#3B82F6" 
-                activeDot={{ r: 8 }} 
+                activeDot={{ r: 6 }} 
                 strokeWidth={2}
               />
             </LineChart>
           ) : (
             <BarChart
               data={chartData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 25 }}
+              margin={{ top: 5, right: 10, left: 0, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
               <XAxis 
@@ -196,19 +202,25 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({
                 tickFormatter={formatDate}
                 angle={-45}
                 textAnchor="end"
-                height={70}
+                height={60}
+                tick={{ fontSize: 10 }}
+                padding={{ left: 10, right: 10 }}
               />
-              <YAxis />
+              <YAxis 
+                tick={{ fontSize: 10 }}
+                width={30}
+              />
               <Tooltip
                 formatter={(value: number) => [`${value} activities`, 'Count']}
                 labelFormatter={(label: string) => formatDate(label)}
+                contentStyle={{ fontSize: '12px' }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '12px', marginTop: '10px' }} />
               <Bar 
                 dataKey="count" 
                 name="Activity Count"
                 fill="#3B82F6" 
-                radius={[4, 4, 0, 0]}
+                radius={[2, 2, 0, 0]}
               />
             </BarChart>
           )}

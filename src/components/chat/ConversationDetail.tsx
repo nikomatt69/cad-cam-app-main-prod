@@ -6,6 +6,7 @@ import { ArrowLeft, Info, User, Users, Send, MoreVertical } from 'react-feather'
 import useChatStore, { Message } from '@/src/store/chatStore';
 import { formatDistanceToNow, format } from 'date-fns';
 import Image from 'next/image';
+import { NotificationService } from '@/src/lib/notificationService';
 
 interface ConversationDetailProps {
   conversationId: string;
@@ -71,14 +72,34 @@ const ConversationDetail: React.FC<ConversationDetailProps> = ({
     }
   };
   
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (messageInput.trim() && conversationId) {
-      sendMessage(conversationId, messageInput.trim());
-      setMessageInput('');
-      // Reset scroll position to show new message
-      setIsScrolledUp(false);
+      try {
+        // Invio del messaggio (codice esistente)
+        await sendMessage(conversationId, messageInput.trim());
+        
+        // Genera notifiche per gli altri partecipanti
+        if (activeConversation && session?.user) {
+          // Questa parte sarebbe in realtà gestita dal backend
+          // ma per completezza mostriamo come potrebbe essere fatto
+          await NotificationService.createNewMessageNotifications(
+            messages[messages.length - 1].id, // assumendo che message sia la risposta dal server
+            session.user.id,
+            conversationId,
+            messageInput.trim(),
+            session.user.name || 'Utente',
+            organizationId
+          );
+        }
+        
+        // Reset del form
+        setMessageInput('');
+        setIsScrolledUp(false);
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
     }
   };
   

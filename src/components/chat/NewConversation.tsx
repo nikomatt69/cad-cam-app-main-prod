@@ -73,7 +73,9 @@ const NewConversation: React.FC<NewConversationProps> = ({
     if (selectedMembers.length === 0) return;
     
     const participantIds = selectedMembers.map(member => member.id);
-    const name = isGroupChat ? groupName || `Group with ${selectedMembers.map(m => m.name).join(', ')}` : undefined;
+    const name = isGroupChat 
+      ? groupName || `Group with ${selectedMembers.map(m => m.name || 'User').join(', ')}` 
+      : selectedMembers[0].name || selectedMembers[0].email || 'Unnamed User';
     
     const conversation = await createConversation(
       organizationId,

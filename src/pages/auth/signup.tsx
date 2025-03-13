@@ -6,6 +6,10 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import MetaTags from '@/src/components/layout/Metatags';
+import Layout from '@/src/components/layout/Layout';
+import Navbar from '@/src/components/layout/Navbar';
+import Footer from '@/src/components/ui/Footer';
+import BottomNavigation from '@/src/components/components/BottomNavigation';
 
 export default function SignUp() {
   const router = useRouter();
@@ -108,6 +112,7 @@ export default function SignUp() {
         title="CAM/CAM FUN SIGNUP" 
      
       />
+      <Navbar/>
       <div className="min-h-screen items-center flex flex-col justify-center py-8 sm:px-6 lg:px-8 bg-gray">
         <div className="max-w-lg w-full border-2 justify-center flex-col flex rounded-xl p-20 sm:p-2 space-y-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md ">
@@ -267,6 +272,8 @@ export default function SignUp() {
         </div>
         </div>
       </div>
+      <Footer/>
+      
     </>
   );
 }

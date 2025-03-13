@@ -15,7 +15,7 @@ import { useThreePerformance } from 'src/hooks/canvas/useThreePerformance';
 import { useCADKeyboardShortcuts } from 'src/hooks/useCADKeyboardShortcuts';
 import DragDropIndicator from './DragDropIndicator';
 import KeyboardShortcutsDialog from './KeyboardShortcutsDialog';
-import ShortcutsDialog from '../ShortcutsDialog';
+import ShortcutsDialog, { ShortcutCategory } from '../ShortcutsDialog';
 
 
 interface CADCanvasProps {
@@ -2165,7 +2165,7 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
         
         // Position camera to look at XZ plane (from Y axis)
         cameraRef.current.position.set(0, 50, 0);
-        cameraRef.current.up.set(0, 0, 1); // Set Z as the up direction
+        cameraRef.current.up.set(0, 1, 0); // Set Z as the up direction
         cameraRef.current.lookAt(0, 0, 0);
         
         // Update grid for XZ plane view
@@ -2192,8 +2192,8 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
         if (customAxes) {
           customAxes.visible = axisVisible;
           customAxes.children.forEach((child, index) => {
-            // Show X (index 0) and Z (index 2), hide Y (index 1)
-            if (index === 1) {
+            // Show X (index 0) and Y (index 1), hide Z (index 2)
+            if (index === 2) {
               child.visible = false;
             } else {
               child.visible = true;
@@ -2789,7 +2789,111 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
       y: (vector.y * -0.5 + 0.5) * canvas.height
     };
   };
-
+  const allShortcuts: ShortcutCategory[] = [
+    {
+      title: "Navigation",
+      shortcuts: [
+        { keys: ["Left Click + Drag"], description: "Rotate camera (3D mode)" },
+        { keys: ["Middle Click + Drag"], description: "Pan view" },
+        { keys: ["Right Click + Drag"], description: "Orbit around selection" },
+        { keys: ["Scroll"], description: "Zoom in/out" },
+        { keys: ["+", "="], description: "Zoom in" },
+        { keys: ["-", "_"], description: "Zoom out" },
+        { keys: ["F"], description: "Zoom to fit/focus on selection" },
+        { keys: ["Ctrl + 1"], description: "Switch to 3D view" },
+        { keys: ["Ctrl + 2"], description: "Switch to top view (2D)" },
+      ]
+    },
+    {
+      title: "Selection & Editing",
+      shortcuts: [
+        { keys: ["Click"], description: "Select object" },
+        { keys: ["Shift + Click"], description: "Add to selection" },
+        { keys: ["Ctrl + Click"], description: "Remove from selection" },
+        { keys: ["Escape"], description: "Deselect all / Cancel current operation" },
+        { keys: ["Delete", "Backspace"], description: "Delete selected objects" },
+        { keys: ["G"], description: "Move (Translate) mode" },
+        { keys: ["R"], description: "Rotate mode" },
+        { keys: ["S"], description: "Scale mode" },
+        { keys: ["X"], description: "Constrain to X axis" },
+        { keys: ["Y"], description: "Constrain to Y axis" },
+        { keys: ["Z"], description: "Constrain to Z axis" },
+      ]
+    },
+    {
+      title: "Tools & Creation",
+      shortcuts: [
+        { keys: ["L"], description: "Line tool" },
+        { keys: ["C"], description: "Circle tool" },
+        { keys: ["R"], description: "Rectangle tool" },
+        { keys: ["P"], description: "Polygon tool" },
+        { keys: ["B"], description: "Box/Cube tool" },
+        { keys: ["O"], description: "Sphere tool" },
+        { keys: ["Y"], description: "Cylinder tool" },
+        { keys: ["T"], description: "Text tool" },
+        { keys: ["D"], description: "Dimension tool" },
+        { keys: ["M"], description: "Measurement tool" },
+      ]
+    },
+    {
+      title: "View Controls",
+      shortcuts: [
+        { keys: ["Ctrl + G"], description: "Toggle grid visibility" },
+        { keys: ["Ctrl + A"], description: "Toggle axes visibility" },
+        { keys: ["F11", "Alt + F"], description: "Toggle fullscreen" },
+        { keys: ["H"], description: "Hide selected objects" },
+        { keys: ["Alt + H"], description: "Show all objects" },
+        { keys: ["W"], description: "Toggle wireframe mode" },
+        { keys: ["Alt + Z"], description: "Toggle X-ray mode" },
+      ]
+    },
+    {
+      title: "Snapping & Precision",
+      shortcuts: [
+        { keys: ["Ctrl + X"], description: "Toggle snap mode" },
+        { keys: ["Alt + G"], description: "Toggle grid snap" },
+        { keys: ["Alt + P"], description: "Toggle point snap" },
+        { keys: ["Alt + M"], description: "Toggle midpoint snap" },
+        { keys: ["Alt + I"], description: "Toggle intersection snap" },
+        { keys: ["Alt + C"], description: "Toggle center snap" },
+      ]
+    },
+    {
+      title: "History & File Operations",
+      shortcuts: [
+        { keys: ["Ctrl + Z"], description: "Undo" },
+        { keys: ["Ctrl + Y", "Ctrl + Shift + Z"], description: "Redo" },
+        { keys: ["Ctrl + S"], description: "Save" },
+        { keys: ["Ctrl + O"], description: "Open" },
+        { keys: ["Ctrl + N"], description: "New" },
+        { keys: ["Ctrl + E"], description: "Export" },
+        { keys: ["Ctrl + I"], description: "Import" },
+      ]
+    },
+    {
+      title: "Layers & Organization",
+      shortcuts: [
+        { keys: ["Ctrl + L"], description: "Toggle layers panel" },
+        { keys: ["Ctrl + Shift + N"], description: "New layer" },
+        { keys: ["Ctrl + G"], description: "Group selected objects" },
+        { keys: ["Ctrl + Shift + G"], description: "Ungroup" },
+        { keys: ["Alt + L"], description: "Lock selected objects" },
+        { keys: ["Alt + Shift + L"], description: "Unlock all objects" },
+      ]
+    },
+    {
+      title: "Help & UI",
+      shortcuts: [
+        { keys: ["?", "Shift + /"], description: "Show keyboard shortcuts (this dialog)" },
+        { keys: ["F1"], description: "Help" },
+        { keys: ["Ctrl + ,"], description: "Preferences" },
+        { keys: ["Tab"], description: "Toggle sidebar" },
+        { keys: ["Ctrl + B"], description: "Toggle properties panel" },
+        { keys: ["Ctrl + Space"], description: "Command palette" },
+        { keys: ["Ctrl + F"], description: "Search" },
+      ]
+    },
+  ];
 
 
   
@@ -2887,22 +2991,23 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
       
       {/* Keyboard shortcuts info - attivato con ? */}
       <div className="absolute bottom-4 left-4">
-        <div>
+        
       <button 
         onClick={() => setShowKeyboardShortcuts(true)}
-        className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
-        title="Show keyboard shortcuts"
+        className="p-2 bg-[#F8FBFF] dark:bg-gray-800 bg-opacity-80 rounded-full text-gray-700 dark:text-gray-200 hover:bg-opacity-100 shadow-md hover:shadow-lg transition-all duration-200"
+        title="Show keyboard shortcuts (? or F2)"
       >
-        <HelpCircle size={16} />
+        <HelpCircle size={18} />
       </button>
-      
-      {/* Render dialog outside of button */}
-      <ShortcutsDialog 
-        isOpen={showKeyboardShortcuts} 
-        onClose={() => setShowKeyboardShortcuts(false)} 
-      />
-      </div>
-      </div>
+    </div>
+    
+    {/* Keyboard shortcuts dialog - positioned outside the button for proper z-index/overlay */}
+    <ShortcutsDialog 
+      isOpen={showKeyboardShortcuts} 
+      onClose={() => setShowKeyboardShortcuts(false)} 
+      shortcuts={allShortcuts}
+    />
+  
     </div>
   );
 };

@@ -73,15 +73,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const formattedConversations = conversations.map(conv => {
         const otherParticipants = conv.participants
           .filter(p => p.userId !== userId)
-          .map(p => p.user);
+          .map(p => p.user.id);
           
         const userParticipant = conv.participants.find(p => p.userId === userId);
         
         return {
           id: conv.id,
           name: conv.name || (otherParticipants.length === 1 
-            ? otherParticipants[0].name 
-            : otherParticipants.map(p => p.name).join(', ')),
+            ? otherParticipants[0] || 'Unnamed User' 
+            : otherParticipants.map(p => p).join(', ')),
           isGroupChat: conv.isGroupChat,
           lastMessage: conv.messages[0] || null,
           messageCount: conv._count.messages,

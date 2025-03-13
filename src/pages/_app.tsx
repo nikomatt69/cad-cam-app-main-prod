@@ -25,6 +25,7 @@ import { Toaster } from 'react-hot-toast';
 import { AnalyticsProvider } from '../contexts/AnalyticsContext';
 import { AIAgentProvider } from '../contexts/AIAgentProvider';
 import AIAssistant from '../components/ai/AIAssistant';
+import ViewportMeta from '../components/layout/ViewportMeta';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -66,12 +67,13 @@ export default function App({ Component, pageProps: { session, ...pageProps }, r
                   <AnalyticsProvider>
                   <AIAgentProvider>
                   <style jsx global>{`
-          body {
-            font-family: ${camFont.style.fontFamily};
-          }
-        `}</style>
+                     body {
+                     font-family: ${camFont.style.fontFamily};
+                      }
+                    `}</style>
+                      <ViewportMeta />
                       <Component {...pageProps} />
-                      <AIAssistant />
+                     
                       </AIAgentProvider>
                       </AnalyticsProvider>
                     <PWAInstallPrompt />

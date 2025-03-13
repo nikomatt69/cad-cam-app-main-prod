@@ -32,6 +32,8 @@ model User {
   subscription            Subscription? // Relation to subscription
   ConversationParticipant ConversationParticipant[]
   Message                 Message[]
+  notifications           Notification[] // Aggiunti per il sistema di notifiche
+  pushSubscriptions       PushSubscription[]
 }
 
 // Subscription model for Stripe integration
@@ -85,13 +87,14 @@ model Organization {
   updatedAt   DateTime @updatedAt
 
   // Relationships
-  users        UserOrganization[]
-  projects     Project[]
-  invitations  OrganizationInvitation[]
-  materials    Material[] // Add organization materials
-  tools        Tool[] // Add organization tools
-  LibraryItem  LibraryItem[]
-  Conversation Conversation[]
+  users         UserOrganization[]
+  projects      Project[]
+  invitations   OrganizationInvitation[]
+  materials     Material[] // Add organization materials
+  tools         Tool[] // Add organization tools
+  LibraryItem   LibraryItem[]
+  Conversation  Conversation[]
+  notifications Notification[] // Aggiunto per il sistema di notifiche
 }
 
 model OrganizationInvitation {
@@ -135,10 +138,11 @@ model Project {
   isPublic       Boolean  @default(false) // Add public flag
 
   // Relationships
-  owner        User          @relation(fields: [ownerId], references: [id])
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  drawings     Drawing[]
-  components   Component[]
+  owner         User          @relation(fields: [ownerId], references: [id])
+  organization  Organization? @relation(fields: [organizationId], references: [id])
+  drawings      Drawing[]
+  components    Component[]
+  notifications Notification[] // Aggiunto per il sistema di notifiche
 }
 
 model Drawing {
@@ -179,7 +183,8 @@ model Component {
   projectId   String
 
   // Relationships
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  notifications Notification[] // Aggiunto per il sistema di notifiche
 }
 
 model Material {
@@ -360,6 +365,52 @@ model Message {
   updatedAt      DateTime @updatedAt
 
   // Relationships
-  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender        User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  conversation  Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  notifications Notification[] // Aggiunto per il sistema di notifiche
+}
+
+// Modello per le notifiche
+model Notification {
+  id             String           @id @default(cuid())
+  type           NotificationType
+  title          String
+  content        String
+  isRead         Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  
+  // Riferimenti alle entità correlate
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Riferimenti opzionali
+  organizationId String?
+  organization   Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  componentId    String?
+  component      Component?       @relation(fields: [componentId], references: [id], onDelete: Cascade)
+  messageId      String?
+  message        Message?         @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  // Attributi per il routing
+  linkUrl        String?
+}
+
+model PushSubscription {
+  id             String   @id @default(cuid())
+  userId         String
+  endpoint       String   @unique
+  p256dh         String
+  auth           String
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  PROJECT_CREATED
+  COMPONENT_CREATED
+  MEMBER_JOINED
+  ORGANIZATION_INVITATION
 }

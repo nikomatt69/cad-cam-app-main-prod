@@ -5,7 +5,8 @@ import {
   Square, Flag, CornerDownRight, Hash, X,
   PenTool,
   Upload,
-  Grid
+  Grid,
+  Camera  // Aggiungo l'icona Camera per lo screenshot
 } from 'react-feather';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -16,7 +17,8 @@ export type DrawingToolType =
   | 'highlighter'   // Highlighter
   | 'dimension'     // Dimensioning tool
   | 'text'          // Text insertion tool
-  | 'select';       // Default selection tool
+  | 'select'        // Default selection tool
+  | 'screenshot';   // Screenshot tool
 
 interface DrawingToolbarProps {
   onSelectTool: (tool: DrawingToolType) => void;
@@ -33,6 +35,7 @@ interface DrawingToolbarProps {
   onTextSizeChange: (size: number) => void;
   dimensionStyle: 'linear' | 'angular' | 'radius' | 'diameter';
   onDimensionStyleChange: (style: 'linear' | 'angular' | 'radius' | 'diameter') => void;
+  onTakeScreenshot?: (type: 'full' | 'selection' | 'viewport') => void;
 }
 
 const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
@@ -49,7 +52,8 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
   textSize,
   onTextSizeChange,
   dimensionStyle,
-  onDimensionStyleChange
+  onDimensionStyleChange,
+  onTakeScreenshot = () => {}
 }) => {
   const [expandedTool, setExpandedTool] = useState<DrawingToolType | null>(null);
   
@@ -64,16 +68,16 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
   // Create a tool button component
   const ToolButton = ({ 
     tool, 
-    icon, 
+   
     label 
   }: { 
     tool: DrawingToolType; 
-    icon: React.ReactNode; 
+  
     label: string;
   }) => (
     <div className="relative">
       <button
-        className={`p-2 rounded-md flex items-center justify-center ${
+        className={`p-1 rounded-md flex items-center justify-center ${
           activeTool === tool ? 'bg-blue-500 text-white' : 'bg-white text-gray-800 hover:bg-gray-100'
         }`}
         onClick={() => {
@@ -83,10 +87,11 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
         title={label}
       >
         <div className="flex flex-col items-center">
-          {icon}
+         
           <span className="text-xs mt-1">{label}</span>
           {(tool === 'pen' || tool === 'eraser' || tool === 'highlighter' || 
-            tool === 'text' || tool === 'dimension' || tool === 'colorPicker') && (
+            tool === 'text' || tool === 'dimension' || tool === 'colorPicker' ||
+            tool === 'screenshot') && (
             <ChevronDown size={12} className="ml-1" />
           )}
         </div>
@@ -99,7 +104,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute left-0 top-full mt-1 bg-white rounded-md shadow-lg p-3 z-50 min-w-[200px]"
+            className="absolute left-0 top-full mt-1 bg-white rounded-md shadow-lg p-2 z-50 min-w-[200px]"
           >
             {tool === 'pen' && (
               <div className="space-y-2">
@@ -115,7 +120,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                   />
                   <span className="ml-2 text-sm">{penSize}px</span>
                 </div>
-                <div className="mt-2">
+                <div className="mt-1">
                   <label className="block text-sm font-medium text-gray-700">Color</label>
                   <input
                     type="color"
@@ -124,7 +129,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                     className="mt-1 w-full h-8"
                   />
                 </div>
-                <div className="mt-2">
+                <div className="mt-1">
                   <label className="block text-sm font-medium text-gray-700">Line Style</label>
                   <div className="grid grid-cols-3 gap-2 mt-1">
                     <button className="h-7 border rounded flex items-center justify-center bg-gray-50">
@@ -155,7 +160,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                   />
                   <span className="ml-2 text-sm">{eraserSize}px</span>
                 </div>
-                <div className="mt-2">
+                <div className="mt-1">
                   <label className="block text-sm font-medium text-gray-700">Eraser Type</label>
                   <div className="mt-1 space-y-1">
                     <button className="w-full py-1 px-2 text-left text-sm rounded hover:bg-gray-100 flex items-center">
@@ -185,7 +190,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                   />
                   <span className="ml-2 text-sm">{highlighterSize}px</span>
                 </div>
-                <div className="mt-2">
+                <div className="mt-1">
                   <label className="block text-sm font-medium text-gray-700">Color</label>
                   <input
                     type="color"
@@ -194,7 +199,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                     className="mt-1 w-full h-8"
                   />
                 </div>
-                <div className="mt-2">
+                <div className="mt-1">
                   <label className="block text-sm font-medium text-gray-700">Opacity</label>
                   <div className="flex items-center">
                     <input
@@ -254,7 +259,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                   />
                   <span className="ml-2 text-sm">{textSize}px</span>
                 </div>
-                <div className="mt-2">
+                    <div className="mt-1">
                   <label className="block text-sm font-medium text-gray-700">Font</label>
                   <select className="mt-1 w-full px-2 py-1 border rounded text-sm">
                     <option>Arial</option>
@@ -263,7 +268,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                     <option>Courier New</option>
                   </select>
                 </div>
-                <div className="mt-2">
+                <div className="mt-1">
                   <label className="block text-sm font-medium text-gray-700">Color</label>
                   <input
                     type="color"
@@ -272,7 +277,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                     className="mt-1 w-full h-8"
                   />
                 </div>
-                <div className="mt-2 flex space-x-2">
+                <div className="mt-1 flex space-x-2">
                   <button className="p-1 border rounded hover:bg-gray-100" title="Bold">
                     <span className="font-bold">B</span>
                   </button>
@@ -327,7 +332,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                     <span>Diameter</span>
                   </button>
                 </div>
-                <div className="mt-2">
+                <div className="mt-1">
                   <label className="block text-sm font-medium text-gray-700">Units</label>
                   <select className="mt-1 w-full px-2 py-1 border rounded text-sm">
                     <option>mm</option>
@@ -335,7 +340,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                     <option>inch</option>
                   </select>
                 </div>
-                <div className="mt-2">
+                <div className="mt-1">
                   <label className="block text-sm font-medium text-gray-700">Precision</label>
                   <select className="mt-1 w-full px-2 py-1 border rounded text-sm">
                     <option>0</option>
@@ -343,6 +348,62 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
                     <option>0.00</option>
                     <option>0.000</option>
                   </select>
+                </div>
+              </div>
+            )}
+            
+            {/* Screenshot Tool Options */}
+            {tool === 'screenshot' && (
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">Screenshot Options</label>
+                <div className="flex flex-col space-y-2">
+                  <button
+                    className="flex items-center px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors"
+                    onClick={() => onTakeScreenshot('full')}
+                  >
+                    <div className="mr-2 text-blue-500">
+                      <Camera size={18} />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm font-medium">Full Canvas</div>
+                      <div className="text-xs text-gray-500">Capture entire drawing</div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    className="flex items-center px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors"
+                    onClick={() => onTakeScreenshot('selection')}
+                  >
+                    <div className="mr-2 text-green-500">
+                      <Square size={18} />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm font-medium">Selection</div>
+                      <div className="text-xs text-gray-500">Drag to select an area</div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    className="flex items-center px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors"
+                    onClick={() => onTakeScreenshot('viewport')}
+                  >
+                    <div className="mr-2 text-purple-500">
+                      <Grid size={18} />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm font-medium">Viewport</div>
+                      <div className="text-xs text-gray-500">Current visible area</div>
+                    </div>
+                  </button>
+                </div>
+                
+                  <div className="mt-2 border-t pt-2">
+                  <div className="text-sm text-gray-700">Image Format</div>
+                  <div className="mt-1 flex space-x-2">
+                    <button className="px-2 py-1 text-sm border rounded-md bg-blue-50 text-blue-700">PNG</button>
+                    <button className="px-2 py-1 text-sm border rounded-md hover:bg-gray-50">JPG</button>
+                    <button className="px-2 py-1 text-sm border rounded-md hover:bg-gray-50">SVG</button>
+                  </div>
                 </div>
               </div>
             )}
@@ -354,13 +415,15 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
   
   return (
     <div className="bg-white shadow-md rounded-md p-2 flex  flex-wrap items-center gap-2">
-      <ToolButton tool="select" icon={<MousePointer size={6} />} label="Select" />
-      <ToolButton tool="pen" icon={<PenTool size={6} />} label="Pen" />
-      <ToolButton tool="eraser" icon={<Upload size={6} />} label="Eraser" />
-      <ToolButton tool="colorPicker" icon={<Droplet size={6} />} label="Color" />
-      <ToolButton tool="highlighter" icon={<Edit3 size={6} />} label="Highlight" />
-      <ToolButton tool="dimension" icon={<Grid size={6} />} label="Dimension" />
-      <ToolButton tool="text" icon={<Type size={6} />} label="Text" />
+      <ToolButton tool="select"  label="Select" />
+      <ToolButton tool="pen" label="Pen" />
+      <ToolButton tool="eraser"  label="Eraser" />
+      <ToolButton tool="colorPicker" label="Color" />
+      <ToolButton tool="highlighter"  label="Highlight" />
+      <ToolButton tool="dimension"  label="Dimension" />
+      <ToolButton tool="text"  label="Text" />
+      {/* Nuovo strumento Screenshot */}
+      <ToolButton tool="screenshot"  label="Screenshot" />
       
       {/* Current Color Indicator */}
       <div className="ml-auto flex items-center space-x-2">

@@ -1,3 +1,4 @@
+// src/hooks/useCADKeyboardShortcuts.ts
 import { useEffect, useCallback, useState, useRef } from 'react';
 
 // Define all possible shortcut action types for better type safety
@@ -139,7 +140,14 @@ export interface KeyboardShortcutsOptions extends KeyboardShortcutHandlers {
  */
 export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
+  const [isMac, setIsMac] = useState(false);
   const inputFocusedRef = useRef<boolean>(false);
+  
+  // Detect if user is on Mac
+  useEffect(() => {
+    setIsMac(navigator.platform.toLowerCase().includes('mac') || 
+           navigator.userAgent.toLowerCase().includes('mac'));
+  }, []);
   
   // Check if an input element is currently focused
   useEffect(() => {
@@ -199,6 +207,7 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
       target.getAttribute('contenteditable') === 'true'
     );
   }, [options.ignoredTargets]);
+  
   // Handle keydown events
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Skip if disabled
@@ -210,6 +219,9 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
     // Skip if document is hidden (tab/window not focused)
     if (document.hidden) return;
     
+    // Detect Command key on Mac properly
+    const isModifierKey = isMac ? e.metaKey : e.ctrlKey;
+    
     // Add to pressed keys
     setPressedKeys(prev => {
       const newSet = new Set(prev);
@@ -219,7 +231,7 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
     
     // Log key event if enabled
     if (options.logKeyEvents) {
-      console.log('Key down:', getShortcutString(e));
+      console.log('Key down:', getShortcutString(e), 'isMac:', isMac);
     }
     
     // Check for custom shortcuts first
@@ -243,45 +255,45 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onEscape();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a' && options.onSelectAll) {
+    else if (isModifierKey && e.key.toLowerCase() === 'a' && options.onSelectAll) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onSelectAll();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a' && options.onDeselectAll) {
+    else if (isModifierKey && e.shiftKey && e.key.toLowerCase() === 'a' && options.onDeselectAll) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onDeselectAll();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'i' && options.onInvertSelection) {
+    else if (isModifierKey && e.key.toLowerCase() === 'i' && options.onInvertSelection) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onInvertSelection();
     }
     
     // Clipboard Operations
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c' && options.onCopy) {
+    else if (isModifierKey && e.key.toLowerCase() === 'c' && options.onCopy) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onCopy();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v' && options.onPaste) {
+    else if (isModifierKey && e.key.toLowerCase() === 'v' && options.onPaste) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onPaste();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'x' && options.onCut) {
+    else if (isModifierKey && e.key.toLowerCase() === 'x' && options.onCut) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onCut();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd' && options.onDuplicate) {
+    else if (isModifierKey && e.key.toLowerCase() === 'd' && options.onDuplicate) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onDuplicate();
     }
     
     // History Operations
-    else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && options.onUndo) {
+    else if (isModifierKey && !e.shiftKey && e.key.toLowerCase() === 'z' && options.onUndo) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onUndo();
     }
     else if (
-      ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z') || 
-      ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y')
+      (isModifierKey && e.shiftKey && e.key.toLowerCase() === 'z') || 
+      (isModifierKey && !isMac && e.key.toLowerCase() === 'y')
     ) {
       if (options.onRedo) {
         if (options.preventDefaultForAll !== false) e.preventDefault();
@@ -335,23 +347,23 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
     }
     
     // View Changes
-    else if ((e.ctrlKey || e.metaKey) && e.key === '1' && options.onViewChange) {
+    else if (isModifierKey && e.key === '1' && options.onViewChange) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onViewChange('perspective');
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key === '2' && options.onViewChange) {
+    else if (isModifierKey && e.key === '2' && options.onViewChange) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onViewChange('top');
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key === '3' && options.onViewChange) {
+    else if (isModifierKey && e.key === '3' && options.onViewChange) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onViewChange('front');
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key === '4' && options.onViewChange) {
+    else if (isModifierKey && e.key === '4' && options.onViewChange) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onViewChange('right');
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key === '5' && options.onViewChange) {
+    else if (isModifierKey && e.key === '5' && options.onViewChange) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onViewChange('isometric');
     }
@@ -361,27 +373,27 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onToggleSidebar();
     }
-    else if (e.key.toLowerCase() === 'l' && e.ctrlKey && options.onToggleLayers) {
+    else if (e.key.toLowerCase() === 'l' && isModifierKey && options.onToggleLayers) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onToggleLayers();
     }
-    else if (e.key.toLowerCase() === 'p' && e.ctrlKey && e.altKey && options.onToggleProperties) {
+    else if (e.key.toLowerCase() === 'p' && isModifierKey && e.altKey && options.onToggleProperties) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onToggleProperties();
     }
-    else if (e.key.toLowerCase() === 't' && e.ctrlKey && options.onToggleToolbar) {
+    else if (e.key.toLowerCase() === 't' && isModifierKey && options.onToggleToolbar) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onToggleToolbar();
     }
-    else if (e.key.toLowerCase() === 'g' && e.ctrlKey && options.onToggleGrid) {
+    else if (e.key.toLowerCase() === 'g' && isModifierKey && options.onToggleGrid) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onToggleGrid();
     }
-    else if (e.key.toLowerCase() === 'x' && e.ctrlKey && e.altKey && options.onToggleSnap) {
+    else if (e.key.toLowerCase() === 'x' && isModifierKey && e.altKey && options.onToggleSnap) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onToggleSnap();
     }
-    else if (e.key.toLowerCase() === 'w' && e.ctrlKey && e.altKey && options.onToggleWireframe) {
+    else if (e.key.toLowerCase() === 'w' && isModifierKey && e.altKey && options.onToggleWireframe) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onToggleWireframe();
     }
@@ -391,7 +403,7 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
     }
     
     // Layer Operations
-    else if (e.key.toLowerCase() === 'n' && e.shiftKey && e.ctrlKey && options.onCreateLayer) {
+    else if (e.key.toLowerCase() === 'n' && e.shiftKey && isModifierKey && options.onCreateLayer) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onCreateLayer();
     }
@@ -439,59 +451,59 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
     }
     
     // Distribution Operations
-    else if (e.key.toLowerCase() === 'h' && e.ctrlKey && e.shiftKey && options.onDistribute) {
+    else if (e.key.toLowerCase() === 'h' && isModifierKey && e.shiftKey && options.onDistribute) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onDistribute('horizontal');
     }
-    else if (e.key.toLowerCase() === 'v' && e.ctrlKey && e.shiftKey && options.onDistribute) {
+    else if (e.key.toLowerCase() === 'v' && isModifierKey && e.shiftKey && options.onDistribute) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onDistribute('vertical');
     }
     
     // Model Operations
-    else if (e.key.toLowerCase() === 'g' && e.ctrlKey && !e.shiftKey && options.onGroupSelected) {
+    else if (e.key.toLowerCase() === 'g' && isModifierKey && !e.shiftKey && options.onGroupSelected) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onGroupSelected();
     }
-    else if (e.key.toLowerCase() === 'g' && e.ctrlKey && e.shiftKey && options.onUngroupSelected) {
+    else if (e.key.toLowerCase() === 'g' && isModifierKey && e.shiftKey && options.onUngroupSelected) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onUngroupSelected();
     }
-    else if (e.key === 'u' && e.ctrlKey && e.altKey && options.onBoolean) {
+    else if (e.key === 'u' && isModifierKey && e.altKey && options.onBoolean) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onBoolean('union');
     }
-    else if (e.key === 's' && e.ctrlKey && e.altKey && options.onBoolean) {
+    else if (e.key === 's' && isModifierKey && e.altKey && options.onBoolean) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onBoolean('subtract');
     }
-    else if (e.key === 'i' && e.ctrlKey && e.altKey && options.onBoolean) {
+    else if (e.key === 'i' && isModifierKey && e.altKey && options.onBoolean) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onBoolean('intersect');
     }
     
     // File Operations
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && !e.shiftKey && options.onSave) {
+    else if (isModifierKey && e.key.toLowerCase() === 's' && !e.shiftKey && options.onSave) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onSave();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && e.shiftKey && options.onSaveAs) {
+    else if (isModifierKey && e.key.toLowerCase() === 's' && e.shiftKey && options.onSaveAs) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onSaveAs();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o' && options.onOpen) {
+    else if (isModifierKey && e.key.toLowerCase() === 'o' && options.onOpen) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onOpen();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n' && options.onNew) {
+    else if (isModifierKey && e.key.toLowerCase() === 'n' && options.onNew) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onNew();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'i' && options.onImport) {
+    else if (isModifierKey && e.key.toLowerCase() === 'i' && options.onImport) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onImport();
     }
-    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e' && options.onExport) {
+    else if (isModifierKey && e.key.toLowerCase() === 'e' && options.onExport) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onExport();
     }
@@ -565,19 +577,19 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onHelp();
     }
-    else if (e.key === 'F2' && options.onShowShortcuts) {
+    else if ((e.key === '?' || e.key === 'F2') && options.onShowShortcuts) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onShowShortcuts();
     }
-    else if (e.key.toLowerCase() === 'd' && e.ctrlKey && e.altKey && options.onToggleDarkMode) {
+    else if (e.key.toLowerCase() === 'd' && isModifierKey && e.altKey && options.onToggleDarkMode) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onToggleDarkMode();
     }
-    else if (e.key.toLowerCase() === ',' && e.ctrlKey && options.onPreferences) {
+    else if (e.key.toLowerCase() === ',' && isModifierKey && options.onPreferences) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onPreferences();
     }
-    else if (e.key.toLowerCase() === 'f' && e.ctrlKey && options.onSearch) {
+    else if (e.key.toLowerCase() === 'f' && isModifierKey && options.onSearch) {
       if (options.preventDefaultForAll !== false) e.preventDefault();
       options.onSearch();
     }
@@ -585,7 +597,8 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
   }, [
     options,
     getShortcutString,
-    shouldIgnoreTarget
+    shouldIgnoreTarget,
+    isMac
   ]);
   
   // Handle keyup events
@@ -629,6 +642,9 @@ export const useCADKeyboardShortcuts = (options: KeyboardShortcutsOptions) => {
     isShortcutPressed: (keys: string[]) => {
       const lowerKeys = keys.map(k => k.toLowerCase());
       return lowerKeys.every(k => pressedKeys.has(k));
-    }
+    },
+    
+    // Platform information
+    isMacOS: isMac
   };
 };

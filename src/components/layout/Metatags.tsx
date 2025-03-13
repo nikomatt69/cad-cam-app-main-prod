@@ -25,7 +25,7 @@ export default function MetaTags({
   canonicalUrl,
 }: MetaTagsProps) {
   const router = useRouter();
-  const siteUrl ='https://cadcamfun.xyz';
+  const siteUrl = process.env.NEXTAUTH_URL ;
   const currentPath = router.asPath;
   const fullUrl = canonicalUrl || `${siteUrl}${currentPath}`;
   const fullTitle = `${title}${title === 'CAD/CAM FUN' ? '' : ' | CAD/CAM FUN'}`;

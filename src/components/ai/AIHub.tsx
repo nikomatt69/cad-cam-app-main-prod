@@ -62,7 +62,7 @@ const AIHub: React.FC<AIHubProps> = ({
   );
 
   const renderModelSelector = () => (
-    <div className="mb-4">
+    <div className="mb-4 flex flex-col">
       <select
         value={state.currentModel}
         onChange={(e) => dispatch({ 
@@ -134,7 +134,7 @@ const AIHub: React.FC<AIHubProps> = ({
       {renderModelSelector()}
       {/* Collapse/Expand button */}
       <button
-        className="absolute -left-3 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white rounded-full p-1 shadow-md z-10"
+        className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white rounded-full p-1 shadow-md z-10"
         onClick={() => setIsOpen(!isOpen)}
         title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
       >

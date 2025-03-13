@@ -29,7 +29,7 @@ export default async function handler(
     }
 
     const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
     });
 
     const response = await anthropic.messages.create({

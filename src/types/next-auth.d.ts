@@ -4,7 +4,7 @@ import { JWT } from 'next-auth/jwt';
 
 declare module 'next-auth' {
   // Define specific role types for proper type checking
-  type UserRole = 'user' | 'admin' | 'editor' | 'viewer';
+  type UserRole = 'user' | 'admin' | 'editor' | 'viewer' | 'manager' | 'member';
 
   interface Session {
     user: {
@@ -18,8 +18,9 @@ declare module 'next-auth' {
       lastLogin?: string;  // Timestamp of last login
     };
     expires: string;  // Session expiration timestamp
+    token?: string;  // JWT token for WebSocket authentication
   }
-  
+
   interface User {
     id: string;
     name?: string | null;
@@ -40,5 +41,7 @@ declare module 'next-auth/jwt' {
     exp?: number;  // Expiration timestamp
     iat?: number;  // Issued at timestamp
     jti?: string;  // JWT ID for token tracking
+    token?: string;  // Serialized JWT string for WebSocket authentication
+    organizations?: { organizationId: string; role: string }[];  // User's organizations
   }
 }

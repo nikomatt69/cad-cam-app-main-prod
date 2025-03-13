@@ -74,13 +74,21 @@ export const nextAuthConfig: NextAuthOptions = {
         token.id = user.id;
         token.roles = user.roles;
       }
+      
+      // Genera un token codificato che possiamo utilizzare per i WebSocket
+      // Il token è già firmato internamente da NextAuth, quindi possiamo usarlo direttamente
+      token.token = JSON.stringify(token);
+      
       return token;
     },
     
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        session.user.roles as string[] 
+        session.user.roles as string[];
+        
+        // Includi il token JWT nella sessione per l'utilizzo nei WebSockets
+        session.token = token.token;
       }
       return session;
     },

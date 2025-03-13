@@ -70,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'x-api-key': process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
           'anthropic-version': '2023-06-01'
         }
       }

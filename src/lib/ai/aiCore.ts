@@ -45,7 +45,7 @@ export class AICore {
     }
     
     this.client = new Anthropic({
-      apiKey: this.config.apiKey || 'dummy-key-for-initialization',
+      apiKey: this.config.apiKey || process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
       dangerouslyAllowBrowser: this.config.allowBrowser
     });
   }

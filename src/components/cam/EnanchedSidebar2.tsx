@@ -64,6 +64,7 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
   const [selectedLibraryComponent, setSelectedLibraryComponent] = useState<string | null>(null);
   const [previewComponent, setPreviewComponent] = useState<any | null>(null);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const { data: session } = useSession();
   const { viewMode, setViewMode, gridVisible, toggleGrid, axisVisible, toggleAxis, activeTool } = useCADStore();
@@ -570,13 +571,29 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
       </div>
       
       {/* Navigation from the original sidebar */}
-      <div className="mt-2 p-2 overflow-y-auto rounded-xl border-t border-gray-200">
-        <div className="text-xs rounded-xl text-gray-500 mb-2 px-3">
-          {isOpen ? "Quick Navigation" : ""}
-        </div>
-        <div className="space-y-1 scrollbar overflow-y-auto">
-          {navigation.slice(0, isOpen ? undefined : 0).map(item => renderNavItem(item))}
-        </div>
+      <div className="mt-2 p-2 overflow-y-auto  rounded-xl border-t border-gray-200">
+        <button 
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-left rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <span className="text-xs text-gray-500">
+            {isOpen ? "Quick Navigation" : ""}
+          </span>
+          <svg 
+            className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`} 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        {isDropdownOpen && (
+          <div className="space-y-1 scrollbar overflow-y-auto mt-2">
+            {navigation.slice(0, isOpen ? undefined : 0).map(item => renderNavItem(item))}
+          </div>
+        )}
       </div>
       
       {/* Toggle sidebar button */}

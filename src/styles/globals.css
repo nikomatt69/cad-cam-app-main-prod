@@ -80,6 +80,17 @@
     }
   }
   
+  .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .overflow-wrap-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
   /* Stili per garantire che lo scorrimento funzioni bene su iOS */
   .sidebar-scrollable {
     -webkit-overflow-scrolling: touch;

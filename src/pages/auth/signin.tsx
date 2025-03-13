@@ -5,6 +5,7 @@ import Head from 'next/head';
 import MetaTags from '@/src/components/layout/Metatags';
 import Navbar from '@/src/components/layout/Navbar';
 import Footer from '@/src/components/ui/Footer';
+import Layout from '@/src/components/layout/Layout';
 
 export default function SignIn() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function SignIn() {
         title="CAM/CAM FUN LOGIN" 
      
       />
-      
+      <Navbar/>
       <div className="min-h-screen flex items-center justify-center bg-gray  py-8 sm:p-1 lg:px-8">
         <div className="max-w-lg w-full border-2 flex-col flex rounded-xl xs:p-0 p-20 sm:p-3 space-y-8">
           <div className='  items-center'>
@@ -136,7 +137,7 @@ export default function SignIn() {
       
         
       </div>
-      
+      <Footer/>
     </>
   );
 }
