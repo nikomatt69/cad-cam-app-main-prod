@@ -36,8 +36,8 @@ export default function MetaTags({
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords} />
-      <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=2" />
-      
+      <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=1" />
+    
       {/* Canonical Link */}
       <link rel="canonical" href={fullUrl} />
       
