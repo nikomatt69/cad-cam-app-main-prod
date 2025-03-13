@@ -1,7 +1,6 @@
 // src/lib/canvas/view-cube.ts - ViewCube controller for 3D navigation
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
 // Define cube face constants
 export const CUBE_FACES = {
   FRONT: 'front',
