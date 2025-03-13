@@ -68,11 +68,9 @@ const AIModal: FC<Props> = () => {
             autoFocus={false}
             className="max-w-lg overflow-y-auto overflow-y-hidden   bg-white dark:bg-gray-900"
           >
-            <div className="center-items z-100  flex w-full overflow-y-auto border-0 bg-white pt-4 dark:bg-gray-900/70">
-            <UnifiedTextToCAD />
-            </div>
             
-            <div />
+            <UnifiedTextToCAD />
+           
           </ModalBody>
         </ModalContent>
       </Modal>

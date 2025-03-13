@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import { Sun, Moon, Bell, Settings, User, LogOut, Menu, X } from 'react-feather';
 import useUserProfileStore from 'src/store/userProfileStore';
+import NotificationCenter from '../notifications/NotificationCenter';
 
 const Navbar = () => {
   const router = useRouter();
@@ -12,20 +13,23 @@ const Navbar = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const { profileImage } = useUserProfileStore(); // Get image from global store
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   // Close any open dropdowns when clicking outside
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (profileDropdownOpen) {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        profileDropdownOpen && 
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node) &&
+        event.target instanceof HTMLElement &&
+        !event.target.closest('#user-menu')
+      ) {
         setProfileDropdownOpen(false);
       }
-    };
-    
-    // Only add the event listener if the dropdown is open
-    if (profileDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
     }
-    
+
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -91,10 +95,10 @@ const Navbar = () => {
 
             {/* Notifications - hide on smallest screens */}
             <button
-              className="hidden sm:inline-flex items-center justify-center p-1 sm:p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
+              className=" sm:inline-flex items-center justify-center p-1 sm:p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
               aria-label="View notifications"
             >
-              <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+               <NotificationCenter />
             </button>
 
             {/* Settings - hide on smallest screens */}
@@ -136,6 +140,7 @@ const Navbar = () => {
               {/* Dropdown menu */}
               {profileDropdownOpen && (
                 <div
+                  ref={dropdownRef}
                   className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-600 ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
                   role="menu"
                   aria-orientation="vertical"
@@ -150,7 +155,6 @@ const Navbar = () => {
                     href="/profile"
                     className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                     role="menuitem"
-                    onClick={() => setProfileDropdownOpen(false)}
                   >
                     <User size={16} className="mr-2" />
                     My Profile
@@ -160,7 +164,6 @@ const Navbar = () => {
                     href="/settings"
                     className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                     role="menuitem"
-                    onClick={() => setProfileDropdownOpen(false)}
                   >
                     <Settings size={16} className="mr-2" />
                     Settings

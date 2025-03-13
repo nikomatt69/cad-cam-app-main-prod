@@ -372,7 +372,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({ isOpen, setIsOpen }) 
                     <img
                       src={profileImage || session?.user?.image || ''}
                       alt="Profile"
-                      className="h-full w-full object-cover"
+                      className="h-10 w-10 object-cover"
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center bg-blue-100 dark:bg-blue-900">
@@ -386,9 +386,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({ isOpen, setIsOpen }) 
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {session.user?.name}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {session.user?.email}
-                </p>
+                
               </div>
             </div>
           </div>
