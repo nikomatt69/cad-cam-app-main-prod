@@ -194,7 +194,7 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
             className="flex-1 overflow-y-auto dark:bg-gray-900 dark:text-white scrollbar-thin bg-gray-50 rounded-xl scrollbar-thumb-gray-300 scrollbar-track-transparent" 
             style={{ scrollBehavior: 'smooth' }}
           >
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0" />
+            
             <div className={`${contentWidthClass} mx-auto mb-1 rounded-xl overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6`}>
               {children}
             </div>
