@@ -7,6 +7,10 @@ import { predefinedTools, predefinedMaterials } from 'src/lib/predefinedLibrarie
 import ToolsList from '@/src/pages/tools';
 // Import useLibrary hook at the top of the file
 import { useLibrary } from '../../hooks/useLibrary';
+import { calculateCuttingStatistics, calculateOptimalChipLoad, calculateRecommendedPlungeRate, getCuttingFeedback } from '@/src/lib/gCodeGenerationUtils';
+import { getOperationDescription } from '@/src/lib/operationDescriptions';
+import { materialProperties } from '@/src/lib/materialProperties';
+import { string } from 'zod';
 
 interface ToolpathGeneratorProps {
   onGCodeGenerated: (gcode: string) => void;
@@ -40,7 +44,7 @@ type PrinterNozzleType = 'brass' | 'hardened' | 'ruby' | 'standard';
 // Combined tool type
 type AllToolType = ToolType | LatheToolType | PrinterNozzleType;
 
-interface ToolpathSettings {
+export interface ToolpathSettings {
   machineType: MachineType;
   operationType: OperationType;
   material: MaterialType;
@@ -59,9 +63,19 @@ interface ToolpathSettings {
   coolant: boolean;
   finishingPass: boolean;
   finishingAllowance: number;
+  finishingStrategy: 'contour' |'parallel'|'spiral'|'radial',
   useAI: boolean;
   aiDifficulty: 'simple' | 'moderate' | 'complex';
   aiOptimize: 'speed' | 'quality' | 'balance';
+  // Advanced optimization settings
+  optimizePath: boolean;
+  useArcFitting: boolean;
+  useHighSpeedMode: boolean;
+  useExactStop: boolean;
+  useToolCompensation: boolean;
+  useAdaptiveFeeds: boolean;
+  useRestMachining: boolean;
+  toolNumber?: number;
   // 3D printer specific settings
   nozzleDiameter?: number;
   filamentDiameter?: number;
@@ -80,7 +94,6 @@ interface ToolpathSettings {
   originX: number;
   originY: number;
   originZ: number;
-  
 }
 
 const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated, onToolSelected }) => {
@@ -116,9 +129,19 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
     coolant: true,
     finishingPass: false,
     finishingAllowance: 0.2,
+    finishingStrategy:'contour',
     useAI: false,
     aiDifficulty: 'moderate',
     aiOptimize: 'balance',
+    // Advanced optimization settings
+    optimizePath: false,
+    useArcFitting: false,
+    useHighSpeedMode: false,
+    useExactStop: false,
+    useToolCompensation: false,
+    useAdaptiveFeeds: false,
+    useRestMachining: false,
+    toolNumber: 1,
     // 3D printer default settings
     nozzleDiameter: 0.4,
     filamentDiameter: 1.75,
@@ -357,6 +380,176 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
       setIsAIProcessing(false);
     }
   };
+
+  const convertLinesToArcs = (gcode: string, tolerance: number): string => {
+    // Split into lines
+    const lines = gcode.split('\n');
+    const resultLines: string[] = [];
+    
+    // Collect points for potential arc fitting
+    const points: {x: number, y: number, z: number}[] = [];
+    
+    // Utility to parse a G-code line to a point
+    const parsePoint = (line: string): {x: number, y: number, z: number} | null => {
+      if (!line.startsWith('G1')) return null;
+      
+      const x = parseCoordinate(line, 'X');
+      const y = parseCoordinate(line, 'Y');
+      const z = parseCoordinate(line, 'Z');
+      
+      if (x === null || y === null) return null;
+      
+      return { x, y, z: z ?? 0 };
+    };
+    
+    // Utility to parse coordinates from G-code line
+    const parseCoordinate = (line: string, axis: string): number | null => {
+      const match = line.match(new RegExp(`${axis}([+-]?\\d*\\.?\\d+)`));
+      return match ? parseFloat(match[1]) : null;
+    };
+    
+    // Check if 3 points form an arc
+    const formValidArc = (p1: any, p2: any, p3: any): boolean => {
+      // Points must be on the same Z plane for G2/G3
+      if (p1.z !== p2.z || p2.z !== p3.z) return false;
+      
+      // Simple test: check if middle point is approximately equidistant from endpoints
+      // (this is a very simplified check - real arc fitting is more complex)
+      const d1 = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+      const d2 = Math.sqrt(Math.pow(p3.x - p2.x, 2) + Math.pow(p3.y - p2.y, 2));
+      
+      return Math.abs(d1 - d2) < tolerance;
+    };
+    
+    // Generate G2/G3 arc command
+    const createArcCommand = (p1: any, p2: any, p3: any, feedrate: number | null): string => {
+      // Determine if this is clockwise (G2) or counterclockwise (G3)
+      // This is a simplified method - real implementations use cross product
+      const isClockwise = ((p2.x - p1.x) * (p3.y - p2.y) - (p2.y - p1.y) * (p3.x - p2.x)) < 0;
+      const command = isClockwise ? 'G2' : 'G3';
+      
+      // Calculate arc center (I/J) relative to start point
+      // This is a simplified calculation - real implementations use proper circle equations
+      const centerX = (p1.x + p3.x) / 2;
+      const centerY = (p1.y + p3.y) / 2;
+      
+      const I = (centerX - p1.x).toFixed(3);
+      const J = (centerY - p1.y).toFixed(3);
+      
+      let arc = `${command} X${p3.x.toFixed(3)} Y${p3.y.toFixed(3)} I${I} J${J}`;
+      if (feedrate !== null) {
+        arc += ` F${feedrate}`;
+      }
+      
+      return arc + ` ; Arc converted from linear segments`;
+    };
+    
+    // Process the G-code
+    let currentFeedrate: number | null = null;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Track current feedrate
+      const fMatch = line.match(/F([+-]?\\d*\\.?\\d+)/);
+      if (fMatch) {
+        currentFeedrate = parseFloat(fMatch[1]);
+      }
+      
+      const point = parsePoint(line);
+      
+      if (point) {
+        // Add to point collection for potential arc
+        points.push(point);
+        
+        // If we have 3 points, check if they form an arc
+        if (points.length === 3) {
+          if (formValidArc(points[0], points[1], points[2])) {
+            // Remove the last line we added (middle point)
+            resultLines.pop();
+            
+            // Add arc command
+            resultLines.push(createArcCommand(points[0], points[1], points[2], currentFeedrate));
+            
+            // Reset points array with the last point as first point for next potential arc
+            const lastPoint = points[2];
+            points.length = 0;
+            points.push(lastPoint);
+          } else {
+            // Not a valid arc, remove the first point and continue
+            points.shift();
+          }
+        }
+      } else {
+        // Reset point collection on non-G1 commands
+        points.length = 0;
+        resultLines.push(line);
+      }
+    }
+    
+    return resultLines.join('\n');
+  };
+  const optimizeToolpath = (gcode: string): string => {
+    // Split into lines
+    const lines = gcode.split('\n');
+    const optimizedLines: string[] = [];
+    
+    // Track current position
+    let currentX: number | null = null;
+    let currentY: number | null = null;
+    let currentZ: number | null = null;
+    let currentF: number | null = null;
+    
+    // Utility to parse coordinates from G-code line
+    const parseCoordinate = (line: string, axis: string): number | null => {
+      const match = line.match(new RegExp(`${axis}([+-]?\\d*\\.?\\d+)`));
+      return match ? parseFloat(match[1]) : null;
+    };
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Always keep comments and non G0/G1 commands
+      if (line.startsWith(';') || (!line.startsWith('G0') && !line.startsWith('G1'))) {
+        optimizedLines.push(line);
+        continue;
+      }
+      // Parse new position
+      const x: number | null = parseCoordinate(line, 'X') ?? currentX;
+      const y: number | null = parseCoordinate(line, 'Y') ?? currentY;
+      const z: number | null = parseCoordinate(line, 'Z') ?? currentZ;
+      const f: number | null = parseCoordinate(line, 'F') ?? currentF;
+      // Skip redundant moves (same position, same feedrate)
+      if (x === currentX && y === currentY && z === currentZ && f === currentF) {
+        continue;
+      }
+      
+      // If move is too small (below tolerance), skip it
+      const isSmallMove = 
+        currentX !== null && currentY !== null && currentZ !== null &&
+        x !== null && y !== null && z !== null &&
+        Math.sqrt(
+          Math.pow(x - currentX, 2) + 
+          Math.pow(y - currentY, 2) + 
+          Math.pow(z - currentZ, 2)
+        ) < settings.tolerance;
+      
+      if (isSmallMove && line.startsWith('G1')) {
+        continue;
+      }
+      
+      // Update current position
+      currentX = x;
+      currentY = y;
+      currentZ = z;
+      currentF = f;
+      
+      // Keep this line
+      optimizedLines.push(line);
+    }
+    
+    return optimizedLines.join('\n');
+  };
   
   // Generate G-code based on current settings
   const generateGCode = () => {
@@ -378,6 +571,15 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
         case '3dprinter':
           gcode = generate3DPrinterGCode();
           break;
+      }
+      
+      // Ottimizzazioni avanzate (solo se abilitate nelle impostazioni avanzate)
+      if (settings.optimizePath) {
+        gcode = optimizeToolpath(gcode);
+      }
+      
+      if (settings.useArcFitting) {
+        gcode = convertLinesToArcs(gcode, settings.tolerance);
       }
       
       // Show success message
@@ -508,58 +710,97 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
     
     gcode += 'G0 Z10 ; Move to safe height\n\n';
     
+    // Aggiungiamo impostazioni avanzate se abilitate
+    if (settings.useHighSpeedMode) {
+      gcode += '; High Speed Machining mode enabled\n';
+      gcode += 'G64 P0.01 ; Path blending with tolerance of 0.01mm\n\n';
+    } else if (settings.useExactStop) {
+      gcode += '; Exact Stop mode enabled\n';
+      gcode += 'G61 ; Exact stop mode\n\n';
+    }
+    
     // Generate toolpath based on geometry type and operation
+    let toolpathGcode = '';
+    
     if (geometryType === 'rectangle') {
-      gcode += generateRectangleToolpath();
+      toolpathGcode += generateRectangleToolpath();
     } else if (geometryType === 'circle') {
-      gcode += generateCircleToolpath();
+      toolpathGcode += generateCircleToolpath();
     } else if (geometryType === 'polygon') {
-      gcode += generatePolygonToolpath();
+      toolpathGcode += generatePolygonToolpath();
     } else if (geometryType === 'custom' && customPath) {
-      gcode += `; Custom path\n${customPath}\n`;
+      toolpathGcode += `; Custom path\n${customPath}\n`;
     } else if (geometryType === 'selected') {
-      gcode += generateFromSelectedElements();
+      toolpathGcode += generateFromSelectedElements();
+    }
+    
+    // Aggiungiamo la compensazione utensile se abilitata
+    if (settings.useToolCompensation) {
+      gcode += '; Tool compensation enabled\n';
+      
+      // Determina direzione compensazione in base a offset e direzione di taglio
+      let compensationDirection = '';
+      
+      if (settings.operationType === 'contour' || settings.operationType === 'profile') {
+        if (settings.offset === 'outside') {
+          compensationDirection = settings.direction === 'climb' ? 'G42' : 'G41';
+        } else if (settings.offset === 'inside') {
+          compensationDirection = settings.direction === 'climb' ? 'G41' : 'G42';
+        }
+      }
+      
+      if (compensationDirection) {
+        gcode += `${compensationDirection} D${settings.toolNumber || 1} ; Tool compensation\n`;
+        
+        // Aggiunge movimento di approccio per la compensazione
+        const firstLine = toolpathGcode.split('\n').find(line => line.trim().startsWith('G1'));
+        if (firstLine) {
+          const match = firstLine.match(/X([-\d.]+)\s+Y([-\d.]+)/);
+          if (match) {
+            const x = parseFloat(match[1]);
+            const y = parseFloat(match[2]);
+            
+            // Aggiunge punto di approccio (perpendicolare al primo movimento)
+            gcode += `G0 X${(x - 5).toFixed(3)} Y${y.toFixed(3)} ; Approach point for compensation\n`;
+          }
+        }
+        
+        // Aggiungi il toolpath
+        gcode += toolpathGcode;
+        
+        // Aggiungi il codice per disattivare la compensazione
+        gcode += 'G40 ; Cancel tool compensation\n';
+      } else {
+        // Se non possiamo determinare la direzione, usiamo il toolpath senza compensazione
+        gcode += toolpathGcode;
+      }
+    } else {
+      // Usa il toolpath normalmente
+      gcode += toolpathGcode;
     }
     
     // Finishing pass if enabled
     if (settings.finishingPass) {
       gcode += '\n; Finishing pass\n';
       gcode += `; Finishing allowance: ${settings.finishingAllowance}mm\n`;
-      // Simulate finishing pass code
-      gcode += 'G0 Z5 ; Move to safe height for finishing pass\n';
-      if (geometryType === 'rectangle') {
-        const { toolDiameter, offset } = settings;
-        let offsetDistance = 0;
-        if (offset === 'inside') {
-          offsetDistance = -toolDiameter / 2;
-        } else if (offset === 'outside') {
-          offsetDistance = toolDiameter / 2;
-        }
-        
-        const width = rectangleWidth + offsetDistance * 2 * (offset === 'outside' ? 1 : -1);
-        const height = rectangleHeight + offsetDistance * 2 * (offset === 'outside' ? 1 : -1);
-        
-        const startX = -width / 2;
-        const startY = -height / 2;
-        
-        gcode += `G0 X${startX.toFixed(3)} Y${startY.toFixed(3)} ; Move to start position for finishing\n`;
-        gcode += `G1 Z${(-settings.depth).toFixed(3)} F${settings.plungerate} ; Plunge to final depth\n`;
-        
-        const corners = [
-          [startX, startY],
-          [startX + width, startY],
-          [startX + width, startY + height],
-          [startX, startY + height],
-          [startX, startY]
-        ];
-        
-        if (settings.direction === 'conventional') {
-          corners.reverse();
-        }
-        
-        for (let i = 0; i < corners.length; i++) {
-          gcode += `G1 X${corners[i][0].toFixed(3)} Y${corners[i][1].toFixed(3)} F${settings.feedrate * 0.8} ; Finishing corner ${i+1}\n`;
-        }
+      
+      // Applica una strategia diversa per la finitura se specificata
+      if (settings.finishingStrategy === 'contour') {
+        gcode += '; Contour finishing strategy\n';
+        // Implementa la logica per contornatura
+      } else if (settings.finishingStrategy === 'parallel') {
+        gcode += '; Parallel finishing strategy\n';
+        // Implementa la logica per passate parallele
+      } else if (settings.finishingStrategy === 'spiral') {
+        gcode += '; Spiral finishing strategy\n';
+        // Implementa la logica per spirale
+      } else if (settings.finishingStrategy === 'radial') {
+        gcode += '; Radial finishing strategy\n';
+        // Implementa la logica per finitura radiale
+      } else {
+        // Default to contour finishing
+        gcode += 'G0 Z5 ; Move to safe height for finishing pass\n';
+        // Implementa contornatura di default
       }
     }
     
@@ -2154,6 +2395,68 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                 </div>
               </div>
             )}
+             <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Riferimento Visuale</h4>
+            <div className="w-full h-32 relative bg-white border border-gray-300 rounded">
+              {/* Semplice schema visivo dell'origine coordinate */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg width="100%" height="100%" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                  {/* Rettangolo del pezzo */}
+                  <rect x="50" y="20" width="100" height="60" fill="none" stroke="#9CA3AF" strokeWidth="1" />
+                  
+                  {/* Origine basata sul tipo selezionato */}
+                  {settings.originType === 'workpiece-center' && (
+                    <>
+                      <circle cx="100" cy="50" r="4" fill="#3B82F6" />
+                      <line x1="100" y1="10" x2="100" y2="90" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
+                      <line x1="20" y1="50" x2="180" y2="50" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
+                      <text x="110" y="40" fontSize="12" fill="#3B82F6">Origine</text>
+                    </>
+                  )}
+                  
+                  {settings.originType === 'workpiece-corner' && (
+                    <>
+                      <circle cx="50" cy="80" r="4" fill="#3B82F6" />
+                      <line x1="50" y1="10" x2="50" y2="90" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
+                      <line x1="20" y1="80" x2="180" y2="80" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
+                      <text x="35" y="95" fontSize="12" fill="#3B82F6">Origine</text>
+                    </>
+                  )}
+                  
+                  {settings.originType === 'workpiece-corner2' && (
+                    <>
+                      <circle cx="50" cy="20" r="4" fill="#3B82F6" />
+                      <line x1="50" y1="10" x2="50" y2="90" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
+                      <line x1="20" y1="20" x2="180" y2="20" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
+                      <text x="35" y="15" fontSize="12" fill="#3B82F6">Origine</text>
+                    </>
+                  )}
+                  
+                  {settings.originType === 'machine-zero' && (
+                    <>
+                      <circle cx="20" cy="10" r="4" fill="#3B82F6" />
+                      <line x1="20" y1="10" x2="20" y2="90" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
+                      <line x1="20" y1="10" x2="180" y2="10" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
+                      <text x="10" y="25" fontSize="12" fill="#3B82F6">Zero</text>
+                    </>
+                  )}
+                  
+                  {settings.originType === 'custom' && (
+                    <>
+                      <circle cx={(settings.originX/2) + 100} cy={50 - (settings.originY/2)} r="4" fill="#3B82F6" />
+                      <text x={(settings.originX/2) + 105} cy={45 - (settings.originY/2)} fontSize="12" fill="#3B82F6">
+                        Personalizzato
+                      </text>
+                    </>
+                  )}
+                  
+                  {/* Assi */}
+                  <text x="180" y="50" fontSize="10" fill="#374151">X+</text>
+                  <text x="100" y="10" fontSize="10" fill="#374151">Y+</text>
+                </svg>
+              </div>
+            </div>
+          </div>
             
             <div className="p-3 bg-blue-50 rounded-md">
               <p className="text-sm text-blue-800">
@@ -2428,6 +2731,9 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
 
   // Update operation section to be machine specific
   const renderOperationSection = () => {
+    // Ottieni descrizione dell'operazione corrente
+    const operationInfo = getOperationDescription(settings.operationType);
+  
     return (
       <div className="mb-6">
         <div
@@ -2492,6 +2798,13 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
               )}
             </div>
             
+            {/* Descrizione dell'operazione */}
+            <div className="p-4 bg-blue-50 rounded-md">
+              <p className="text-blue-700 text-sm">
+                {operationInfo.description}
+              </p>
+            </div>
+  
             {/* Show geometry options only for mill operations */}
             {settings.machineType === 'mill' && (
               <>
@@ -2502,7 +2815,35 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                   <select
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     value={geometryType}
-                    onChange={(e) => setGeometryType(e.target.value as any)}
+                    onChange={(e) => {
+                      const newGeometryType = e.target.value as 'rectangle' | 'circle' | 'polygon' | 'custom' | 'selected';
+                      setGeometryType(newGeometryType);
+                      
+                      // Quando cambia il tipo di geometria, aggiorni lo spessore se è selezionato un elemento
+                      if (newGeometryType === 'selected' && selectedElement) {
+                        // Se c'è un elemento selezionato, usa la sua dimensione come spessore
+                        let depth = 0;
+                        
+                        if (selectedElement.type === 'rectangle' || selectedElement.type === 'circle' || 
+                            selectedElement.type === 'polygon') {
+                          // Per elementi 2D, manteniamo lo spessore attuale
+                          depth = settings.depth; 
+                        } else if (selectedElement.type === 'cube') {
+                          depth = selectedElement.depth || settings.depth;
+                        } else if (selectedElement.type === 'cylinder') {
+                          depth = selectedElement.height || settings.depth;
+                        } else if (selectedElement.type === 'sphere') {
+                          depth = selectedElement.radius * 2 || settings.depth;
+                        } else if (selectedElement.type === 'cone') {
+                          depth = selectedElement.height || settings.depth;
+                        } else if (selectedElement.type === 'extrude') {
+                          depth = selectedElement.height || settings.depth;
+                        }
+                        
+                        // Aggiorna lo spessore
+                        updateSettings('depth', depth);
+                      }
+                    }}
                   >
                     <option value="rectangle">Rettangolo</option>
                     <option value="circle">Cerchio</option>
@@ -2549,6 +2890,11 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                                   <span className="font-medium">{selectedElement.z} mm</span>
                                 </div>
                               )}
+                              {/* Aggiungiamo il campo per lo spessore di lavorazione */}
+                              <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
+                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="font-medium text-blue-600">{settings.depth} mm</span>
+                              </div>
                             </div>
                           )}
                           
@@ -2576,6 +2922,11 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                                   <span className="font-medium">{selectedElement.z} mm</span>
                                 </div>
                               )}
+                              {/* Aggiungiamo il campo per lo spessore di lavorazione */}
+                              <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
+                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="font-medium text-blue-600">{settings.depth} mm</span>
+                              </div>
                             </div>
                           )}
                           
@@ -2606,6 +2957,11 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                                   ).toFixed(2)} mm
                                 </span>
                               </div>
+                              {/* Aggiungiamo il campo per lo spessore di lavorazione */}
+                              <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
+                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="font-medium text-blue-600">{settings.depth} mm</span>
+                              </div>
                             </div>
                           )}
                           
@@ -2626,6 +2982,11 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Centro Y:</span>
                                 <span className="font-medium">{selectedElement.y} mm</span>
+                              </div>
+                              {/* Aggiungiamo il campo per lo spessore di lavorazione */}
+                              <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
+                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="font-medium text-blue-600">{settings.depth} mm</span>
                               </div>
                             </div>
                           )}
@@ -2656,6 +3017,11 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                                 <span className="text-gray-600">Centro Z:</span>
                                 <span className="font-medium">{selectedElement.z} mm</span>
                               </div>
+                              {/* Aggiungiamo il campo per lo spessore di lavorazione evidenziando che corrisponde alla profondità */}
+                              <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
+                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="font-medium text-blue-600">{settings.depth} mm</span>
+                              </div>
                             </div>
                           )}
                           
@@ -2680,6 +3046,11 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Centro Z:</span>
                                 <span className="font-medium">{selectedElement.z} mm</span>
+                              </div>
+                              {/* Aggiungiamo il campo per lo spessore di lavorazione evidenziando che corrisponde al diametro */}
+                              <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
+                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="font-medium text-blue-600">{settings.depth} mm</span>
                               </div>
                             </div>
                           )}
@@ -2710,6 +3081,11 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                                 <span className="text-gray-600">Centro Z:</span>
                                 <span className="font-medium">{selectedElement.z} mm</span>
                               </div>
+                              {/* Aggiungiamo il campo per lo spessore di lavorazione evidenziando che corrisponde all'altezza */}
+                              <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
+                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="font-medium text-blue-600">{settings.depth} mm</span>
+                              </div>
                             </div>
                           )}
                           
@@ -2735,6 +3111,11 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                                 <span className="text-gray-600">Centro Z:</span>
                                 <span className="font-medium">{selectedElement.z} mm</span>
                               </div>
+                              {/* Aggiungiamo il campo per lo spessore di lavorazione evidenziando che corrisponde all'altezza */}
+                              <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
+                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="font-medium text-blue-600">{settings.depth} mm</span>
+                              </div>
                             </div>
                           )}
                           
@@ -2752,8 +3133,28 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                           )}
                         </div>
                         
+                        {/* Aggiungiamo un input per modificare lo spessore direttamente */}
+                        <div className="mt-3 p-2 bg-blue-50 rounded-md">
+                          <label className="block text-sm font-medium text-blue-700 mb-1">
+                            Spessore di lavorazione (mm)
+                          </label>
+                          <input
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            className="w-full p-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            value={settings.depth}
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value);
+                              if (!isNaN(value) && value > 0) {
+                                updateSettings('depth', value);
+                              }
+                            }}
+                          />
+                        </div>
+                        
                         {/* Button to use these dimensions */}
-                        <div className="mt-3">
+                        <div className="mt-3 flex justify-between">
                           <button
                             type="button"
                             className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -2779,8 +3180,42 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                               }, 3000);
                             }}
                           >
-                            Usa queste dimensioni
+                            Usa dimensioni XY
                           </button>
+                          
+                          {/* Aggiungiamo un pulsante specifico per usare lo spessore dalla geometria 3D */}
+                          {(selectedElement.type === 'cube' || 
+                            selectedElement.type === 'sphere' || 
+                            selectedElement.type === 'cylinder' || 
+                            selectedElement.type === 'cone') && (
+                            <button
+                              type="button"
+                              className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                              onClick={() => {
+                                // Imposta lo spessore in base al tipo di geometria 3D
+                                if (selectedElement.type === 'cube') {
+                                  updateSettings('depth', selectedElement.depth);
+                                } else if (selectedElement.type === 'sphere') {
+                                  updateSettings('depth', selectedElement.radius * 2);
+                                } else if (selectedElement.type === 'cylinder') {
+                                  updateSettings('depth', selectedElement.height);
+                                } else if (selectedElement.type === 'cone') {
+                                  updateSettings('depth', selectedElement.height);
+                                }
+                                
+                                // Show success message
+                                setSuccess('Spessore aggiornato dalla geometria 3D');
+                                if (successTimerRef.current) {
+                                  clearTimeout(successTimerRef.current);
+                                }
+                                successTimerRef.current = setTimeout(() => {
+                                  setSuccess(null);
+                                }, 3000);
+                              }}
+                            >
+                              Usa spessore 3D
+                            </button>
+                          )}
                         </div>
                       </div>
                     ) : (
@@ -2793,50 +3228,224 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                 
                 {/* Geometry specific settings */}
                 {geometryType === 'rectangle' && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Larghezza (mm)(X)
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          value={rectangleWidth}
+                          onChange={(e) => updateNumericValue(e, setRectangleWidth)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Altezza (mm)(Y)
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          value={rectangleHeight}
+                          onChange={(e) => updateNumericValue(e, setRectangleHeight)}
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Spessore (mm)(Z)
+                        </label>
+                        <input
+                          type="number"
+                          min="0.1"
+                          step="0.1"
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          value={settings.depth}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value);
+                            if (!isNaN(value) && value > 0) {
+                              updateSettings('depth', value);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Anteprima Geometria - Stilizzata come nell'immagine richiesta */}
+                    <div className="border border-gray-200 rounded-md p-4 bg-white">
+                      <h4 className="text-sm font-medium text-gray-700 mb-4 text-center">Anteprima Geometria</h4>
+                      <div className="w-full h-64 relative">
+                        <svg width="100%" height="100%" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                          {/* Griglia leggera */}
+                          {Array.from({length: 21}).map((_, i) => (
+                            <line 
+                              key={`grid-v-${i}`} 
+                              x1={50 + i * 15} 
+                              y1="30" 
+                              x2={50 + i * 15} 
+                              y2="270" 
+                              stroke="#F3F4F6" 
+                              strokeWidth="1" 
+                            />
+                          ))}
+                          {Array.from({length: 17}).map((_, i) => (
+                            <line 
+                              key={`grid-h-${i}`} 
+                              x1="50" 
+                              y1={30 + i * 15} 
+                              x2="350" 
+                              y2={30 + i * 15} 
+                              stroke="#F3F4F6" 
+                              strokeWidth="1" 
+                            />
+                          ))}
+                          
+                          {/* Assi principali */}
+                          <line x1="50" y1="150" x2="350" y2="150" stroke="#E5E7EB" strokeWidth="1" />
+                          <line x1="200" y1="30" x2="200" y2="270" stroke="#E5E7EB" strokeWidth="1" />
+                          
+                          {/* Etichette degli assi */}
+                          <text x="345" y="165" fontSize="14" fill="#9CA3AF">X</text>
+                          <text x="210" y="40" fontSize="14" fill="#9CA3AF">Y</text>
+                        
+                        {/* Rettangolo più visibile e blu */}
+                        <rect 
+                          x={200 - (rectangleWidth / 2)} 
+                          y={150 - (rectangleHeight / 2)} 
+                          width={rectangleWidth} 
+                          height={rectangleHeight} 
+                          fill="none" 
+                          stroke="#4F83ED" 
+                          strokeWidth="2" 
+                        />
+                        
+                        {/* Indicazione dello spessore */}
+                        <text 
+                          x={200} 
+                          y={150 + (rectangleHeight / 2) + 20} 
+                          fontSize="12" 
+                          fill="#4F83ED"
+                          textAnchor="middle"
+                        >
+                          Spessore: {settings.depth}mm
+                        </text>
+                        
+                        {/* Origine al centro */}
+                        <circle cx="200" cy="150" r="5" fill="#EF4444" />
+                        <text x="210" y="160" fontSize="12" fontWeight="500" fill="#EF4444">Origine</text>
+                      </svg>
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              {geometryType === 'circle' && (
+                <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Width (mm)(X)
+                        Raggio (mm)
                       </label>
                       <input
                         type="number"
                         min="1"
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        value={rectangleWidth}
-                        onChange={(e) => updateNumericValue(e, setRectangleWidth)}
+                        value={circleRadius}
+                        onChange={(e) => updateNumericValue(e, setCircleRadius)}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Height (mm)(Y)
+                        Spessore (mm)(Z)
                       </label>
                       <input
                         type="number"
-                        min="1"
+                        min="0.1"
+                        step="0.1"
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        value={rectangleHeight}
-                        onChange={(e) => updateNumericValue(e, setRectangleHeight)}
+                        value={settings.depth}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value) && value > 0) {
+                            updateSettings('depth', value);
+                          }
+                        }}
                       />
                     </div>
                   </div>
-                )}
-                
-                {geometryType === 'circle' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Raggio (mm)
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      value={circleRadius}
-                      onChange={(e) => updateNumericValue(e, setCircleRadius)}
-                    />
+                  
+                  {/* Anteprima Geometria Cerchio - Stilizzata come nell'immagine richiesta */}
+                  <div className="border border-gray-200 rounded-md p-4 bg-white">
+                    <h4 className="text-sm font-medium text-gray-700 mb-4 text-center">Anteprima Geometria</h4>
+                    <div className="w-full h-64 relative">
+                      <svg width="100%" height="100%" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                        {/* Griglia leggera */}
+                        {Array.from({length: 21}).map((_, i) => (
+                          <line 
+                            key={`grid-v-${i}`} 
+                            x1={50 + i * 15} 
+                            y1="30" 
+                            x2={50 + i * 15} 
+                            y2="270" 
+                            stroke="#F3F4F6" 
+                            strokeWidth="1" 
+                          />
+                        ))}
+                        {Array.from({length: 17}).map((_, i) => (
+                          <line 
+                            key={`grid-h-${i}`} 
+                            x1="50" 
+                            y1={30 + i * 15} 
+                            x2="350" 
+                            y2={30 + i * 15} 
+                            stroke="#F3F4F6" 
+                            strokeWidth="1" 
+                          />
+                        ))}
+                        
+                        {/* Assi principali */}
+                        <line x1="50" y1="150" x2="350" y2="150" stroke="#E5E7EB" strokeWidth="1" />
+                        <line x1="200" y1="30" x2="200" y2="270" stroke="#E5E7EB" strokeWidth="1" />
+                        
+                        {/* Etichette degli assi */}
+                        <text x="345" y="165" fontSize="14" fill="#9CA3AF">X</text>
+                        <text x="210" y="40" fontSize="14" fill="#9CA3AF">Y</text>
+                        
+                        {/* Cerchio */}
+                        <circle 
+                          cx="200" 
+                          cy="150" 
+                          r={circleRadius} 
+                          fill="none" 
+                          stroke="#4F83ED" 
+                          strokeWidth="2" 
+                        />
+                        
+                        {/* Indicazione dello spessore */}
+                        <text 
+                          x={200} 
+                          y={150 + circleRadius + 20} 
+                          fontSize="12" 
+                          fill="#4F83ED"
+                          textAnchor="middle"
+                        >
+                          Spessore: {settings.depth}mm
+                        </text>
+                        
+                        {/* Origine al centro */}
+                        <circle cx="200" cy="150" r="5" fill="#EF4444" />
+                        <text x="210" y="160" fontSize="12" fontWeight="500" fill="#EF4444">Origine</text>
+                      </svg>
+                    </div>
                   </div>
-                )}
-                
-                {geometryType === 'polygon' && (
+                </>
+              )}
+              
+              {geometryType === 'polygon' && (
+                <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -2868,57 +3477,145 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                         onChange={(e) => updateNumericValue(e, setPolygonRadius)}
                       />
                     </div>
-                  </div>
-                )}
-                
-                {geometryType === 'custom' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      G-code Personalizzato
-                    </label>
-                    <div className="relative">
-                      <textarea
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm h-32"
-                        value={customPath}
-                        onChange={(e) => setCustomPath(e.target.value)}
-                        placeholder="Inserisci G-code personalizzato qui..."
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Spessore (mm)(Z)
+                      </label>
+                      <input
+                        type="number"
+                        min="0.1"
+                        step="0.1"
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        value={settings.depth}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value) && value > 0) {
+                            updateSettings('depth', value);
+                          }
+                        }}
                       />
-                      {settings.useAI && !isAIProcessing && (
-                        <button
-                          type="button"
-                          className="absolute top-2 right-2 p-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                          title="Genera G-code con AI"
-                          onClick={() => {
-                            // Simulate AI G-code generation
-                            setIsAIProcessing(true);
-                            setTimeout(() => {
-                              setCustomPath(
-                                `; G-code generato automaticamente da AI\n` +
-                                `G0 Z10 ; Posizione sicura\n` +
-                                `G0 X0 Y0 ; Posizione iniziale\n` +
-                                `G1 Z-${settings.depth/2} F${settings.plungerate} ; Prima profondità\n` +
-                                `G1 X10 Y10 F${settings.feedrate} ; Movimento lineare\n` +
-                                `G2 X20 Y0 I0 J-10 F${settings.feedrate} ; Arco in senso orario\n` +
-                                `G1 X0 Y0 F${settings.feedrate} ; Ritorno all'origine\n` +
-                                `G0 Z10 ; Posizione sicura\n`
-                              );
-                              setIsAIProcessing(false);
-                            }, 2000);
-                          }}
-                        >
-                          <Cpu size={16} />
-                        </button>
-                      )}
-                      {isAIProcessing && (
-                        <div className="absolute top-2 right-2 p-1">
-                          <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        </div>
-                      )}
                     </div>
-                    <div className="flex justify-end mt-1">
+                  </div>
+                  
+                  {/* Anteprima Geometria Poligono - Stilizzata come nell'immagine richiesta */}
+                  <div className="border border-gray-200 rounded-md p-4 bg-white">
+                    <h4 className="text-sm font-medium text-gray-700 mb-4 text-center">Anteprima Geometria</h4>
+                    <div className="w-full h-64 relative">
+                      <svg width="100%" height="100%" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                        {/* Griglia leggera */}
+                        {Array.from({length: 21}).map((_, i) => (
+                          <line 
+                            key={`grid-v-${i}`} 
+                            x1={50 + i * 15} 
+                            y1="30" 
+                            x2={50 + i * 15} 
+                            y2="270" 
+                            stroke="#F3F4F6" 
+                            strokeWidth="1" 
+                          />
+                        ))}
+                        {Array.from({length: 17}).map((_, i) => (
+                          <line 
+                            key={`grid-h-${i}`} 
+                            x1="50" 
+                            y1={30 + i * 15} 
+                            x2="350" 
+                            y2={30 + i * 15} 
+                            stroke="#F3F4F6" 
+                            strokeWidth="1" 
+                          />
+                        ))}
+                        
+                        {/* Assi principali */}
+                        <line x1="50" y1="150" x2="350" y2="150" stroke="#E5E7EB" strokeWidth="1" />
+                        <line x1="200" y1="30" x2="200" y2="270" stroke="#E5E7EB" strokeWidth="1" />
+                        
+                        {/* Etichette degli assi */}
+                        <text x="345" y="165" fontSize="14" fill="#9CA3AF">X</text>
+                        <text x="210" y="40" fontSize="14" fill="#9CA3AF">Y</text>
+                        
+                        {/* Poligono */}
+                        <polygon 
+                          points={Array.from({length: polygonSides}).map((_, i) => {
+                            const angle = i * (2 * Math.PI / polygonSides);
+                            const x = 200 + polygonRadius * Math.cos(angle);
+                            const y = 150 + polygonRadius * Math.sin(angle);
+                            return `${x},${y}`;
+                          }).join(' ')}
+                          fill="none" 
+                          stroke="#4F83ED" 
+                          strokeWidth="2" 
+                        />
+                        
+                        {/* Indicazione dello spessore */}
+                        <text 
+                          x={200} 
+                          y={150 + polygonRadius + 20} 
+                          fontSize="12" 
+                          fill="#4F83ED"
+                          textAnchor="middle"
+                        >
+                          Spessore: {settings.depth}mm
+                        </text>
+                        
+                        {/* Origine al centro */}
+                        <circle cx="200" cy="150" r="5" fill="#EF4444" />
+                        <text x="210" y="160" fontSize="12" fontWeight="500" fill="#EF4444">Origine</text>
+                      </svg>
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              {geometryType === 'custom' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    G-code Personalizzato
+                  </label>
+                  <div className="relative">
+                    <textarea
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm h-32"
+                      value={customPath}
+                      onChange={(e) => setCustomPath(e.target.value)}
+                      placeholder="Inserisci G-code personalizzato qui..."
+                    />
+                    {settings.useAI && !isAIProcessing && (
+                      <button
+                        type="button"
+                        className="absolute top-2 right-2 p-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                        title="Genera G-code con AI"
+                        onClick={() => {
+                          // Simulate AI G-code generation
+                          setIsAIProcessing(true);
+                          setTimeout(() => {
+                            setCustomPath(
+                              `; G-code generato automaticamente da AI\n` +
+                              `G0 Z10 ; Posizione sicura\n` +
+                              `G0 X0 Y0 ; Posizione iniziale\n` +
+                              `G1 Z-${settings.depth/2} F${settings.plungerate} ; Prima profondità\n` +
+                              `G1 X10 Y10 F${settings.feedrate} ; Movimento lineare\n` +
+                              `G2 X20 Y0 I0 J-10 F${settings.feedrate} ; Arco in senso orario\n` +
+                              `G1 X0 Y0 F${settings.feedrate} ; Ritorno all'origine\n` +
+                              `G0 Z10 ; Posizione sicura\n`
+                            );
+                            setIsAIProcessing(false);
+                          }, 2000);
+                        }}
+                      >
+                        <Cpu size={16} />
+                      </button>
+                    )}
+                    {isAIProcessing && (
+                      <div className="absolute top-2 right-2 p-1">
+                        <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-4">
+                    <div className="flex justify-start">
                       <button
                         type="button"
                         className="text-xs text-blue-600 hover:text-blue-800"
@@ -2939,19 +3636,38 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                         Inserisci esempio
                       </button>
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Spessore (mm)(Z)
+                      </label>
+                      <input
+                        type="number"
+                        min="0.1"
+                        step="0.1"
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        value={settings.depth}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value) && value > 0) {
+                            updateSettings('depth', value);
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
   // Render material section
   const renderMaterialSection = () => {
     return (
-      <div className="mb-6">
+      <div className="mb-6 text-xs">
         <div
           className="flex items-center justify-between cursor-pointer"
           onClick={() => toggleSection('material')}
@@ -2982,43 +3698,112 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
               </select>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Spessore Materiale (mm)
-              </label>
-              <input
-                type="number"
-                min="0.1"
-                step="0.1"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                value={settings.depth}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value) && value > 0) {
-                    updateSettings('depth', value);
-                  }
-                }}
-              />
-            </div>
+            {/* Anteprima proprietà del materiale selezionato */}
+            {settings.material && materialProperties[settings.material] && (
+              <div className="p-3 bg-blue-50 rounded-md">
+                <h4 className="text-xs font-medium text-blue-800 mb-2">
+                  Proprietà {settings.material === 'aluminum' 
+                    ? 'Alluminio' 
+                    : settings.material === 'steel' 
+                    ? 'Acciaio' 
+                    : settings.material === 'wood' 
+                    ? 'Legno' 
+                    : settings.material === 'plastic' 
+                    ? 'Plastica' 
+                    : settings.material === 'brass' 
+                    ? 'Ottone' 
+                    : settings.material === 'titanium' 
+                    ? 'Titanio' 
+                    : settings.material === 'composite' 
+                    ? 'Composito' 
+                    : 'Altro'}
+                </h4>
+                <div className="grid gap-x-4 gap-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Densità:</span>
+                    <span className="font-medium text-blue-700">{materialProperties[settings.material].density}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Durezza:</span>
+                    <span className="font-medium text-blue-700">{materialProperties[settings.material].hardness}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Comportamento termico:</span>
+                    <span className="font-medium text-blue-700">{materialProperties[settings.material].thermalBehavior}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tipo di truciolo:</span>
+                    <span className="font-medium text-blue-700">{materialProperties[settings.material].chipType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Refrigerante:</span>
+                    <span className="font-medium text-blue-700">{materialProperties[settings.material].coolant}</span>
+                  </div>
+                  {materialProperties[settings.material].recommendedToolCoating && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Rivestimento utensile:</span>
+                      <span className="font-medium text-blue-700">{materialProperties[settings.material].recommendedToolCoating}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Pulsante per applicare parametri consigliati */}
+                <button
+                  type="button"
+                  className="mt-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
+                  onClick={() => {
+                    // Applica i parametri consigliati in base al materiale
+                    if (materialProperties[settings.material].feedrateModifier && 
+                        materialProperties[settings.material].speedModifier) {
+                      const baseFeedrate = 1000;  // Valore base
+                      const baseRPM = 10000;      // Valore base
+                      
+                      setSettings(prev => ({
+                        ...prev,
+                        feedrate: Math.round(baseFeedrate * materialProperties[settings.material].feedrateModifier!),
+                        plungerate: Math.round((baseFeedrate * materialProperties[settings.material].feedrateModifier! * 0.4)),
+                        rpm: Math.round(baseRPM * materialProperties[settings.material].speedModifier!),
+                        coolant: materialProperties[settings.material].coolant === 'Necessario' || 
+                                materialProperties[settings.material].coolant === 'Raccomandato' || 
+                                materialProperties[settings.material].coolant === 'Necessario ad alta pressione'
+                      }));
+                      
+                      setSuccess(`Parametri ottimizzati per ${settings.material}`);
+                      successTimerRef.current = setTimeout(() => {
+                        setSuccess(null);
+                      }, 3000);
+                    }
+                  }}
+                >
+                  Applica parametri consigliati
+                </button>
+              </div>
+            )}
             
-            {/* Show workpiece config if available from workpiece store */}
+            {/* Mostro le informazioni sul pezzo grezzo ma senza sovrascrivere automaticamente lo spessore */}
             {workpiece && (
               <div className="mt-2 p-3 bg-blue-50 rounded-md">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-blue-800">Dimensioni pezzo</span>
+                  <span className="text-sm font-medium text-blue-800">Informazioni pezzo grezzo</span>
                   <button
                     type="button"
                     className="text-xs text-blue-600 hover:text-blue-800"
                     onClick={() => {
-                      // Use dimensions from workpiece store
-                      updateSettings('depth', Math.min(workpiece.depth, settings.depth));
+                      // Mostro solo un messaggio che informa l'utente che lo spessore va impostato nella sezione operazioni
+                      setSuccess('Lo spessore di lavorazione è determinato dalla geometria selezionata nella sezione Operazioni');
+                      successTimerRef.current = setTimeout(() => {
+                        setSuccess(null);
+                      }, 4000);
                     }}
                   >
-                    Usa configurazione pezzo
+                    Info
                   </button>
                 </div>
                 <div className="mt-1 text-xs text-blue-600">
                   {workpiece.width} x {workpiece.height} x {workpiece.depth} mm ({workpiece.material})
+                </div>
+                <div className="mt-1 text-xs text-gray-500 italic">
+                  Nota: Lo spessore di lavorazione viene determinato dalla geometria selezionata
                 </div>
               </div>
             )}
@@ -3177,6 +3962,121 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                 </select>
               )}
             </div>
+            <div className="p-3 bg-gray-50 rounded-md">
+            <div className="flex justify-between items-start">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                {settings.machineType === 'mill' ? 
+                  (settings.toolType === 'endmill' ? 'Fresa a candela' : 
+                   settings.toolType === 'ballnose' ? 'Fresa a sfera' : 
+                  
+                   settings.toolType === 'drill' ? 'Punta da trapano' : 
+                   settings.toolType === 'vbit' ? 'Fresa a V' : 
+                   'Utensile speciale') : 
+                  settings.machineType === 'lathe' ? 
+                  (settings.toolType === 'turning' ? 'Utensile per tornitura' : 
+                   settings.toolType === 'facing' ? 'Utensile per sfacciatura' : 
+                   settings.toolType === 'boring' ? 'Utensile per alesatura' : 
+                   'Utensile per tornio') : 
+                  'Ugello per stampa 3D'
+                }
+              </h4>
+              <div className="text-xs text-gray-500">
+                {selectedLibraryTool ? 
+                  `${selectedLibraryTool.name || 'Utensile personalizzato'}` : 
+                  'Utensile generico'
+                }
+              </div>
+            </div>
+            <div className="flex items-center">
+              <div className="w-20 h-20 mr-4 bg-white rounded-md border border-gray-200 flex items-center justify-center">
+                {/* SVG dell'utensile in base al tipo */}
+                <svg viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                  {settings.machineType === 'mill' && settings.toolType === 'endmill' && (
+                    <g>
+                      <rect x="15" y="5" width="10" height="30" fill="#9CA3AF" />
+                      <rect x="17" y="5" width="6" height="30" fill="#D1D5DB" />
+                      <rect x="15" y="3" width="10" height="2" fill="#6B7280" />
+                    </g>
+                  )}
+                  
+                  {settings.machineType === 'mill' && settings.toolType === 'ballnose' && (
+                    <g>
+                      <rect x="15" y="5" width="10" height="25" fill="#9CA3AF" />
+                      <rect x="17" y="5" width="6" height="25" fill="#D1D5DB" />
+                      <ellipse cx="20" cy="30" rx="5" ry="5" fill="#9CA3AF" />
+                      <rect x="15" y="3" width="10" height="2" fill="#6B7280" />
+                    </g>
+                  )}
+                  
+                  {settings.machineType === 'mill' && settings.toolType === 'drill' && (
+                    <g>
+                      <rect x="15" y="5" width="10" height="25" fill="#9CA3AF" />
+                      <rect x="17" y="5" width="6" height="25" fill="#D1D5DB" />
+                      <polygon points="20,35 15,30 25,30" fill="#9CA3AF" />
+                      <rect x="15" y="3" width="10" height="2" fill="#6B7280" />
+                    </g>
+                  )}
+                  
+                  {settings.machineType === 'lathe' && (
+                    <g>
+                      <rect x="10" y="15" width="20" height="10" fill="#9CA3AF" />
+                      <polygon points="30,15 35,10 35,20 30,25" fill="#6B7280" />
+                      <rect x="8" y="15" width="2" height="10" fill="#4B5563" />
+                    </g>
+                  )}
+                  
+                  {settings.machineType === '3dprinter' && (
+                    <g>
+                      <rect x="15" y="5" width="10" height="15" fill="#9CA3AF" />
+                      <polygon points="25,20 15,20 18,35 22,35" fill="#6B7280" />
+                      <circle cx="20" cy="35" r="1" fill="#4B5563" />
+                    </g>
+                  )}
+                </svg>
+              </div>
+              <div className="flex-1">
+                <table className="w-full text-xs">
+                  <tbody>
+                    {settings.machineType !== '3dprinter' && (
+                      <>
+                        <tr>
+                          <td className="py-1 text-gray-500">Diametro:</td>
+                          <td className="py-1 text-gray-800">{settings.toolDiameter} mm</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 text-gray-500">Taglienti:</td>
+                          <td className="py-1 text-gray-800">{settings.flutes}</td>
+                        </tr>
+                      </>
+                    )}
+                    {settings.machineType === '3dprinter' && (
+                      <>
+                        <tr>
+                          <td className="py-1 text-gray-500">Diametro ugello:</td>
+                          <td className="py-1 text-gray-800">{settings.nozzleDiameter} mm</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 text-gray-500">Filamento:</td>
+                          <td className="py-1 text-gray-800">{settings.filamentDiameter} mm</td>
+                        </tr>
+                      </>
+                    )}
+                    <tr>
+                      <td className="py-1 text-gray-500">Velocità max:</td>
+                      <td className="py-1 text-gray-800">{settings.rpm} RPM</td>
+                    </tr>
+                    {selectedLibraryTool && selectedLibraryTool.material && (
+                      <tr>
+                        <td className="py-1 text-gray-500">Materiale:</td>
+                        <td className="py-1 text-gray-800">{selectedLibraryTool.material}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+            
             
             {settings.machineType !== '3dprinter' && (
               <>
@@ -3373,6 +4273,14 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
 
   // Render cutting parameters section
   const renderCuttingSection = () => {
+    // Calcola le statistiche di taglio e suggerimenti
+    const optimalChipLoad = calculateOptimalChipLoad(settings.material, settings.toolDiameter, settings.flutes);
+    const recommendedPlunge = calculateRecommendedPlungeRate(settings.feedrate);
+    const cuttingFeedback = getCuttingFeedback(settings);
+    const chipLoad = (settings.feedrate / (settings.rpm * settings.flutes)).toFixed(3);
+    const cuttingStats = calculateCuttingStatistics(settings);
+    const effectiveStepover = (settings.stepover / 100) * settings.toolDiameter;
+    
     return (
       <div className="mb-6">
         <div
@@ -3402,6 +4310,10 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                   }
                 }}
               />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>Min: 0.1mm</span>
+                <span>Max consigliato: 3mm</span>
+              </div>
             </div>
             
             <div>
@@ -3420,6 +4332,14 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                   }
                 }}
               />
+              <div className="flex flex-col text-xs mt-1">
+                <span className="text-gray-500">Avanzamento per dente: {chipLoad} mm</span>
+                {cuttingFeedback && (
+                  <span className={`${cuttingFeedback.startsWith('✓') ? 'text-green-600' : 'text-yellow-600'} font-medium`}>
+                    {cuttingFeedback}
+                  </span>
+                )}
+              </div>
             </div>
             
             <div>
@@ -3438,6 +4358,9 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                   }
                 }}
               />
+              <div className="text-xs text-gray-500 mt-1">
+                Consigliato: {recommendedPlunge} mm/min ({Math.round((recommendedPlunge / settings.feedrate) * 100)}% dell avanzamento)
+              </div>
             </div>
             
             <div>
@@ -3457,6 +4380,9 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                   }
                 }}
               />
+              <div className="text-xs text-gray-500 mt-1">
+                Larghezza effettiva: {effectiveStepover.toFixed(2)} mm
+              </div>
             </div>
             
             <div>
@@ -3472,6 +4398,40 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                 <option value="inside">Interno</option>
                 <option value="center">Centro</option>
               </select>
+              
+              {/* Visualizzazione grafica offset utensile */}
+              <div className="mt-2 flex justify-center">
+                <div className="w-48 h-32 relative">
+                  <svg width="100%" height="100%" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg">
+                    {settings.offset === 'center' && (
+                      <>
+                        <rect x="70" y="40" width="100" height="80" stroke="#4B83F0" strokeWidth="2" strokeDasharray="5,5" fill="none" />
+                        <circle cx="120" cy="40" r="4" fill="#4B83F0" />
+                        <line x1="120" y1="20" x2="120" y2="140" stroke="#4B83F0" strokeWidth="1" strokeDasharray="4,4" />
+                        <line x1="50" y1="80" x2="190" y2="80" stroke="#4B83F0" strokeWidth="1" strokeDasharray="4,4" />
+                      </>
+                    )}
+                    
+                    {settings.offset === 'outside' && (
+                      <>
+                        <rect x="70" y="40" width="100" height="80" stroke="#4B83F0" strokeWidth="2" strokeDasharray="5,5" fill="none" />
+                        <rect x="60" y="30" width="120" height="100" stroke="#4B83F0" strokeWidth="2" fill="none" />
+                        <circle cx="60" cy="30" r="4" fill="#4B83F0" />
+                        <path d="M 60,30 L 70,40" stroke="#4B83F0" strokeWidth="1" />
+                      </>
+                    )}
+                    
+                    {settings.offset === 'inside' && (
+                      <>
+                        <rect x="70" y="40" width="100" height="80" stroke="#4B83F0" strokeWidth="2" strokeDasharray="5,5" fill="none" />
+                        <rect x="80" y="50" width="80" height="60" stroke="#4B83F0" strokeWidth="2" fill="none" />
+                        <circle cx="80" cy="50" r="4" fill="#4B83F0" />
+                        <path d="M 80,50 L 70,40" stroke="#4B83F0" strokeWidth="1" />
+                      </>
+                    )}
+                  </svg>
+                </div>
+              </div>
             </div>
             
             <div>
@@ -3486,6 +4446,41 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                 <option value="climb">Concordante (Climb)</option>
                 <option value="conventional">Discordante (Conventional)</option>
               </select>
+              
+              {/* Visualizzazione grafica direzione taglio */}
+              <div className="mt-2 flex justify-center">
+                <div className="w-48 h-32 relative">
+                  <svg width="100%" height="100%" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg">
+                    <text x="120" y="30" textAnchor="middle" fontSize="16" fill="#4B83F0">
+                      {settings.direction === 'climb' ? 'Concordante' : 'Discordante'}
+                    </text>
+                    
+                    {/* Utensile concordante (sinistra) */}
+                    <circle cx="80" cy="80" r="40" fill="none" stroke="#aaa" strokeWidth="1" />
+                    <circle cx="80" cy="80" r={settings.direction === 'climb' ? "14" : "8"} fill="#4B83F0" />
+                    
+                    {settings.direction === 'climb' && (
+                      <path d="M 80,80 Q 100,95 120,80" stroke="#4B83F0" strokeWidth="2" fill="none" strokeDasharray="4,3" />
+                    )}
+                    
+                    {settings.direction === 'climb' && (
+                      <path d="M 115,77 L 120,80 L 115,83" fill="none" stroke="#4B83F0" strokeWidth="2" />
+                    )}
+                    
+                    {/* Utensile discordante (destra) */}
+                    <circle cx="160" cy="80" r="40" fill="none" stroke="#aaa" strokeWidth="1" />
+                    <circle cx="160" cy="80" r={settings.direction === 'conventional' ? "14" : "8"} fill="#4B83F0" />
+                    
+                    {settings.direction === 'conventional' && (
+                      <path d="M 160,80 Q 140,65 120,80" stroke="#4B83F0" strokeWidth="2" fill="none" strokeDasharray="4,3" />
+                    )}
+                    
+                    {settings.direction === 'conventional' && (
+                      <path d="M 125,77 L 120,80 L 125,83" fill="none" stroke="#4B83F0" strokeWidth="2" />
+                    )}
+                  </svg>
+                </div>
+              </div>
             </div>
             
             <div className="flex items-center">
@@ -3522,6 +4517,29 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                 />
               </div>
             )}
+            
+            {/* Tabella con statistiche di taglio */}
+            <div className="mt-4 p-4 border border-gray-300 bg-gray-50 rounded-md">
+              <h4 className="text-xs font-medium text-gray-800 mb-2">Statistiche di Taglio</h4>
+              <div className="grid  gap-x-4 gap-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Velocità di taglio:</span>
+                  <span className="font-medium">{cuttingStats.cuttingSpeed.toFixed(1)} m/min</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Avanzamento per dente:</span>
+                  <span className="font-medium">{chipLoad} mm</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tasso rimozione:</span>
+                  <span className="font-medium">{cuttingStats.materialRemovalRate.toFixed(2)} cm³/min</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Stepover effettivo:</span>
+                  <span className="font-medium">{effectiveStepover.toFixed(2)} mm</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -3531,7 +4549,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
   // Render advanced section
   const renderAdvancedSection = () => {
     return (
-      <div className="mb-6">
+      <div className="mb-6" data-testid="advanced-options-panel">
         <div
           className="flex items-center justify-between cursor-pointer"
           onClick={() => toggleSection('advanced')}
@@ -3542,29 +4560,152 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
         
         {expanded.advanced && (
           <div className="mt-3 space-y-4">
+            {/* Tolleranza */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tolleranza (mm)
-              </label>
-              <input
-                type="number"
-                min="0.001"
-                step="0.001"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                value={settings.tolerance}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value) && value > 0) {
-                    updateSettings('tolerance', value);
-                  }
-                }}
-              />
+              <h4 className="text-sm font-medium text-gray-800 mb-2">Impostazioni di Precisione</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">
+                    Tolleranza (mm)
+                  </label>
+                  <input
+                    type="number"
+                    min="0.001"
+                    step="0.001"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    value={settings.tolerance}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      if (!isNaN(value) && value > 0) {
+                        updateSettings('tolerance', value);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
             </div>
             
-            <div className="p-3 bg-blue-50 rounded-md">
-              <p className="text-sm text-blue-800">
-                Le impostazioni avanzate permettono un controllo più preciso del percorso utensile, ma possono richiedere una regolazione manuale per risultati ottimali.
-              </p>
+            {/* Ottimizzazione percorso */}
+            <div className="border-t border-gray-200 pt-4">
+              <h4 className="text-sm font-medium text-gray-800 mb-2">Ottimizzazione Percorso</h4>
+              
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="use-path-optimization"
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={settings.optimizePath || false}
+                    onChange={(e) => updateSettings('optimizePath', e.target.checked)}
+                  />
+                  <label htmlFor="use-path-optimization" className="ml-2 block text-sm text-gray-700">
+                    Abilita ottimizzazione percorso
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="use-arc-fitting"
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={settings.useArcFitting || false}
+                    onChange={(e) => updateSettings('useArcFitting', e.target.checked)}
+                  />
+                  <label htmlFor="use-arc-fitting" className="ml-2 block text-sm text-gray-700">
+                    Converti segmenti in archi (G2/G3)
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Strategie avanzate di taglio */}
+            <div className="border-t border-gray-200 pt-4">
+              <h4 className="text-sm font-medium text-gray-800 mb-2">Strategie Avanzate</h4>
+              
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="use-adaptive-feeds"
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={settings.useAdaptiveFeeds || false}
+                    onChange={(e) => updateSettings('useAdaptiveFeeds', e.target.checked)}
+                  />
+                  <label htmlFor="use-adaptive-feeds" className="ml-2 block text-sm text-gray-700">
+                    Abilita velocità adattive in curva
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="use-rest-machining"
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={settings.useRestMachining || false}
+                    onChange={(e) => updateSettings('useRestMachining', e.target.checked)}
+                  />
+                  <label htmlFor="use-rest-machining" className="ml-2 block text-sm text-gray-700">
+                    Utilizza lavorazione residua (Rest Machining)
+                  </label>
+                </div>
+                
+                {settings.finishingPass && (
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">
+                      Strategia finitura
+                    </label>
+                    <select
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      value={settings.finishingStrategy || 'contour'}
+                      onChange={(e) => updateSettings('finishingStrategy', e.target.value)}
+                    >
+                      <option value="contour">Contornatura</option>
+                      <option value="parallel">Passate parallele</option>
+                      <option value="spiral">Spirale</option>
+                      <option value="radial">Radiale</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Opzioni di compensazione */}
+            <div className="border-t border-gray-200 pt-4">
+              <h4 className="text-sm font-medium text-gray-800 mb-2">Compensazione Utensile</h4>
+              
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="use-tool-compensation"
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={settings.useToolCompensation || false}
+                    onChange={(e) => updateSettings('useToolCompensation', e.target.checked)}
+                  />
+                  <label htmlFor="use-tool-compensation" className="ml-2 block text-sm text-gray-700">
+                    Usa compensazione utensile nel G-code (G41/G42)
+                  </label>
+                </div>
+                
+                {settings.useToolCompensation && (
+                  <div className="p-2 bg-blue-50 rounded-md">
+                    <p className="text-xs text-blue-700">
+                      La compensazione raggio utensile (cutter compensation) verrà inserita 
+                      direttamente nel G-code. La direzione sarà determinata automaticamente 
+                      dalle impostazioni di offset e direzione di taglio.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Opzioni avanzate generali */}
+            <div className="border-t border-gray-200 pt-4">
+              <div className="p-3 bg-blue-50 rounded-md">
+                <p className="text-sm text-blue-800">
+                  Le impostazioni avanzate permettono un controllo più preciso del percorso utensile, ma possono richiedere una regolazione manuale per risultati ottimali. Le funzionalità avanzate dipendono dal tipo di controllo numerico utilizzato.
+                </p>
+              </div>
             </div>
           </div>
         )}

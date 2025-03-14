@@ -18,9 +18,7 @@ export const initializeWebSocket = async (token: string): Promise<Socket> => {
   // Create a new socket connection
   socket = io({
     path: '/api/websocket',
-    auth: {
-      token
-    },
+    query: { token }, // Use query instead of auth headers
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     transports: ['websocket', 'polling'] // Prefer WebSocket, fallback to polling
@@ -58,10 +56,42 @@ export const initializeWebSocket = async (token: string): Promise<Socket> => {
         tag: notification.id,
         requireInteraction: true,
         silent: false,
-        
-     
-        
       });
+    }
+  });
+
+  // Listen for typing events
+  socket.on('userTyping', async (data) => {
+    const useChatStore = (await import('@/src/store/chatStore')).default;
+    const { typingUsers } = useChatStore.getState();
+    
+    if (data.isTyping) {
+      // Add or update typing user
+      useChatStore.setState({
+        typingUsers: {
+          ...typingUsers,
+          [data.conversationId]: {
+            ...typingUsers[data.conversationId],
+            [data.userId]: {
+              name: data.userName,
+              timestamp: Date.now()
+            }
+          }
+        }
+      });
+    } else {
+      // Remove user from typing list
+      if (typingUsers[data.conversationId] && typingUsers[data.conversationId][data.userId]) {
+        const updatedConversationTypers = { ...typingUsers[data.conversationId] };
+        delete updatedConversationTypers[data.userId];
+        
+        useChatStore.setState({
+          typingUsers: {
+            ...typingUsers,
+            [data.conversationId]: updatedConversationTypers
+          }
+        });
+      }
     }
   });
 
@@ -89,6 +119,23 @@ export const leaveOrganization = (organizationId: string): void => {
   if (socket && socket.connected) {
     socket.emit('leaveOrganization', organizationId);
     console.log(`Left organization channel: ${organizationId}`);
+  }
+};
+
+/**
+ * Send typing status to other participants in a conversation
+ * @param conversationId The conversation ID
+ * @param isTyping Whether the user is typing or has stopped typing
+ */
+export const sendTypingStatus = (conversationId: string, isTyping: boolean): void => {
+  if (socket && socket.connected) {
+    socket.emit('typing', {
+      conversationId,
+      isTyping
+    });
+    console.log(`Sent typing status (${isTyping}) for conversation: ${conversationId}`);
+  } else {
+    console.warn('Socket not connected, cannot send typing status');
   }
 };
 

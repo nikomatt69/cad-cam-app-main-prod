@@ -1,11 +1,12 @@
 // src/components/chat/ConversationList.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { 
-  Users, MessageCircle, Plus, Search, User, UserPlus, Settings
+  Users, MessageCircle, Plus, Search, User, UserPlus
 } from 'react-feather';
 import useChatStore from '@/src/store/chatStore';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 
 interface ConversationListProps {
   organizationId: string;
@@ -13,7 +14,22 @@ interface ConversationListProps {
 
 const ConversationList: React.FC<ConversationListProps> = ({ organizationId }) => {
   const router = useRouter();
-  const { conversations, isLoadingConversations, fetchConversations, createConversation, error } = useChatStore();
+  const { data: session } = useSession();
+  const { 
+    conversations, 
+    isLoadingConversations, 
+    hasMoreConversations,
+    fetchConversations,
+    fetchMoreConversations,
+    refreshConversations,
+    error 
+  } = useChatStore();
+  
+  const listRef = useRef<HTMLDivElement>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshStartY, setRefreshStartY] = useState(0);
+  const [refreshCurrentY, setRefreshCurrentY] = useState(0);
+  const [forceUpdate, setForceUpdate] = useState(0); // Per forzare il re-render
   
   useEffect(() => {
     if (organizationId) {
@@ -21,13 +37,56 @@ const ConversationList: React.FC<ConversationListProps> = ({ organizationId }) =
     }
   }, [organizationId, fetchConversations]);
   
+  // Implementa infinite scroll
+  const handleScroll = () => {
+    if (listRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+      
+      // Se siamo a 20px dal fondo, carica più conversazioni
+      if (scrollHeight - scrollTop - clientHeight < 20 && !isLoadingConversations && hasMoreConversations) {
+        fetchMoreConversations(organizationId);
+      }
+    }
+  };
+  
+  // Implementa pull-to-refresh
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setRefreshStartY(e.touches[0].clientY);
+    setRefreshCurrentY(e.touches[0].clientY);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setRefreshCurrentY(e.touches[0].clientY);
+    
+    // Se l'utente sta trascinando verso il basso e siamo in cima alla lista
+    const listElement = listRef.current;
+    if (listElement && listElement.scrollTop === 0 && refreshCurrentY > refreshStartY) {
+      e.preventDefault(); // Previene lo scroll normale
+    }
+  };
+  
+  const handleTouchEnd = async () => {
+    // Se l'utente ha trascinato abbastanza verso il basso e siamo in cima alla lista
+    const pullDistance = refreshCurrentY - refreshStartY;
+    const listElement = listRef.current;
+    
+    if (listElement && listElement.scrollTop === 0 && pullDistance > 70) {
+      setIsRefreshing(true);
+      await refreshConversations(organizationId);
+      setIsRefreshing(false);
+    }
+    
+    setRefreshStartY(0);
+    setRefreshCurrentY(0);
+  };
+  
   const handleCreateDirectMessage = () => {
-    // Navigate to a page to select users or show a modal
+    // Naviga a una pagina per selezionare gli utenti o mostra un modale
     router.push(`/organizations/${organizationId}/chat/new`);
   };
   
   const handleCreateGroupChat = () => {
-    // Navigate to a page to create a group chat
+    // Naviga a una pagina per creare una chat di gruppo
     router.push(`/organizations/${organizationId}/chat/new-group`);
   };
   
@@ -51,14 +110,14 @@ const ConversationList: React.FC<ConversationListProps> = ({ organizationId }) =
   const getConversationName = (conversation: any) => {
     if (conversation.name) return conversation.name;
     
-    // For direct messages, show the other participant's name
+    // Per i messaggi diretti, mostra il nome dell'altro partecipante
     const otherParticipants = conversation.participants.filter(
-      (p: any) => p.id !== '1' // Replace with current user ID
+      (p: any) => p.id !== session?.user?.id
     );
     if (otherParticipants.length === 1) {
       return otherParticipants[0].name || 'Unnamed User';
     }
-    return otherParticipants.map((p: any) => p.name).join(', ');
+    return otherParticipants.map((p: any) => p.name || 'Unnamed User').join(', ');
   };
   
   return (
@@ -66,7 +125,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ organizationId }) =
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
           <MessageCircle className="h-5 w-5 mr-2" />
-          Messaggi
+          Messages
         </h2>
         
         <div className="mt-2 flex">
@@ -98,8 +157,28 @@ const ConversationList: React.FC<ConversationListProps> = ({ organizationId }) =
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-2">
-        {isLoadingConversations ? (
+      {/* Conversations List with Pull-to-refresh */}
+      <div 
+        ref={listRef}
+        className="flex-1 overflow-y-auto p-2"
+        onScroll={handleScroll}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Pull to refresh indicator */}
+        {refreshCurrentY - refreshStartY > 30 && (
+          <div className="flex justify-center items-center py-3 text-gray-500">
+            {isRefreshing ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-2"></div>
+            ) : (
+              <div className="mr-2">↓</div>
+            )}
+            {isRefreshing ? 'Updating...' : 'Release to refresh'}
+          </div>
+        )}
+        
+        {isLoadingConversations && conversations.length === 0 ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
           </div>
@@ -169,11 +248,12 @@ const ConversationList: React.FC<ConversationListProps> = ({ organizationId }) =
                         {conversation.lastMessage ? (
                           <>
                             <span className="font-semibold">
-                              {conversation.lastMessage.sender?.name === 'You' ? 'Tu: ' : ''}
+                              {conversation.lastMessage.sender?.name === session?.user?.name ? 'Tu: ' : 
+                               conversation.lastMessage.sender?.name ? `${conversation.lastMessage.sender.name}: ` : ''}
                             </span>
                             {conversation.lastMessage.content}
                           </>
-                        ) : (
+                         ) : (
                           <span className="italic">Nessun messaggio</span>
                         )}
                       </p>
@@ -188,6 +268,13 @@ const ConversationList: React.FC<ConversationListProps> = ({ organizationId }) =
               );
             })}
           </ul>
+        )}
+        
+        {/* Loader per infinite scroll */}
+        {isLoadingConversations && conversations.length > 0 && (
+          <div className="flex justify-center py-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+          </div>
         )}
       </div>
     </div>

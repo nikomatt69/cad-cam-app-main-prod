@@ -27,15 +27,15 @@ interface AIAssistantState {
   clearMessages: () => void;
 }
 
-// Funzione sicura per ottenere le dimensioni della finestra
+// Safe function to get window dimensions
 const getDefaultPosition = () => {
   if (typeof window === 'undefined') {
-    return { x: 500, y: 300 }; // Valori di default per SSR
+    return { x: 500, y: 300 }; // Default values for SSR
   }
   return { x: window.innerWidth - 420, y: window.innerHeight - 500 };
 };
 
-// Utilizziamo create con un controllo per window
+// We use create with a check for window
 export const useAIAssistantStore = create<AIAssistantState>((set) => ({
   isVisible: false,
   isExpanded: false,

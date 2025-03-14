@@ -2,11 +2,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { ArrowLeft, Info, User, Users, Send, MoreVertical } from 'react-feather';
+import { ArrowLeft, Info, User, Users, Send, MoreVertical, Volume, VolumeX, Mic } from 'react-feather';
 import useChatStore, { Message } from '@/src/store/chatStore';
 import { formatDistanceToNow, format } from 'date-fns';
 import Image from 'next/image';
 import { NotificationService } from '@/src/lib/notificationService';
+import { SoundEffects } from '@/src/lib/soundEffects';
+import FileUploader from './FileUploader';
+import VoiceRecorder from './VoiceRecorder';
 
 interface ConversationDetailProps {
   conversationId: string;
@@ -25,6 +28,8 @@ const ConversationDetail: React.FC<ConversationDetailProps> = ({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [messageInput, setMessageInput] = useState('');
   const [isScrolledUp, setIsScrolledUp] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [forceUpdate, setForceUpdate] = useState(0); // Per forzare il re-render
   
   const { 
     activeConversation,
@@ -33,10 +38,13 @@ const ConversationDetail: React.FC<ConversationDetailProps> = ({
     hasMoreMessages,
     nextCursor,
     isSending,
+    typingUsers,
     fetchConversation,
     fetchMessages,
     sendMessage,
-    markAsRead
+    markAsRead,
+    setTyping,
+    sendFileMessage
   } = useChatStore();
   
   useEffect(() => {
@@ -77,43 +85,166 @@ const ConversationDetail: React.FC<ConversationDetailProps> = ({
     
     if (messageInput.trim() && conversationId) {
       try {
-        // Invio del messaggio (codice esistente)
-        await sendMessage(conversationId, messageInput.trim());
+        console.log('Starting to send message:', messageInput);
+        console.log('Conversation ID:', conversationId);
+        console.log('Organization ID:', organizationId);
         
-        // Genera notifiche per gli altri partecipanti
-        if (activeConversation && session?.user) {
-          // Questa parte sarebbe in realtà gestita dal backend
-          // ma per completezza mostriamo come potrebbe essere fatto
-          await NotificationService.createNewMessageNotifications(
-            messages[messages.length - 1].id, // assumendo che message sia la risposta dal server
-            session.user.id,
-            conversationId,
-            messageInput.trim(),
-            session.user.name || 'Utente',
-            organizationId
-          );
-        }
+        // Invio del messaggio
+        await sendMessage(conversationId, messageInput.trim());
+        console.log('Message sent successfully!');
         
         // Reset del form
         setMessageInput('');
         setIsScrolledUp(false);
       } catch (error) {
-        console.error('Error sending message:', error);
+        console.error('Error in handleSendMessage:', error);
+        alert('Failed to send message. Please try again.');
       }
+    } else {
+      console.log('Cannot send empty message or missing conversation ID');
+      if (!messageInput.trim()) console.log('Empty message');
+      if (!conversationId) console.log('Missing conversation ID:', conversationId);
     }
   };
   
-  const formatMessageTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const today = new Date();
-    const isToday = date.toDateString() === today.toDateString();
+  const handleMessageInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessageInput(e.target.value);
     
-    return isToday 
-      ? format(date, 'HH:mm') 
-      : format(date, 'dd/MM/yyyy HH:mm');
+    // Invia lo stato "sta scrivendo" quando l'utente digita
+    if (conversationId && e.target.value.trim() !== '') {
+      setTyping(conversationId, true);
+    } else if (conversationId) {
+      setTyping(conversationId, false);
+    }
+  };
+
+  const handleVoiceRecorded = async (audioBlob: Blob, duration: number) => {
+    try {
+      // Create File object from Blob
+      const fileName = `voice-message-${new Date().getTime()}.webm`;
+      const audioFile = new Blob([audioBlob], { type: 'audio/webm' });
+      
+      // Get signed URL for upload
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fileName: fileName,
+          fileType: 'audio/webm',
+          fileSize: audioBlob.size,
+          organizationId,
+          conversationId
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error uploading voice message');
+      }
+      
+      const { upload, uploadUrl } = await response.json();
+      
+      // Upload the audio file
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: audioBlob,
+        headers: {
+          'Content-Type': 'audio/webm'
+        }
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error('Error uploading audio file');
+      }
+      
+      // Build the public URL
+      const audioUrl = upload.publicUrl || `https://${upload.s3Bucket}.4everland.store/${upload.s3Key}`;
+      
+      // Create a message with the audio file
+      const durationText = duration > 59 ? 
+        `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}` : 
+        `0:${duration.toString().padStart(2, '0')}`;
+      
+      const content = `Sent a voice message: [${durationText}]`;
+      
+      // Send the message
+      await sendMessage(conversationId, content, upload.id, audioUrl);
+      
+    } catch (error) {
+      console.error('Error sending voice message:', error);
+      alert('Unable to send voice message. Please try again later.');
+    }
+  };
+  
+  // Gestisce il caricamento di file
+  const handleFileUpload = async (fileId: string, fileUrl: string, fileName: string, fileType: string) => {
+    if (!conversationId) return;
+    
+    try {
+      await sendFileMessage(conversationId, fileId, fileUrl, fileName, fileType);
+      setIsScrolledUp(false);
+    } catch (error) {
+      console.error('Error sending file message:', error);
+    }
+  };
+  
+  // Filtra e ottieni gli utenti che stanno scrivendo in questa conversazione
+  const currentTypingUsers = (typingUsers && conversationId && typingUsers[conversationId]) || {};
+  const typingUsersList = Object.values(currentTypingUsers)
+    .filter(user => user && user.timestamp > Date.now() - 5000) // Solo utenti che hanno digitato negli ultimi 5 secondi
+    .map(user => user?.name || 'Unknown User');
+  
+  // Rimuovi automaticamente gli utenti che stanno digitando dopo un certo periodo
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentTime = Date.now();
+      
+      // Controlla se ci sono utenti che stanno digitando che devono essere rimossi
+      if (Object.keys(currentTypingUsers).length > 0) {
+        const hasExpired = Object.values(currentTypingUsers).some(
+          user => user && user.timestamp < currentTime - 5000
+        );
+        
+        if (hasExpired) {
+          // Forza un re-render che rimuoverà gli utenti scaduti
+          setForceUpdate(prev => prev + 1);
+        }
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [currentTypingUsers]);
+  
+  const formatMessageTime = (timestamp: string) => {
+    if (!timestamp) return '';
+    
+    try {
+      const date = new Date(timestamp);
+      const today = new Date();
+      const isToday = date.toDateString() === today.toDateString();
+      
+      return isToday 
+        ? format(date, 'HH:mm') 
+        : format(date, 'dd/MM/yyyy HH:mm');
+    } catch (error) {
+      console.error('Error formatting message time:', error);
+      return '';
+    }
+  };
+  
+  const toggleSound = () => {
+    const isEnabled = SoundEffects.getInstance().toggleSounds();
+    setSoundEnabled(isEnabled);
   };
   
   const renderMessageBubble = (message: Message, isCurrentUser: boolean) => {
+    if (!message) return null;
+    
+    // Check if the message contains a file
+    const hasFile = message.content.includes('Sent a file:');
+    const hasVoice = message.content.includes('Sent a voice message:');
+    
     return (
       <div
         className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-4`}
@@ -156,7 +287,26 @@ const ConversationDetail: React.FC<ConversationDetailProps> = ({
                 : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-bl-none'
             }`}
           >
-            {message.content}
+            {hasFile ? (
+              <div className="flex items-center">
+                <File className="h-5 w-5 mr-2" />
+                <span>{message.content.replace('Sent a file: ', '')}</span>
+              </div>
+            ) : hasVoice && message.fileUrl ? (
+              <div className="flex flex-col">
+                <div className="flex items-center">
+                  <Mic className="h-5 w-5 mr-2" />
+                  <span>Voice message {message.content.match(/\[(.*?)\]/)?.[1]}</span>
+                </div>
+                <audio 
+                  controls 
+                  src={message.fileUrl} 
+                  className="mt-2 max-w-full h-8" 
+                />
+              </div>
+            ) : (
+              message.content
+            )}
           </div>
         </div>
         
@@ -181,6 +331,7 @@ const ConversationDetail: React.FC<ConversationDetailProps> = ({
     );
   };
   
+  // Mostra loader o nessuna conversazione selezionata
   if (!activeConversation && isLoadingMessages) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -199,10 +350,19 @@ const ConversationDetail: React.FC<ConversationDetailProps> = ({
     );
   }
   
+  // Verifica se la struttura di activeConversation è completa
+  if (!activeConversation.participants) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+  
   const conversationName = activeConversation.name || 
     activeConversation.participants
-      .filter(p => p.id !== session?.user?.id)
-      .map(p => p.name)
+      .filter((p: { id: string }) => p?.id !== session?.user?.id)
+      .map((p: { name: string }) => p?.name || 'Unnamed User')
       .join(', ');
   
   return (
@@ -233,9 +393,17 @@ const ConversationDetail: React.FC<ConversationDetailProps> = ({
             {conversationName}
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-            {activeConversation.participants.length} partecipanti
+            {activeConversation.participants?.length || 0} partecipanti
           </p>
         </div>
+        
+        <button 
+          onClick={toggleSound}
+          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+          title={soundEnabled ? "Disattiva suoni" : "Attiva suoni"}
+        >
+          {soundEnabled ? <Volume className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        </button>
         
         <button 
           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
@@ -262,58 +430,83 @@ const ConversationDetail: React.FC<ConversationDetailProps> = ({
           </div>
         )}
         
-        {isLoadingMessages && !messages.length ? (
+        {isLoadingMessages && !messages?.length ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
           </div>
-        ) : messages.length === 0 ? (
+        ) : !messages?.length ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
             <MessageSquare className="h-12 w-12 mb-3" />
             <p className="text-center">
-              Non ci sono ancora messaggi. <br />
-              Invia il primo messaggio!
+              No messages yet. <br />
+              Send the first message!
             </p>
           </div>
         ) : (
           <div className="space-y-2">
             {messages.map((message) => (
-              renderMessageBubble(message, message.senderId === session?.user?.id)
+              message && renderMessageBubble(message, message.senderId === session?.user?.id)
             ))}
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
       
+      {/* Typing indicator */}
+      {typingUsersList.length > 0 && (
+        <div className="px-4 py-1 text-xs text-gray-500 animate-pulse">
+          {typingUsersList.length === 1 
+            ? `${typingUsersList[0]} is typing...` 
+            : `${typingUsersList.join(', ')} are typing...`}
+        </div>
+      )}
+      
       {/* Message input */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <form onSubmit={handleSendMessage} className="flex items-end">
-          <div className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-500 dark:focus-within:ring-blue-400 bg-white dark:bg-gray-700 overflow-hidden">
-            <textarea
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              placeholder="Scrivi un messaggio..."
-              className="block w-full p-3 border-0 focus:ring-0 resize-none bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              rows={1}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  if (messageInput.trim()) {
-                    handleSendMessage(e);
-                  }
-                }
-              }}
-            />
-          </div>
-          
-          <button
-            type="submit"
-            disabled={!messageInput.trim() || isSending}
-            className="ml-2 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-          >
-            <Send className="h-5 w-5" />
-          </button>
-        </form>
+  <form onSubmit={handleSendMessage} className="flex flex-col">
+    <div className="flex items-end">
+      <div className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-500 dark:focus-within:ring-blue-400 bg-white dark:bg-gray-700 overflow-hidden">
+        <textarea
+          value={messageInput}
+          onChange={handleMessageInputChange}
+          placeholder="Scrivi un messaggio..."
+          className="block w-full p-3 border-0 focus:ring-0 resize-none bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+          rows={1}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              if (messageInput.trim()) {
+                handleSendMessage(e);
+              }
+            }
+          }}
+        />
       </div>
+      
+      <div className="flex items-center">
+        <FileUploader 
+          onFileUpload={handleFileUpload}
+          organizationId={organizationId}
+          conversationId={conversationId}
+        />
+        
+        <VoiceRecorder
+          onVoiceRecorded={handleVoiceRecorded}
+          conversationId={conversationId}
+          organizationId={organizationId}
+        />
+        
+        <button
+          type="submit"
+          disabled={!messageInput.trim() || isSending}
+          className="ml-2 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+        >
+          <Send className="h-5 w-5" />
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
     </div>
   );
 };
@@ -348,5 +541,24 @@ const MessageSquare = (props: any) => (
     {...props}
   >
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+const File = (props: any) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <line x1="10" y1="9" x2="8" y2="9" />
   </svg>
 );

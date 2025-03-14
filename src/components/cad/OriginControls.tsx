@@ -76,6 +76,7 @@ const OriginControls: React.FC = () => {
           </div>
         </div>
         
+        
         <button
           onClick={resetOrigin}
           className="w-full px-3 py-1 mt-2 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200"

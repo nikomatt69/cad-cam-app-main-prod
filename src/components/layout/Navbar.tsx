@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { Sun, Moon, Bell, Settings, User, LogOut, Menu, X } from 'react-feather';
 import useUserProfileStore from 'src/store/userProfileStore';
 import NotificationCenter from '../notifications/NotificationCenter';
+import OrganizationChatPage from '@/src/pages/organizations/[id]/chat';
 
 const Navbar = () => {
   const router = useRouter();
@@ -253,6 +254,28 @@ const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Settings
+            </Link>
+            <Link
+              href="/organizations"
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                router.pathname === '/organizations' 
+                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300' 
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Organizations
+            </Link>
+            <Link
+              href={`/organizations/${OrganizationChatPage}`}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                router.pathname === '/chat' 
+                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300' 
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Chat
             </Link>
           </div>
         </div>

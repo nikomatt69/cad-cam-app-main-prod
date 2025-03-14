@@ -76,7 +76,7 @@ const ConversationPage = () => {
     <Layout>
       <Metatags title={activeConversation?.name || 'Chat della conversazione'} />
       
-      <div className="p-4 h-[calc(100vh-64px)]">
+      <div className="p-4 h-[calc(100vh-84px)]">
         <div className="flex h-full gap-4">
           {/* Conversation List - Hidden on mobile when viewing a conversation */}
           {(!isMobileView || showConversationList) && (

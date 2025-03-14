@@ -305,6 +305,9 @@ model FileUpload {
   organizationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  
+  // Aggiungi questa relazione per i messaggi
+  messages      Message[]
 }
 
 model LibraryItem {
@@ -326,6 +329,7 @@ model LibraryItem {
   // Relationships
   owner        User?         @relation(fields: [ownerId], references: [id])
   organization Organization? @relation(fields: [organizationId], references: [id])
+
 }
 
 model Conversation {
@@ -361,6 +365,8 @@ model Message {
   content        String   @db.Text
   senderId       String
   conversationId String
+  fileId         String?  // Aggiungi questo campo
+  fileUrl        String?  // Aggiungi questo campo
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -368,6 +374,8 @@ model Message {
   sender        User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
   conversation  Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   notifications Notification[] // Aggiunto per il sistema di notifiche
+  fileUpload    FileUpload?   @relation(fields: [fileId], references: [id], onDelete: SetNull) // Aggiungi questa relazione
+  @@index([conversationId])
 }
 
 // Modello per le notifiche

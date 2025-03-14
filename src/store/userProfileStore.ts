@@ -6,8 +6,8 @@ interface UserProfileState {
   setProfileImage: (image: string | null) => void;
 }
 
-// Store per condividere lo stato dell'immagine profilo tra componenti
-// con persistenza nel localStorage
+// Store to share the profile image state between components
+// with persistence in localStorage
 const useUserProfileStore = create<UserProfileState>()(
   persist(
     (set) => ({
@@ -15,8 +15,8 @@ const useUserProfileStore = create<UserProfileState>()(
       setProfileImage: (image) => set({ profileImage: image }),
     }),
     {
-      name: 'user-profile-storage', // nome della chiave nel localStorage
-      getStorage: () => localStorage, // usa localStorage come storage
+      name: 'user-profile-storage', // name of the key in localStorage
+      getStorage: () => localStorage, // use localStorage as storage
     }
   )
 );

@@ -37,8 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       return res.status(200).json({ success: true, id: result.id });
     } catch (error) {
-      console.error('Errore nel salvataggio della sottoscrizione push:', error);
-      return res.status(500).json({ message: 'Errore nel salvataggio della sottoscrizione push' });
+      console.error('Error saving push subscription:', error);
+      return res.status(500).json({ message: 'Error saving push subscription' });
     }
   }
   
@@ -61,8 +61,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       return res.status(200).json({ success: true });
     } catch (error) {
-      console.error('Errore nell\'eliminazione della sottoscrizione push:', error);
-      return res.status(500).json({ message: 'Errore nell\'eliminazione della sottoscrizione push' });
+      console.error('Error deleting push subscription:', error);
+      return res.status(500).json({ message: 'Error deleting push subscription' });
     }
   }
   

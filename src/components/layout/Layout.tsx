@@ -10,6 +10,7 @@ import Footer from '../ui/Footer';
 import useRefreshToken from '@/src/hooks/useRefreshToken';
 import BottomNavigation from '../components/BottomNavigation';
 import CookieConsentBanner from '../components/CookieConsentBanner';
+import { disconnectWebSocket, initializeWebSocket } from '@/src/lib/websocket';
 
 
 type EnhancedLayoutProps = {

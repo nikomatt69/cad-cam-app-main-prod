@@ -36,16 +36,17 @@ import EnhancedSidebar from '../components/cad/EnanchedSidebar';
 import ToolpathVisualizer from '../components/cam/ToolpathVisualizer';
 import AIToolpathOptimizer from '../components/ai/AIToolpathOptimizer';
 import Loading from '../components/ui/Loading';
-import FanucPostProcessor from '../components/cam/FanucPostProcessor';
-import HeidenhainPostProcessor from '../components/cam/HeidenhainPostProcessor';
+import FanucPostProcessor from '../components/cam/postprocessor/FanucPostProcessor';
+import HeidenhainPostProcessor from '../components/cam/postprocessor/HeidenhainPostProcessor';
 import MetaTags from '../components/layout/Metatags';
 import OriginControls from '../components/cad/OriginControls';
 import AISettingsPanel from '../components/ai/AISettingPanel';
 import Link from 'next/link';
 import AIHub from '../components/ai/AIHub';
+import GenericPostProcessor from '../components/cam/postprocessor/GenericPostProcessor';
 
 // Tipi di post-processor supportati
-type PostProcessorType = 'fanuc' | 'heidenhain';
+type PostProcessorType = 'fanuc' | 'heidenhain' | 'siemens' | 'haas' | 'mazak' | 'okuma' | 'generic';
 
 export default function CAMPage() {
   const { data: session, status } = useSession();
@@ -349,6 +350,11 @@ export default function CAMPage() {
                     >
                       <option value="fanuc">Fanuc</option>
                       <option value="heidenhain">Heidenhain</option>
+                      <option value="siemens">Siemens</option>
+                      <option value="haas">Haas</option>
+                      <option value="mazak">Mazak</option>
+                      <option value="okuma">Okuma</option>
+                      <option value="generic">Generic</option>
                     </select>
                   </div>
                 </div>
@@ -368,11 +374,18 @@ export default function CAMPage() {
                       onProcessedGcode={handleProcessedGcode}
                     />
                   )}
+                  
+                  {['siemens', 'haas', 'mazak', 'okuma', 'generic'].includes(selectedPostProcessor) && (
+                    <GenericPostProcessor
+                      initialGcode={gcode}
+                      controllerType={selectedPostProcessor}
+                      onProcessedGcode={handleProcessedGcode}
+                    />
+                  )}
                 </div>
               </div>
             )}
-            
-          </div>
+            </div>
           
           {/* Right sidebar for controls */}
           <div 
@@ -426,7 +439,7 @@ export default function CAMPage() {
               
               {activeRightPanel === 'cycles' && (
                <><MachineCycles 
-                  controllerType={selectedPostProcessor} 
+               controllerType={selectedPostProcessor as 'fanuc' | 'heidenhain'}  
                   onCycleCodeGenerated={handleCycleCodeGenerated} 
                 />
                 

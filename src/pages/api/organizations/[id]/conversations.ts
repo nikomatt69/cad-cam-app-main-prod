@@ -30,6 +30,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // GET request to list conversations
   if (req.method === 'GET') {
     try {
+      // Estrai parametri di paginazione dalla query
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const skip = (page - 1) * limit;
+  
+      // Conta totale delle conversazioni per la paginazione
+      const totalCount = await prisma.conversation.count({
+        where: {
+          organizationId,
+          participants: {
+            some: {
+              userId
+            }
+          }
+        }
+      });
+      
       // Get all conversations for the organization where the user is a participant
       const conversations = await prisma.conversation.findMany({
         where: {
@@ -56,7 +73,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             orderBy: {
               createdAt: 'desc'
             },
-            take: 1
+            take: 1,
+            include: {
+              sender: {
+                select: {
+                  id: true,
+                  name: true,
+                  image: true
+                }
+              }
+            }
           },
           _count: {
             select: {
@@ -66,30 +92,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         orderBy: {
           updatedAt: 'desc'
-        }
+        },
+        skip,
+        take: limit
       });
       
       // Format conversations for response
       const formattedConversations = conversations.map(conv => {
         const otherParticipants = conv.participants
           .filter(p => p.userId !== userId)
-          .map(p => p.user.id);
+          .map(p => ({
+            id: p.user.id,
+            name: p.user.name || 'Unnamed User',
+            image: p.user.image
+          }));
           
         const userParticipant = conv.participants.find(p => p.userId === userId);
+        
+        const lastMessage = conv.messages[0] || null;
         
         return {
           id: conv.id,
           name: conv.name || (otherParticipants.length === 1 
-            ? otherParticipants[0] || 'Unnamed User' 
-            : otherParticipants.map(p => p).join(', ')),
+            ? otherParticipants[0].name
+            : otherParticipants.map(p => p.name).join(', ')),
           isGroupChat: conv.isGroupChat,
-          lastMessage: conv.messages[0] || null,
+          lastMessage: lastMessage ? {
+            id: lastMessage.id,
+            content: lastMessage.content,
+            createdAt: lastMessage.createdAt,
+            senderId: lastMessage.senderId,
+            sender: lastMessage.sender
+          } : null,
           messageCount: conv._count.messages,
           createdAt: conv.createdAt,
           updatedAt: conv.updatedAt,
           participants: conv.participants.map(p => ({
             id: p.user.id,
-            name: p.user.name,
+            name: p.user.name || 'Unnamed User',
             image: p.user.image,
             joinedAt: p.joinedAt
           })),
@@ -97,7 +137,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         };
       });
       
-      return res.status(200).json(formattedConversations);
+      // Includi informazioni sulla paginazione nella risposta
+      return res.status(200).json({
+        conversations: formattedConversations,
+        pagination: {
+          total: totalCount,
+          page,
+          limit,
+          pages: Math.ceil(totalCount / limit),
+          hasMore: skip + limit < totalCount
+        }
+      });
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
       return res.status(500).json({ message: 'Failed to fetch conversations' });

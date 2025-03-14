@@ -30,10 +30,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // GET request to list all members
   if (req.method === 'GET') {
     try {
+      const { search } = req.query; // Get search parameter
+      
+      // Build the Prisma query with search
+      const whereCondition: any = {
+        organizationId
+      };
+      
+      // If there's a search term, add filter condition
+      if (search && typeof search === 'string') {
+        whereCondition.user = {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } }
+          ]
+        };
+      }
+      
       const members = await prisma.userOrganization.findMany({
-        where: {
-          organizationId
-        },
+        where: whereCondition,
         include: {
           user: {
             select: {

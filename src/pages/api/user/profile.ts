@@ -53,8 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         organizations: formattedOrganizations
       });
     } catch (error) {
-      console.error('Errore nel recupero del profilo:', error);
-      return res.status(500).json({ message: 'Errore nel recupero del profilo' });
+      console.error('Error retrieving profile:', error);
+      return res.status(500).json({ message: 'Error retrieving profile' });
     }
   }
   

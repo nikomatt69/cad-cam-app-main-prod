@@ -1,15 +1,19 @@
 // src/components/chat/NewConversation.tsx
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { ArrowLeft, Search, User, Check, X } from 'react-feather';
+import { useSession } from 'next-auth/react';
+import { ArrowLeft, Search, User, Check, X, Users } from 'react-feather';
 import useChatStore from '@/src/store/chatStore';
 import Image from 'next/image';
 
 interface Member {
   id: string;
-  name: string | null;
-  email: string | null;
-  image: string | null;
+  user: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+  };
   role: string;
 }
 
@@ -25,6 +29,7 @@ const NewConversation: React.FC<NewConversationProps> = ({
   onBack
 }) => {
   const router = useRouter();
+  const { data: session } = useSession();
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,31 +38,48 @@ const NewConversation: React.FC<NewConversationProps> = ({
   const { createConversation } = useChatStore();
   
   useEffect(() => {
-    const fetchMembers = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/organizations/${organizationId}/members`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch members');
-        }
-        const data = await response.json();
-        setMembers(data);
-      } catch (error) {
-        console.error('Error fetching members:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchMembers();
   }, [organizationId]);
   
+  const fetchMembers = async (query?: string) => {
+    setIsLoading(true);
+    try {
+      let url = `/api/organizations/${organizationId}/members`;
+      if (query) {
+        url += `?search=${encodeURIComponent(query)}`;
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch members');
+      }
+      const data = await response.json();
+      console.log('Fetched members:', data); // Debug log
+      setMembers(data);
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    
+    // If query is empty, fetch all members
+    if (!query.trim()) {
+      fetchMembers();
+      return;
+    }
+    
+    // Search for members matching the query
+    fetchMembers(query);
+  };
+  
   const filteredMembers = members.filter(member => {
-    const matchesSearch = 
-      (member.name && member.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (member.email && member.email.toLowerCase().includes(searchQuery.toLowerCase()));
-    const isNotSelected = !selectedMembers.some(selected => selected.id === member.id);
-    return matchesSearch && isNotSelected;
+    // Skip already selected members
+    return !selectedMembers.some(selected => selected.user.id === member.user.id);
   });
   
   const handleSelectMember = (member: Member) => {
@@ -66,16 +88,16 @@ const NewConversation: React.FC<NewConversationProps> = ({
   };
   
   const handleRemoveMember = (memberId: string) => {
-    setSelectedMembers(selectedMembers.filter(member => member.id !== memberId));
+    setSelectedMembers(selectedMembers.filter(member => member.user.id !== memberId));
   };
   
   const handleCreateConversation = async () => {
     if (selectedMembers.length === 0) return;
     
-    const participantIds = selectedMembers.map(member => member.id);
+    const participantIds = selectedMembers.map(member => member.user.id);
     const name = isGroupChat 
-      ? groupName || `Group with ${selectedMembers.map(m => m.name || 'User').join(', ')}` 
-      : selectedMembers[0].name || selectedMembers[0].email || 'Unnamed User';
+      ? groupName || `Group with ${selectedMembers.map(m => m.user.name || 'User').join(', ')}` 
+      : selectedMembers[0].user.name || selectedMembers[0].user.email || 'Unnamed User';
     
     const conversation = await createConversation(
       organizationId,
@@ -132,7 +154,7 @@ const NewConversation: React.FC<NewConversationProps> = ({
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               placeholder="Cerca per nome o email..."
               className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             />
@@ -149,12 +171,12 @@ const NewConversation: React.FC<NewConversationProps> = ({
             <div className="flex flex-wrap gap-2">
               {selectedMembers.map(member => (
                 <div
-                  key={member.id}
+                  key={member.user.id}
                   className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300"
                 >
-                  <span className="text-sm font-medium">{member.name || member.email}</span>
+                  <span className="text-sm font-medium">{member.user.name || member.user.email}</span>
                   <button
-                    onClick={() => handleRemoveMember(member.id)}
+                    onClick={() => handleRemoveMember(member.user.id)}
                     className="ml-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
                   >
                     <X className="h-4 w-4" />
@@ -182,10 +204,10 @@ const NewConversation: React.FC<NewConversationProps> = ({
                 onClick={() => handleSelectMember(member)}
               >
                 <div className="flex-shrink-0">
-                  {member.image ? (
+                  {member.user.image ? (
                     <Image
-                      src={member.image}
-                      alt={member.name || 'User'}
+                      src={member.user.image}
+                      alt={member.user.name || 'User'}
                       width={40}
                       height={40}
                       className="rounded-full"
@@ -199,10 +221,10 @@ const NewConversation: React.FC<NewConversationProps> = ({
                 
                 <div className="ml-3 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {member.name || 'Unnamed User'}
+                    {member.user.name || 'Unnamed User'}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {member.email || 'No email'} • {member.role}
+                    {member.user.email || 'No email'} • {member.role}
                   </p>
                 </div>
               </button>

@@ -1,10 +1,19 @@
 // src/lib/nextAuthConfig.ts
-
 import { NextAuthOptions } from 'next-auth';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from './prisma';
 import { compare } from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
+// Function to generate a minimal WebSocket token
+export const generateWebSocketToken = (userId: string): string => {
+  return jwt.sign(
+    { sub: userId },
+    process.env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET!,
+    { expiresIn: '24h' }
+  );
+};
 
 export const nextAuthConfig: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -75,9 +84,8 @@ export const nextAuthConfig: NextAuthOptions = {
         token.roles = user.roles;
       }
       
-      // Genera un token codificato che possiamo utilizzare per i WebSocket
-      // Il token è già firmato internamente da NextAuth, quindi possiamo usarlo direttamente
-      token.token = JSON.stringify(token);
+      // Do NOT include the token itself in the JWT - this causes bloat
+      // Remove this line: token.token = JSON.stringify(token);
       
       return token;
     },
@@ -85,10 +93,11 @@ export const nextAuthConfig: NextAuthOptions = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        session.user.roles as string[];
+        token.roles as string[];
         
-        // Includi il token JWT nella sessione per l'utilizzo nei WebSockets
-        session.token = token.token;
+        // Instead of including the whole token, just add the user ID
+        // We'll generate a minimal WebSocket token when needed
+        // Remove this line: session.token = token.token;
       }
       return session;
     },
