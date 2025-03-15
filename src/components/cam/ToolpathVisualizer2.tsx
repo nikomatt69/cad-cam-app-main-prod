@@ -11,15 +11,18 @@ import {
   Tool, Box, Layers, Globe, Sun, Square, Menu, Info, Settings, X
 } from 'react-feather';
 
-interface ToolpathVisualizerProps {
+import { createToolFromLibrary, animateToolRotation, addCuttingGlow, applyRealisticMaterial } from '@/src/lib/toolVisualization';
+
+export interface ToolpathVisualizerProps {
   width: string;
   height: string;
   gcode: string;
   isSimulating: boolean;
   selectedTool?: string | null;
   showWorkpiece?: boolean;
-  onSimulationComplete: () => void;
-  onSimulationProgress: (progress: number) => void;
+  onSimulationComplete?: () => void;
+  onSimulationProgress?: (progress: number) => void;
+  onToolChange?: (toolName: string) => void;
 }
 
 interface ToolpathPoint {
@@ -159,9 +162,10 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   gcode,
   isSimulating,
   selectedTool = null,
-  showWorkpiece = true,
+  showWorkpiece: initialShowWorkpiece = true,
   onSimulationComplete,
-  onSimulationProgress
+  onSimulationProgress,
+  onToolChange
 }) => {
   // Refs for Three.js elements
   const containerRef = useRef<HTMLDivElement>(null);
@@ -177,7 +181,9 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const workpieceRef = useRef<THREE.Mesh | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const toolpathPointsRef = useRef<ToolpathPoint[]>([]);
-  
+  const animateToolRef = useRef<(() => void) | null>(null);
+  const [internalSelectedTool, setInternalSelectedTool] = useState<string | null>(selectedTool);
+
   // State for UI and visualization
   const [currentView, setCurrentView] = useState<string>('isometric');
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
@@ -191,7 +197,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const [showGrid, setShowGrid] = useState(true);
   const [showTool, setShowTool] = useState(true);
   const [showToolpath, setShowToolpath] = useState(true);
-  const [isWorkpieceVisible, setIsWorkpieceVisible] = useState(showWorkpiece);
+  const [isWorkpieceVisible, setIsWorkpieceVisible] = useState(initialShowWorkpiece);
   const [showStats, setShowStats] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<'info' | 'settings' | 'tools'>('info');
@@ -217,7 +223,10 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     cameraRefForHooks,
     {
       enabled: true,
-      highDetailThreshold: 50,
+      highDetailThreshold: 100,
+      mediumDetailThreshold: 300,
+      mediumDetailReduction: 0.5,
+      lowDetailReduction: 0.2,
       
     }
   );
@@ -342,12 +351,15 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
       if (controlsRef.current) {
         controlsRef.current.update();
       }
-      
+      if (isPlaying && animateToolRef.current) {
+        animateToolRef.current();
+      }
       // Update tool position during simulation
       if (isPlaying && toolpathPointsRef.current.length > 0 && toolRef.current) {
         updateToolPosition();
       }
-      
+     
+
       // Render with active camera
       let activeCamera: THREE.Camera | null = cameraRef.current;
       
@@ -435,6 +447,14 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     
     // Get current point
     const currentPoint = toolpathPointsRef.current[currentPointIndex];
+
+    if (currentPoint.isRapid || currentPoint.type === 'G0') {
+      addCuttingGlow(toolRef.current, 0); // Rimuovi l'incandescenza
+    } else {
+      // Intensità proporzionale alla velocità di avanzamento
+      const intensity = (currentPoint.feedrate || 1000) / 5000;
+      addCuttingGlow(toolRef.current, intensity);
+    }
     
     // Update tool position
     if (currentPoint) {
@@ -806,27 +826,28 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     // Create new tool if tool is selected
     if (selectedTool) {
       console.log("Creating tool for:", selectedTool);
-      const newTool = createToolMesh(selectedTool);
-      if (newTool) {
-        // Make sure the tool is visible
-        newTool.visible = showTool;
+      const toolMesh = createToolMesh(selectedTool);
+      if (toolMesh) {
+        // Imposta la visibilità dell'utensile
+        toolMesh.visible = showTool;
         
-        // Set initial tool position
+        // Posiziona l'utensile
         if (toolpathPointsRef.current.length > 0) {
           const firstPoint = toolpathPointsRef.current[0];
-          newTool.position.set(firstPoint.x, firstPoint.y, firstPoint.z);
+          toolMesh.position.set(firstPoint.x, firstPoint.y, firstPoint.z);
         } else {
-          // Default position at origin
-          newTool.position.set(0, 0, 0);
+          toolMesh.position.set(0, 0, 0);
         }
         
-        // Add tool to scene
-        sceneRef.current.add(newTool);
-        toolRef.current = newTool;
+        const toolData = predefinedTools.find(t => t.name === selectedTool);
+        if (toolData) {
+          // Applica materiale realistico in base al tipo di utensile
+          applyRealisticMaterial(toolMesh, toolData.material || 'carbide');
+        }
         
-        console.log("Tool created and added to scene:", newTool);
-      } else {
-        console.warn("Failed to create tool mesh for:", selectedTool);
+        // Aggiungi l'utensile alla scena
+        sceneRef.current.add(toolMesh);
+        toolRef.current = toolMesh;
       }
     } else {
       // Create a default tool if none is selected
@@ -1080,6 +1101,48 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
       setIsPanelOpen(true);
     }
   };
+
+  const onSelectTool = useCallback((toolName: string) => {
+    // Aggiorna lo stato interno
+    setInternalSelectedTool(toolName);
+    // If selectedTool is controlled externally, call the onToolChange callback
+    if (onToolChange) {
+      onToolChange(toolName);
+    }
+    
+    // Create rotation animation
+    if (toolRef.current) {
+      // Ruota l'utensile di 360 gradi per mostrare che è stato selezionato
+      const startRotation = toolRef.current.rotation.y;
+      const endRotation = startRotation + Math.PI * 2;
+      
+      let startTime: number | null = null;
+      const animateDuration = 1000; // ms
+      
+      const animateToolSelection = (timestamp: number) => {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / animateDuration, 1);
+        
+        if (toolRef.current) {
+          toolRef.current.rotation.y = startRotation + (endRotation - startRotation) * progress;
+        }
+        
+        if (progress < 1) {
+          requestAnimationFrame(animateToolSelection);
+        }
+      };
+      
+      requestAnimationFrame(animateToolSelection);
+    }
+  }, [onToolChange]);
+
+  // Effetto per sincronizzare lo stato interno con la prop selectedTool
+  useEffect(() => {
+    if (selectedTool !== internalSelectedTool) {
+      setInternalSelectedTool(selectedTool);
+    }
+  }, [selectedTool]);
   
   // Get current point
   const currentPoint = getCurrentPointInfo();
@@ -1486,27 +1549,53 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
                 </div>
                 
                 {/* Tool info */}
-                {selectedTool && (
-                  <div>
-                    <h4 className="text-sm font-medium text-blue-400 mb-2">Tool</h4>
-                    <div className="bg-gray-700 p-3 rounded text-sm">
-                      <div className="text-sm font-medium mb-2">{selectedTool}</div>
-                      {predefinedTools.find(t => t.name === selectedTool) && (
-                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                          <div className="text-gray-300">Type:</div>
-                          <div>
-                            {predefinedTools.find(t => t.name === selectedTool)?.type}
-                          </div>
-                          
-                          <div className="text-gray-300">Diameter:</div>
-                          <div>
-                            {predefinedTools.find(t => t.name === selectedTool)?.diameter} mm
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                 {selectedTool ? (
+      <div className="bg-gray-700 p-2 rounded">
+        <div className="text-sm font-medium mb-1">{selectedTool}</div>
+        {/* Mostra dettagli specifici dell'utensile */}
+        {predefinedTools.find(t => t.name === selectedTool) && (
+          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+            <div className="text-gray-400">Type:</div>
+            <div>{predefinedTools.find(t => t.name === selectedTool)?.type}</div>
+            
+            <div className="text-gray-400">Diameter:</div>
+            <div>{predefinedTools.find(t => t.name === selectedTool)?.diameter} mm</div>
+            
+            <div className="text-gray-400">Material:</div>
+            <div>{predefinedTools.find(t => t.name === selectedTool)?.material || 'Carbide'}</div>
+            
+            <div className="text-gray-400">Flutes:</div>
+            <div>{predefinedTools.find(t => t.name === selectedTool)?.numberOfFlutes || '2'}</div>
+            
+            {/* Pulsante per visualizzare l'utensile */}
+            <div className="col-span-2 mt-2">
+              <button
+                className="w-full py-1 px-2 bg-blue-600 hover:bg-blue-700 rounded text-xs"
+                onClick={() => {
+                  // Centra la vista sull'utensile
+                  if (toolRef.current && cameraRef.current && controlsRef.current) {
+                    const position = toolRef.current.position.clone();
+                    controlsRef.current.target.copy(position);
+                    cameraRef.current.position.set(
+                      position.x + 20,
+                      position.y + 20,
+                      position.z + 20
+                    );
+                    cameraRef.current.lookAt(position);
+                    controlsRef.current.update();
+                  }
+                }}
+              >
+                Focus on Tool
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    ) : (
+      <div className="text-sm text-gray-400">No tool selected</div>
+    )}
+
                 
                 {/* Workpiece info */}
                 {workpiece && (
@@ -1649,21 +1738,22 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
               </div>
               
               <div className="space-y-2">
-                {predefinedTools.slice(0, 10).map(tool => (
-                  <div
-                    key={tool.name}
-                    className={`p-2 rounded cursor-pointer ${
-                      selectedTool === tool.name ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'
-                    }`}
-                  >
-                    <div className="text-sm font-medium">{tool.name}</div>
-                    <div className="flex text-xs text-gray-300 mt-1">
-                      <span className="mr-3">{tool.type}</span>
-                      <span>Ø {tool.diameter}mm</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+  {predefinedTools.slice(0, 10).map(tool => (
+    <div
+      key={tool.name}
+      className={`p-2 rounded cursor-pointer ${
+        internalSelectedTool === tool.name ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'
+      }`}
+      onClick={() => onSelectTool(tool.name)}
+    >
+      <div className="text-sm font-medium">{tool.name}</div>
+      <div className="flex text-xs text-gray-300 mt-1">
+        <span className="mr-3">{tool.type}</span>
+        <span>Ø {tool.diameter}mm</span>
+      </div>
+    </div>
+  ))}
+</div>
             </div>
           )}
         </div>
