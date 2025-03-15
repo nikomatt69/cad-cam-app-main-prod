@@ -1,0 +1,138 @@
+# ToolpathVisualizer Integration Guide
+
+This document provides guidance on how to integrate the professional ToolpathVisualizer component into your CAM application.
+
+## Overview
+
+The ToolpathVisualizer is a comprehensive 3D visualization system for CNC toolpaths, designed to look and feel similar to professional CAM tools like Fusion 360. It supports various visualization modes, dynamic tool animation, and customizable rendering styles.
+
+## Components Structure
+
+The visualizer is divided into several modular components:
+
+```
+src/components/cam/
+├── ToolpathVisualizer.tsx           # Main container component
+└── toolpath-viewer/
+    ├── index.ts                     # Export file
+    ├── ViewCube.tsx                 # 3D orientation indicator
+    ├── ToolpathControls.tsx         # Control panel for toggling options
+    ├── ToolPathInfoPanel.tsx        # Information panel with statistics
+    ├── WorkpieceControls.tsx        # Controls for workpiece visualization
+    ├── ViewModeSelector.tsx         # Selector for rendering modes
+    ├── SimulationControls.tsx       # Playback controls
+    ├── AnimationUtils.ts            # Utilities for smooth animations
+    ├── MaterialUtils.ts             # Material styles for workpieces
+    └── ToolModels.tsx               # 3D models for various tool types
+```
+
+## Integration in CAM.tsx
+
+To integrate the visualizer into the CAM.tsx page, replace the existing visualization component with the new ToolpathVisualizer:
+
+```jsx
+{activeTab === 'visualizer' && (
+  <div className="h-full">
+    <ToolpathVisualizer 
+      width="100%" 
+      height="100%" 
+      gcode={gcode}
+      isSimulating={isSimulating}
+      selectedTool={selectedLibraryTool}
+      showWorkpiece={true}
+      onSimulationComplete={() => {
+        // Handle simulation complete
+        setIsSimulating(false);
+      }}
+      onSimulationProgress={(progress) => {
+        // Update progress if needed
+        console.log(`Simulation progress: ${progress}%`);
+      }}
+    />
+  </div>
+)}
+```
+
+## Props Reference
+
+The ToolpathVisualizer accepts the following props:
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| width | string \| number | '100%' | Width of the visualizer container |
+| height | string \| number | '100%' | Height of the visualizer container |
+| gcode | string | '' | G-code to visualize |
+| isSimulating | boolean | false | Whether simulation is active |
+| selectedTool | string \| null | null | Selected tool identifier from tool library |
+| showWorkpiece | boolean | true | Whether to display the workpiece |
+| onSimulationComplete | function | undefined | Callback when simulation completes |
+| onSimulationProgress | function | undefined | Callback with progress percentage |
+
+## Tool Visualization
+
+The visualizer automatically detects and creates 3D models for various tool types based on the tool ID provided. It supports:
+
+- End mills
+- Ball-end mills
+- V-bits
+- Drill bits
+- Thread mills
+- Chamfer tools
+- Bull nose end mills
+
+## Workpiece Visualization
+
+The workpiece is visualized based on the workpiece data from the CAD store. The visualizer adapts to different materials with appropriate colors and reflective properties.
+
+## Keyboard Shortcuts
+
+The visualizer supports the following keyboard shortcuts:
+
+- **Space:** Play/pause simulation
+- **←/→:** Step back/forward
+- **Home:** Reset to beginning
+- **1-5:** Switch between views
+- **G:** Toggle grid
+- **A:** Toggle axes
+- **T:** Toggle tool visibility
+- **W:** Toggle wireframe mode
+- **R:** Toggle realistic mode
+- **X:** Toggle X-ray mode
+- **F:** Toggle fullscreen
+
+## Customization
+
+The visualizer can be customized in several ways:
+
+1. **Colors:** Edit color schemes in `AnimationUtils.ts` and `MaterialUtils.ts`
+2. **Tool Models:** Enhance or add new tool models in `ToolModels.tsx`
+3. **UI Elements:** Modify UI components for different layouts
+4. **Performance:** Adjust LOD and other performance settings
+
+## Performance Considerations
+
+For optimal performance:
+
+1. Use segmented toolpaths for large G-code files
+2. Set appropriate LOD thresholds based on target hardware
+3. Disable shadows for lower-end devices
+4. Use wireframe mode for very complex scenes
+
+## Integration with Toolpath Generator
+
+The visualizer works seamlessly with the toolpath generator. Whenever a new toolpath is generated:
+
+1. The G-code is passed to the visualizer
+2. The correct tool is automatically selected
+3. The appropriate view is set based on the operation
+4. The visualization mode is adjusted to the toolpath type
+
+## Future Enhancements
+
+Planned enhancements include:
+
+- Stock simulation with material removal
+- Collision detection visualization
+- Multi-axis toolpath support
+- Customizable color themes
+- VR/AR support

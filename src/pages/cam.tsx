@@ -33,7 +33,7 @@ import {
   X
 } from 'react-feather';
 import EnhancedSidebar from '../components/cad/EnanchedSidebar';
-import ToolpathVisualizer from '../components/cam/ToolpathVisualizer';
+import ToolpathVisualizer from '../components/cam/ToolpathVisualizer2';
 import AIToolpathOptimizer from '../components/ai/AIToolpathOptimizer';
 import Loading from '../components/ui/Loading';
 import FanucPostProcessor from '../components/cam/postprocessor/FanucPostProcessor';
@@ -165,10 +165,7 @@ export default function CAMPage() {
     );
   }
 
-  if (status === 'unauthenticated') {
-    router.push('/auth/signin');
-    return null;
-  }
+  
 
  
 
@@ -322,16 +319,25 @@ export default function CAMPage() {
             )}
             
             {activeTab === 'visualizer' && (
-              <div className="h-full">
-               <ToolpathVisualizer 
-                  width="100%" 
-                  height="100%" 
-                  gcode={gcode}
-                  isSimulating={isSimulating}
-                  selectedTool={selectedLibraryTool}
-                />
-              </div>
-            )}
+  <div className="h-full">
+    <ToolpathVisualizer 
+      width="100%" 
+      height="100%" 
+      gcode={gcode}
+      isSimulating={isSimulating}
+      selectedTool={selectedLibraryTool}
+      showWorkpiece={true}
+      onSimulationComplete={() => {
+        // Handle simulation complete
+        setIsSimulating(false);
+      }}
+      onSimulationProgress={(progress) => {
+        // Update progress if needed
+        console.log(`Simulation progress: ${progress}%`);
+      }}
+    />
+  </div>
+)}
             
             {activeTab === 'post-processor' && (
               <div className="h-full rounded-xl overflow-y-auto">
