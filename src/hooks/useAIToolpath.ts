@@ -1,7 +1,7 @@
 // src/hooks/useAIToolpath.ts
 import { useState } from 'react';
 import { Toolpath, ToolpathParameters, ToolpathModification } from '../types/ai';
-import { useAIAgent } from '../contexts/AIAgentProvider';
+import { useAI } from '../components/ai/ai-new/AIContextProvider';
 import { promptTemplates } from '../lib/ai/promptTemplates';
 
 interface UseAIToolpathOptions {
@@ -13,7 +13,7 @@ export const useAIToolpath = (options?: UseAIToolpathOptions) => {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizedToolpath, setOptimizedToolpath] = useState<Toolpath | null>(null);
   const [optimizationError, setOptimizationError] = useState<string | null>(null);
-  const { analyzeDesign, state } = useAIAgent();
+  const { analyzeDesign, state   } = useAI();
 
   /**
    * Optimize a toolpath using AI

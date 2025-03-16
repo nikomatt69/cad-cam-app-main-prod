@@ -8,7 +8,7 @@ import {
   updateMachineConfig, 
   deleteMachineConfig,
   MachineConfig
-} from 'src/lib/machineConfigApi';
+} from 'src/lib/api/machineConfigApi';
 
 const MachineConfigManager: React.FC = () => {
   const { selectedMachine, setSelectedMachine } = useCADStore();

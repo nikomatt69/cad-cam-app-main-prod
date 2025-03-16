@@ -1,6 +1,7 @@
-import TextToCADGenerator from '@/src/components/ai/TextToCADGenerator';
+import { AIHub } from '@/src/components/ai/ai-new';
+
 import Layout from '@/src/components/layout/Layout';
-import AIHub from 'src/components/ai/AIHub';
+
 
 function AIPanelPage() {
   return (

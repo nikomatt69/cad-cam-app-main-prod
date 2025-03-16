@@ -17,7 +17,7 @@ import toast from 'react-hot-toast';
 
 import { predefinedComponents, predefinedTools } from 'src/lib/predefinedLibraries';
 import { ToolLibraryItem } from '@/src/hooks/useUnifiedLibrary';
-import TextToCADGenerator from '../ai/TextToCADGenerator';
+
 import LocalComponentsLibraryView from '../library/LocalComponentsLibraryView';
 import UnifiedLibraryBrowser from './UnifiedLibraryBrowser';
 import { ComponentLibraryItem } from '@/src/hooks/useUnifiedLibrary';
@@ -25,6 +25,7 @@ import ComponentsLibraryView from '../library/ComponentsLibraryView';
 import DrawingToolbar from '../cam/DrawingToolbar';
 import { useDrawingTools } from '@/src/hooks/useDrawingTools';
 import LibraryMenu from './LibraryMenu';
+import { AIHub } from '../ai/ai-new';
 
 interface Position {
   x: number;
@@ -569,7 +570,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
       case 'ai':
         return (
           <div className="p-2">
-            <TextToCADGenerator />
+            <AIHub />
           </div>
         );
       default:

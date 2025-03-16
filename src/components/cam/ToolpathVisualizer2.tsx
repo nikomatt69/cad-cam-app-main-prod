@@ -2076,10 +2076,10 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     } else {
       // Create a default tool if none is selected
       const defaultTool = new THREE.Mesh(
-        new THREE.CylinderGeometry(3, 2, 16, 30), 
+        new THREE.CylinderGeometry(0.3, 0.3, 5, 32), 
         new THREE.MeshStandardMaterial({ 
           color: 0xFF4500,  // Colore arancione brillante
-          emissive: 0xFFff00,
+          emissive: 0xFF0000,
           emissiveIntensity: 0.5
         })
       );
@@ -2087,9 +2087,9 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
       
       if (toolpathPointsRef.current.length > 0) {
         const firstPoint = toolpathPointsRef.current[0];
-        defaultTool.position.set(firstPoint.x, firstPoint.y, firstPoint.z + 100);
+        defaultTool.position.set(firstPoint.x, firstPoint.y, firstPoint.z + 50);
       } else {
-        defaultTool.position.set(0, 0, 100);
+        defaultTool.position.set(0, 0, 50);
       }
       
       // Rendi sempre visibile all'inizio

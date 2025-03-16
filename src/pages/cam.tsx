@@ -40,9 +40,9 @@ import FanucPostProcessor from '../components/cam/postprocessor/FanucPostProcess
 import HeidenhainPostProcessor from '../components/cam/postprocessor/HeidenhainPostProcessor';
 import MetaTags from '../components/layout/Metatags';
 import OriginControls from '../components/cad/OriginControls';
-import AISettingsPanel from '../components/ai/AISettingPanel';
+
 import Link from 'next/link';
-import AIHub from '../components/ai/AIHub';
+
 import GenericPostProcessor from '../components/cam/postprocessor/GenericPostProcessor';
 
 // Tipi di post-processor supportati

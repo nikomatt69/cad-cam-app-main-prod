@@ -23,13 +23,11 @@ import UnifiedLibraryModal from '../components/library/UnifiedLibraryModal';
 import { ComponentLibraryItem, ToolLibraryItem } from '@/src/hooks/useUnifiedLibrary';
 import toast from 'react-hot-toast';
 import EnhancedToolbar from '../components/cad/EnhancedToolbar';
-import AIPanel from '../components/ai/AIPanel';
-import AISettingsPanel from '../components/ai/AISettingPanel';
-import AIHub from '../components/ai/AIHub';
-import TextToCADGenerator from '../components/ai/TextToCADGenerator';
-import { useAIAgent } from '../contexts/AIAgentProvider';
+
+import { useAI } from '../components/ai/ai-new/AIContextProvider';
 import CADCanvas from '../components/cad/CADCanvas';
 import DrawingEnabledCADCanvas from '../components/cam/DrawingEnabledCADCanvas';
+import { AIHub, AIProcessingIndicator, TextToCADPanel } from '../components/ai/ai-new';
 
 export default function CADPage() {
   const { data: session, status } = useSession();
@@ -51,9 +49,31 @@ export default function CADPage() {
   const [description, setDescription] = useState('');
   
   const { addElements } = useElementsStore();
-  const { textToCAD, state: aiState } = useAIAgent();
+  
   
  
+  const [prompt, setPrompt] = useState('');
+  const { textToCAD, state } = useAI();
+  const [statuss, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  
+  const handleGenerate = async () => {
+    if (!prompt.trim()) return;
+    
+    setStatus('processing');
+    
+    try {
+      const result = await textToCAD(prompt);
+      
+      if (result.success) {
+        setStatus('success');
+        // Usa result.data...
+      } else {
+        setStatus('error');
+      }
+    } catch (error) {
+      setStatus('error');
+    }
+  };
   
   // Move the hook call to the top level
   const { loadCadDrawing } = useLocalLibrary();
@@ -224,34 +244,15 @@ export default function CADPage() {
                 <h3 className="text-md font-medium text-gray-900">AI Design Assistant</h3>
                 <Sliders size={16} className="text-blue-600" />
               </div>
-              <div>
-               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                   Describe what to create
-                   </label>
-                   <textarea
-                   value={description}
-                   onChange={(e) => setDescription(e.target.value)}
-                   className="w-full mt-1 p-2 border rounded-md"
-                   placeholder="Describe the 3D model you want to create..."
-                  />
-                </div>
-                <button
-                    onClick={handleGenerateElements}
-                    disabled={aiState.isProcessing || !description.trim()}
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md"
-                  >
-                  {aiState.isProcessing ? 'Generating...' : (
-                  <>
-                   <PenTool size={16} className="mr-2" />
-                    Generate CAD Elements
-                 </>
-                  )}
-              </button>
+             
+               <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Strumenti AI</h1>
+      <TextToCADPanel />
+    </div>
                </div>
               
             </div>
-          </div>
+          
           
           {/* Toggle right sidebar button */}
           <button

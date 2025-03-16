@@ -23,9 +23,8 @@ import usePageTracker from '../hooks/usePageTracker';
 import { useActivityTracking } from '../hooks/useActivityTracking';
 import { Toaster } from 'react-hot-toast';
 import { AnalyticsProvider } from '../contexts/AnalyticsContext';
-import { AIAgentProvider } from '../contexts/AIAgentProvider';
-import AIAssistant from '../components/ai/AIAssistant';
 import ViewportMeta from '../components/layout/ViewportMeta';
+import { AIContextProvider } from '../components/ai/ai-new/AIContextProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -65,7 +64,7 @@ export default function App({ Component, pageProps: { session, ...pageProps }, r
                   <PageTransition key={router.route}>
                   <PageViewTracker />
                   <AnalyticsProvider>
-                  <AIAgentProvider>
+                  <AIContextProvider>
                   <style jsx global>{`
                      body {
                      font-family: ${camFont.style.fontFamily};
@@ -74,7 +73,7 @@ export default function App({ Component, pageProps: { session, ...pageProps }, r
                       <ViewportMeta />
                       <Component {...pageProps} />
                      
-                      </AIAgentProvider>
+                      </AIContextProvider>
                       </AnalyticsProvider>
                     <PWAInstallPrompt />
                   </PageTransition>

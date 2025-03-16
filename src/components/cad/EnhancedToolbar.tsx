@@ -17,7 +17,7 @@ import { useElementsStore } from 'src/store/elementsStore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import Image from 'next/image';
-import AIAssistantButton from '../ai/AIAssistantButton';
+import AIAssistantButton from '../ai/ai-new/AIAssistantButton';
 import AIModal from '../components/AIModal';
 
 interface EnhancedToolbarProps {
@@ -159,7 +159,7 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             <Tool size={16} className="mr-1.5" />
             <span className="text-sm">Toolbar</span>
           </button>
-          <AIModal />
+      
         
         </div>
       </div>

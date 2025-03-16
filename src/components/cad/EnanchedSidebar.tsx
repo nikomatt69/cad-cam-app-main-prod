@@ -349,6 +349,7 @@ const renderSidebarContent = () => {
         
         <OriginControls/>
           <WorkpieceSetup />
+          <MachineConfigManager/>
           
           <div className="mt-6 pt-4 border-t border-gray-200">
             

@@ -11,7 +11,9 @@ import {
 } from '@nextui-org/react';
 import * as React from 'react';
 import { BookOpen } from 'react-feather';
-import UnifiedTextToCAD from '../ai/UnifiedTextToCAD';
+import TextToCADPanel from '../ai/ai-new/TextToCADPanel';
+import AIAssistantButton from '../ai/ai-new/AIAssistantButton';
+
 
 
 type Props = {
@@ -69,7 +71,7 @@ const AIModal: FC<Props> = () => {
             className="max-w-lg overflow-y-auto overflow-y-hidden   bg-white dark:bg-gray-900"
           >
             
-            <UnifiedTextToCAD />
+            <AIAssistantButton mode="cad" fixed />
            
           </ModalBody>
         </ModalContent>
