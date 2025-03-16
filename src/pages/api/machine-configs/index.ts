@@ -18,46 +18,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Extract query parameters
       const { type, search, public: isPublic } = req.query;
       
-      // Build the query
-      const query: any = {
-        where: {
-          OR: [
-            // User's own configs
-            { ownerId: userId },
-            // Configs in organizations where user is a member
-            {
-              organization: {
-                users: {
-                  some: { userId }
-                }
-              }
-            },
-            // Public configs if requested
-            ...(isPublic === 'true' ? [{ isPublic: true }] : [])
-          ]
-        },
-        orderBy: { updatedAt: 'desc' }
+      // Build the query with proper Prisma structure
+      const whereClause: any = {
+        OR: [
+          // User's own configs
+          { ownerId: userId },
+          // Public configs if requested
+          ...(isPublic === 'true' ? [{ isPublic: true }] : [])
+        ]
       };
       
       // Apply additional filters
       if (type) {
-        query.where.type = type;
+        whereClause.type = type;
       }
       
       if (search && typeof search === 'string') {
-        query.where.OR = [
+        whereClause.OR.push(
           { name: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } }
-        ];
+        );
       }
       
-      const machineConfigs = await prisma.machineConfig.findMany(query);
+      const machineConfigs = await prisma.machineConfig.findMany({
+        where: whereClause,
+        orderBy: { updatedAt: 'desc' }
+      });
       
       return sendSuccessResponse(res, machineConfigs);
     } 
     // Handle POST request - Create machine config
     else if (req.method === 'POST') {
-      const { name, description, type, config, organizationId, isPublic } = req.body;
+      const { name, description, type, config, isPublic } = req.body;
       
       // Validate required fields
       if (!name) {
@@ -72,20 +64,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return sendErrorResponse(res, 'Configuration data is required', 400);
       }
       
-      // If organizationId is provided, verify membership
-      if (organizationId) {
-        const organizationMember = await prisma.userOrganization.findFirst({
-          where: {
-            userId,
-            organizationId
-          }
-        });
-        
-        if (!organizationMember) {
-          return sendErrorResponse(res, 'You are not a member of the specified organization', 403);
-        }
-      }
-      
       // Create new machine config
       const machineConfig = await prisma.machineConfig.create({
         data: {
@@ -94,7 +72,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           type,
           config,
           ownerId: userId,
-          
           isPublic: isPublic ?? false // Use false if isPublic is undefined (optional field)
         }
       });
