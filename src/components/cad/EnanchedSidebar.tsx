@@ -27,6 +27,9 @@ import ToolBrowser from '../cam/ToolBroswer';
 import MaterialBrowser from '../cam/MaterialBroswer';
 import SnapSettings from './SnapSettings';
 import { fetchOrganizationById } from '@/src/lib/api/organizations';
+import LibraryMenu from './LibraryMenu';
+import UnifiedLibraryBrowser from './UnifiedLibraryBrowser';
+import UnifiedToolsBrowser, { ToolLibraryItem } from './UnifiedToolsBrowser';
 
 interface EnhancedSidebarProps {
   isOpen: boolean;
@@ -340,8 +343,7 @@ const renderSidebarContent = () => {
 
   return (
     <div className="p-4 space-y-6">
-      {activeSidebarTab === 'tools' && <> <ToolBrowser/>
-    <MaterialBrowser/></>}
+      {activeSidebarTab === 'tools' && <> <UnifiedToolsBrowser onSelectTool={(tool) => setSelectedLibraryTool(tool.name || tool.id)} /></>}
       {activeSidebarTab === 'machine' && (
         <>
         

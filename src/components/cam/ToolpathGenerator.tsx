@@ -163,7 +163,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
   });
   
   const [selectedLibraryTool, setSelectedLibraryTool] = useState<any>(null);
-  const [geometryType, setGeometryType] = useState<'rectangle' | 'circle' | 'polygon' | 'custom' | 'selected'>('rectangle');
+  const [geometryType, setGeometryType] = useState<'rectangle' | 'circle' | 'polygon' | 'custom' | 'selected'|'cube'|'sphere'|'cylinder'|'cone'|'extrude'|'line'>('rectangle');
   const [rectangleWidth, setRectangleWidth] = useState(100);
   const [rectangleHeight, setRectangleHeight] = useState(50);
   const [circleRadius, setCircleRadius] = useState(25);
@@ -2816,7 +2816,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     value={geometryType}
                     onChange={(e) => {
-                      const newGeometryType = e.target.value as 'rectangle' | 'circle' | 'polygon' | 'custom' | 'selected';
+                      const newGeometryType = e.target.value as 'rectangle' | 'circle' | 'polygon' | 'custom' | 'selected'|'cube'|'sphere'|'cylinder'|'cone'|'extrude'|'line';
                       setGeometryType(newGeometryType);
                       
                       // Quando cambia il tipo di geometria, aggiorni lo spessore se è selezionato un elemento

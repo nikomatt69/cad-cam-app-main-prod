@@ -325,7 +325,9 @@ export default function ComponentDetailPage() {
   
   return (
     <MotionConfig reducedMotion="user">
-      <Metatags title={component ? `${component.name} | Component Editor` : 'Component Editor'} />
+      <Metatags title={component ? `${component.name} | Component Editor` : 'Component Editor'} 
+      description={component?.description || ''}
+      ogImage={`/api/og-image/component/${component?.id}?title=${encodeURIComponent(component?.name || '')}`}/>
       <Layout>
         <div className="flex flex-col h-full">
           {/* Header */}

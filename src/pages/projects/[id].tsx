@@ -296,7 +296,9 @@ export default function ProjectDetailPage() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <Metatags title={project.name} />
+      <Metatags title={project.name}
+      description={project.description || ''}
+      ogImage={`/api/og-image/project/${project.id}?title=${encodeURIComponent(project.name)}`} />
       <Layout>
         <div className="p-4 md:p-6 max-w-7xl mx-auto">
           {/* Project header */}
@@ -649,7 +651,8 @@ export default function ProjectDetailPage() {
           isOpen={showEditModal}
           onClose={() => setShowEditModal(false)}
           title="Edit Project"
-          size="md"
+          size="sm"
+          preventBackdropClose={true}
         >
           <form onSubmit={handleUpdateProject}>
             <div className="space-y-4">
@@ -745,7 +748,8 @@ export default function ProjectDetailPage() {
           isOpen={showNewDrawingModal}
           onClose={() => setShowNewDrawingModal(false)}
           title="Create New Drawing"
-          size="md"
+          size="sm"
+          preventBackdropClose={true}
         >
           <form onSubmit={handleCreateDrawing}>
             <div className="space-y-4">
@@ -807,6 +811,7 @@ export default function ProjectDetailPage() {
           onClose={() => setShowNewComponentModal(false)}
           title="Create New Component"
           size="md"
+          preventBackdropClose
         >
           <form onSubmit={handleCreateComponent}>
             <div className="space-y-4">

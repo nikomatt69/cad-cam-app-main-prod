@@ -149,12 +149,7 @@ export default function CADPage() {
     );
   }
 
-  if (status === 'unauthenticated') {
-    router.push('/auth/signin');
-    return null;
-  }
-
-
+ 
 
   
  
@@ -216,7 +211,7 @@ export default function CADPage() {
           <div 
             className={`${
               rightSidebarOpen ? 'w-80' : 'w-0'
-            } flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white  border-2 p-0.5 border-2 border-gray-300 rounded-xl transition-all duration-300 ease-in-out overflow-y-auto`}
+            } flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white p-0.5 border-l border-gray-300 rounded-xl transition-all duration-300 ease-in-out overflow-y-auto`}
           >
             <div className="p-4 space-y-6">
               <PropertyPanel />

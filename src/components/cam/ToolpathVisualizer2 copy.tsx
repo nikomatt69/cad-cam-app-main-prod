@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useCADStore } from 'src/store/cadStore';
 import { predefinedTools } from '@/src/lib/predefinedLibraries';
 import { useLOD } from 'src/hooks/canvas/useLod';
-import { useThreePerformanceVisualizer } from 'src/hooks/useThreePerformanceVisualizer';
+import { useThreePerformance } from 'src/hooks/canvas/useThreePerformance';
 import {
   Eye, EyeOff, Grid, Home, Download, Maximize2, Play, Pause, 
   SkipBack, ChevronLeft, ChevronRight, FastForward, 
@@ -227,8 +227,6 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<'info' | 'settings' | 'tools'>('info');
   const [highlightMode, setHighlightMode] = useState<'none' | 'rapid' | 'cut' | 'depth'>('none');
-
-  const [currentLine, setCurrentLine] = useState(0);
   const [statistics, setStatistics] = useState<Statistics>({
     triangleCount: 0,
     objectCount: 0,
@@ -242,7 +240,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const [showArcs, setShowArcs] = useState(true);
   const [showShapes, setShowShapes] = useState(true);
   const [arcResolution, setArcResolution] = useState(10); // mm per segment
-  const simulationSpeedRef = useRef(1);
+  
   // Get workpiece data from CAD store
   const { workpiece, viewMode: cadViewMode, gridVisible, axisVisible } = useCADStore();
   
@@ -250,38 +248,19 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const sceneRefForHooks = sceneRef as React.RefObject<THREE.Scene>;
   const cameraRefForHooks = cameraRef as React.RefObject<THREE.Camera>;
   
-  const { optimizeScene, 
-   
-    memoryWarning,
-    disposeUnusedResources  } = useThreePerformanceVisualizer(sceneRefForHooks);
-    const {
-      applyLOD,
-      statistics: lodStatistics,
-      temporarilyRestoreFullDetail
-    } = useLOD(sceneRefForHooks, cameraRefForHooks, {
-      highDetailThreshold: 150,          // Distanza per alta qualità
-      mediumDetailThreshold: 500,        // Distanza per qualità media
-      lowDetailReduction: 0.2,           // Riduzione geometria per oggetti lontani
-      mediumDetailReduction: 0.5,        // Riduzione geometria per oggetti a media distanza
-     // Aggiorna ogni frame se in simulazione, altrimenti ogni 100ms
-      optimizeTextures: true,            // Ottimizza texture per oggetti distanti
-          // Libera memoria automaticamente
-           // Più ampio del frustum normale per evitare popping
-    });
-  useEffect(() => {
-    if (memoryWarning) {
-      console.warn('Alta memoria utilizzata: considera di eseguire disposeUnusedResources()');
+  const { optimizeScene } = useThreePerformance(sceneRefForHooks);
+  const { applyLOD, temporarilyRestoreFullDetail } = useLOD(
+    sceneRefForHooks,
+    cameraRefForHooks,
+    {
+      enabled: true,
+      highDetailThreshold: 100,
+      mediumDetailThreshold: 300,
+      mediumDetailReduction: 0.5,
+      lowDetailReduction: 0.2,
     }
-  }, [memoryWarning]);
-  
-  // Pulizia periodica (opzionale, solo per scene molto complesse)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      disposeUnusedResources();
-    }, 60000); // Ogni minuto
-    
-    return () => clearInterval(interval);
-  }, [disposeUnusedResources]);
+  );
+
   // Initialize Three.js scene
   useEffect(() => {
     if (!containerRef.current) return;
@@ -293,7 +272,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
       antialias: true,
       alpha: true,
       logarithmicDepthBuffer: true,
-      powerPreference: 'default'
+      powerPreference: 'high-performance'
     });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setClearColor(0x2A2A2A);
@@ -639,7 +618,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
           transparent: false
         });
         const shank = new THREE.Mesh(shankGeometry, shankMaterial);
-        shank.position.set(0, 0, -(toolData.cuttingLength || 20) - (shankHeight / 2));
+        shank.position.y = shankHeight / 2;
         
         // Create cutting part - with bright color for visibility
         const cuttingHeight = diameter * 3;
@@ -660,7 +639,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
           transparent: false
         });
         const cutting = new THREE.Mesh(cuttingGeometry, cuttingMaterial);
-        cutting.position.set(0, 0, -(toolData.cuttingLength || 20) - (shankHeight / 2));
+        cutting.position.y = -cuttingHeight / 2;
         
         // Add flutes
         const flutes = toolData.numberOfFlutes || 2;
@@ -784,7 +763,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     toolGroup.add(arrowHelper);
     
     // Make tool more visible by scaling up slightly
-    const toolScale = 1;
+    const toolScale = 1.5;
     toolGroup.scale.set(toolScale, toolScale, toolScale);
     
     // Set additional properties for debugging
@@ -1339,118 +1318,9 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     // Set tool at initial position
     if (toolRef.current && points.length > 0) {
       const firstPoint = points[0];
-      toolRef.current.position.set(firstPoint.x, firstPoint.y, firstPoint.z );
+      toolRef.current.position.set(firstPoint.x, firstPoint.y, firstPoint.z);
     }
   }, [gcode, parseGCode, showToolpath, showDebugPoints, showArcs, showShapes, arcResolution]);
-  useEffect(() => {
-    if (!gcode || !sceneRef.current) return;
-
-    // Analizza il G-code per estrarre i punti del percorso
-    const toolPathPoints: ToolpathPoint[] = [];
-    const lines = gcode.split('\n');
-    
-    let currentX = 0;
-    let currentY = 0;
-    let currentZ = 0;
-    
-    lines.forEach(line => {
-      const trimmedLine = line.trim();
-      if (!trimmedLine || trimmedLine.startsWith(';')) return; // Salta commenti e linee vuote
-      
-      const isG0 = trimmedLine.includes('G0') || trimmedLine.includes('G00');
-      const isG1 = trimmedLine.includes('G1') || trimmedLine.includes('G01');
-      
-      if (isG0 || isG1) {
-        // Estrai le coordinate
-        const xMatch = trimmedLine.match(/X([+-]?\d*\.?\d+)/);
-        const yMatch = trimmedLine.match(/Y([+-]?\d*\.?\d+)/);
-        const zMatch = trimmedLine.match(/Z([+-]?\d*\.?\d+)/);
-        
-        if (xMatch) currentX = parseFloat(xMatch[1]);
-        if (yMatch) currentY = parseFloat(yMatch[1]);
-        if (zMatch) currentZ = parseFloat(zMatch[1]);
-        
-        toolPathPoints.push({ x: currentX, y: currentY, z: currentZ });
-      }
-    });
-    
-    // Salva i punti per l'animazione
-    const points = parseGCode(gcode, arcResolution);
-    
-    // Rimuovi il percorso utensile esistente, se presente
-    if (toolpathRef.current) {
-      sceneRef.current.remove(toolpathRef.current);
-      toolpathRef.current = null;
-    }
-    
-    // Crea un nuovo percorso utensile
-    if (toolPathPoints.length > 1) {
-      const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(toolPathPoints.length * 3);
-      
-      toolPathPoints.forEach((point, i) => {
-        positions[i * 3] = point.x;
-        positions[i * 3 + 1] = point.y;
-        positions[i * 3 + 2] = point.z;
-      });
-      
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      
-      const material = new THREE.LineBasicMaterial({ 
-        color: 0x00ff00,
-        linewidth: 2
-      });
-      
-      const line = new THREE.Line(geometry, material);
-      sceneRef.current.add(line);
-      toolpathRef.current = line;
-      
-      // Resetta la posizione del tool all'inizio del percorso
-      if (toolRef.current && toolPathPoints.length > 0) {
-        const startPoint = toolPathPoints[0];
-        toolRef.current.position.set(startPoint.x, startPoint.y, startPoint.z);
-      }
-    }
-    
-    setCurrentLine(0);
-  }, [gcode]);
-
-  // Effetto per gestire l'animazione del percorso utensile
-  useEffect(() => {
-    if (!isSimulating || !toolRef.current || toolpathPointsRef.current.length <= 1) return;
-    
-    let lastTimestamp = 0;
-    const animateToolPath = (timestamp: number) => {
-      if (!lastTimestamp) lastTimestamp = timestamp;
-      
-      const deltaTime = timestamp - lastTimestamp;
-      if (deltaTime > 360 / (0.6  * simulationSpeedRef.current)) {
-        if (currentLine < toolpathPointsRef.current.length - 1) {
-          const currentPoint = toolpathPointsRef.current[currentLine];
-          const nextPoint = toolpathPointsRef.current[currentLine + 1];
-          
-          if (toolRef.current) {
-            toolRef.current.position.set(currentPoint.x, currentPoint.y, currentPoint.z);
-          }
-          
-          setCurrentLine(prev => prev + 1);
-          lastTimestamp = timestamp;
-        }
-      }
-      
-      if (currentLine < toolpathPointsRef.current.length - 1 && isSimulating) {
-        requestAnimationFrame(animateToolPath);
-      }
-    };
-    
-    const animationId = requestAnimationFrame(animateToolPath);
-    
-    return () => {
-      cancelAnimationFrame(animationId);
-    };
-  }, [isSimulating, currentLine]);
-
- 
 
   // Create the enhanced toolpath visualization
   const createEnhancedToolpathVisualization = (
@@ -1619,7 +1489,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     if (rapidPoints.length > 1) {
       const geometry = new THREE.BufferGeometry().setFromPoints(rapidPoints);
       const material = new THREE.LineBasicMaterial({ 
-        color: 0xFF00f0, 
+        color: 0xFF0000, 
         linewidth: 2 
       });
       const line = new THREE.Line(geometry, material);
@@ -2076,20 +1946,20 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     } else {
       // Create a default tool if none is selected
       const defaultTool = new THREE.Mesh(
-        new THREE.CylinderGeometry(3, 2, 16, 30), 
+        new THREE.CylinderGeometry(3, 3, 20, 16), 
         new THREE.MeshStandardMaterial({ 
           color: 0xFF4500,  // Colore arancione brillante
-          emissive: 0xFFff00,
-          emissiveIntensity: 0.5
+          emissive: 0xFF4500,
+          emissiveIntensity: 0.1
         })
       );
       defaultTool.rotation.x = Math.PI / 2;
       
       if (toolpathPointsRef.current.length > 0) {
         const firstPoint = toolpathPointsRef.current[0];
-        defaultTool.position.set(firstPoint.x, firstPoint.y, firstPoint.z + 100);
+        defaultTool.position.set(firstPoint.x, firstPoint.y, firstPoint.z + 10);
       } else {
-        defaultTool.position.set(0, 0, 100);
+        defaultTool.position.set(0, 0, 50);
       }
       
       // Rendi sempre visibile all'inizio

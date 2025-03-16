@@ -16,6 +16,11 @@ import { useCADKeyboardShortcuts } from 'src/hooks/useCADKeyboardShortcuts';
 import DragDropIndicator from './DragDropIndicator';
 import KeyboardShortcutsDialog from './KeyboardShortcutsDialog';
 import ShortcutsDialog, { ShortcutCategory } from '../ShortcutsDialog';
+import { CSG } from 'three-csg-ts';
+// Importazioni per esportazione
+import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
+import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter';
+import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
 
 
 interface CADCanvasProps {
@@ -24,6 +29,22 @@ interface CADCanvasProps {
   previewComponent?: string | null;
   onComponentPlaced?: (component: string, position: {x: number, y: number, z: number}) => void;
   allowDragDrop?: boolean; // Nuova prop per abilitare il drag & drop
+}
+
+interface CommandHistory {
+  undo: () => void;
+  redo: () => void;
+  description: string;
+}
+
+// Add this interface declaration somewhere near the other interface declarations
+interface Window {
+  cadCanvasScene?: THREE.Scene;
+  cadCanvasCamera?: THREE.Camera;
+  exposeCADCanvasAPI?: boolean;
+  cadExporter?: {
+    exportSTEP: (scene: THREE.Scene | null, filename: string) => void;
+  };
 }
 
 const CADCanvas: React.FC<CADCanvasProps> = ({ 
@@ -46,7 +67,7 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
   const { viewMode, gridVisible, axisVisible, originOffset } = useCADStore();
   const { elements, selectedElement, selectElement, setMousePosition, updateElement, addElement } = useElementsStore();
   const { layers } = useLayerStore();
-  
+  const selectedObjectsRef = useRef<THREE.Object3D[]>([]);
   // Nuovo stato per tracciare l'anteprima del componente e il suo posizionamento
   const [isPlacingComponent, setIsPlacingComponent] = useState<boolean>(false);
   const [previewPosition, setPreviewPosition] = useState<{x: number, y: number, z: number}>({x: 0, y: 0, z: 0});
@@ -74,6 +95,8 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
   const [showShortcutsDialog, setShowShortcutsDialog] = useState(false);
   const [snapEnabled, setSnapEnabled] = useState(true);
 
+  // Riferimenti per operazioni booleane
+  const booleanOperationsObjectsRef = useRef<THREE.Object3D[]>([]);
 
   
 
@@ -1946,6 +1969,216 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
   }
 };
 
+const [commandHistory, setCommandHistory] = useState<CommandHistory[]>([]);
+const [historyIndex, setHistoryIndex] = useState(-1);
+const [snapMode, setSnapMode] = useState<'point' | 'line' | 'face' | 'grid' | 'center'>('point');
+
+
+// ... resto del codice esistente
+
+// Funzione per aggiungere comando allo storico
+const addCommandToHistory = useCallback((command: CommandHistory) => {
+  // Rimuovi comandi che sono stati sovrascritti (in caso di undo seguito da nuova azione)
+  const newHistory = commandHistory.slice(0, historyIndex + 1);
+  setCommandHistory([...newHistory, command]);
+  setHistoryIndex(newHistory.length);
+}, [commandHistory, historyIndex]);
+
+// Funzione undo
+const undo = useCallback(() => {
+  if (historyIndex >= 0) {
+    commandHistory[historyIndex].undo();
+    setHistoryIndex(historyIndex - 1);
+  }
+}, [commandHistory, historyIndex]);
+
+// Funzione redo
+const redo = useCallback(() => {
+  if (historyIndex < commandHistory.length - 1) {
+    commandHistory[historyIndex + 1].redo();
+    setHistoryIndex(historyIndex + 1);
+  }
+}, [commandHistory, historyIndex]);
+
+// Sistema avanzato di snap
+
+
+// Operazioni booleane
+const performBooleanOperation = useCallback((operation: 'union' | 'subtract' | 'intersect') => {
+  if (booleanOperationsObjectsRef.current.length < 2) {
+    console.warn('Need at least two objects for boolean operation');
+    return;
+  }
+  
+  let result: THREE.Mesh | null = null;
+  const objects = booleanOperationsObjectsRef.current.filter(obj => obj instanceof THREE.Mesh) as THREE.Mesh[];
+  
+  // Memorizza lo stato precedente per undo/redo
+  const previousState = objects.map(obj => ({
+    id: obj.id,
+    position: obj.position.clone(),
+    rotation: obj.rotation.clone(),
+    scale: obj.scale.clone(),
+    geometry: obj.geometry.clone(),
+    material: obj.material,
+    visible: obj.visible
+  }));
+  
+  if (operation === 'union') {
+    // Unione di oggetti
+    result = objects.reduce((acc: THREE.Mesh | null, obj) => {
+      if (!acc) return obj;
+      return CSG.union(acc, obj);
+    }, null);
+  } else if (operation === 'subtract') {
+    // Sottrazione del primo oggetto con tutti gli altri
+    result = objects.slice(1).reduce((acc, obj) => {
+      return CSG.subtract(acc, obj);
+    }, objects[0]);
+  } else if (operation === 'intersect') {
+    // Intersezione di tutti gli oggetti
+    result = objects.reduce((acc: THREE.Mesh | null, obj) => {
+      if (!acc) return obj;
+      return CSG.intersect(acc, obj);
+    }, null);
+  }
+  
+  if (result && sceneRef.current) {
+    // Rimuovi oggetti originali dalla scena
+    for (const obj of objects) {
+      sceneRef.current.remove(obj);
+    }
+    
+    // Imposta posizione e materiale per il risultato
+    result.position.set(0, 0, 0);
+    result.material = objects[0].material;
+    
+    // Aggiungi il risultato alla scena
+    sceneRef.current.add(result);
+    
+    // Memorizza il nuovo oggetto per operazioni future
+    const resultId = result.id;
+    
+    // Aggiungi comando alla storia per undo/redo
+    const command: CommandHistory = {
+      undo: () => {
+        if (sceneRef.current) {
+          // Rimuovi il risultato
+          const resultObject = sceneRef.current.getObjectById(resultId);
+          if (resultObject) sceneRef.current.remove(resultObject);
+          
+          // Ripristina gli oggetti originali
+          for (const obj of previousState) {
+            const mesh = new THREE.Mesh(obj.geometry, obj.material);
+            mesh.position.copy(obj.position);
+            mesh.rotation.copy(obj.rotation);
+            mesh.scale.copy(obj.scale);
+            mesh.visible = obj.visible;
+            sceneRef.current.add(mesh);
+          }
+        }
+      },
+      redo: () => {
+        if (sceneRef.current) {
+          // Rimuovi gli oggetti originali
+          for (const obj of previousState) {
+            const originalObject = sceneRef.current.getObjectById(obj.id);
+            if (originalObject) sceneRef.current.remove(originalObject);
+          }
+          
+          // Aggiungi il risultato
+          sceneRef.current.add(result!);
+        }
+      },
+      description: `Boolean ${operation} operation`
+    };
+    
+    addCommandToHistory(command);
+  }
+}, [addCommandToHistory]);
+
+// Funzioni di esportazione
+const exportToSTL = useCallback(() => {
+  if (!sceneRef.current) return;
+  
+  const exporter = new STLExporter();
+  const result = exporter.parse(sceneRef.current);
+  
+  const blob = new Blob([result], { type: 'application/octet-stream' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'model.stl';
+  link.click();
+}, []);
+
+const exportToOBJ = useCallback(() => {
+  if (!sceneRef.current) return;
+  
+  const exporter = new OBJExporter();
+  const result = exporter.parse(sceneRef.current);
+  
+  const blob = new Blob([result], { type: 'text/plain' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'model.obj';
+  link.click();
+}, []);
+
+const exportToStep = useCallback(() => {
+  // STEP export richiede librerie più specializzate come OpenCascade.js
+  console.warn('STEP export requires additional libraries');
+  // Implementazione di esempio usando una libreria esterna
+  if (window.cadExporter && window.cadExporter.exportSTEP) {
+    window.cadExporter.exportSTEP(sceneRef.current, 'model.step');
+  } else {
+    alert('STEP export is not available. Please install the required libraries.');
+  }
+}, []);
+
+// ... resto del codice esistente
+
+// Aggiungi il supporto per scorciatoie da tastiera
+useEffect(() => {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    // Scorciatoie per undo/redo
+    if (e.ctrlKey && e.key === 'z') {
+      e.preventDefault();
+      undo();
+    } else if (e.ctrlKey && e.key === 'y') {
+      e.preventDefault();
+      redo();
+    } else if (e.ctrlKey && e.shiftKey && e.key === 'Z') {
+      e.preventDefault();
+      redo();
+    }
+    
+    // Scorciatoie per modalità di snap
+    if (e.key === 'p') setSnapMode('point');
+    if (e.key === 'l') setSnapMode('line');
+    if (e.key === 'f') setSnapMode('face');
+    if (e.key === 'g') setSnapMode('grid');
+    
+    // Scorciatoie per operazioni booleane
+    if (e.ctrlKey && e.key === 'u') performBooleanOperation('union');
+    if (e.ctrlKey && e.key === 's') performBooleanOperation('subtract');
+    if (e.ctrlKey && e.key === 'i') performBooleanOperation('intersect');
+    
+    // Scorciatoie per esportazione
+    if (e.ctrlKey && e.key === 'e') {
+      e.preventDefault();
+      const format = prompt('Export format (stl, obj, step):', 'stl');
+      if (format === 'stl') exportToSTL();
+      else if (format === 'obj') exportToOBJ();
+      else if (format === 'step') exportToStep();
+    }
+  };
+  
+  window.addEventListener('keydown', handleKeyDown);
+  return () => {
+    window.removeEventListener('keydown', handleKeyDown);
+  };
+}, [undo, redo, exportToSTL, exportToOBJ, exportToStep, performBooleanOperation])
+
   // Handle mouse move for hover effects and control points
   
   const handleMouseMove = useCallback((event: React.MouseEvent) => {
@@ -2968,6 +3201,29 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
           >
             <Maximize size={16} />
           </button>
+          <button
+          onClick={() => performBooleanOperation('union')}
+          className="p-1 rounded-md hover:bg-gray-200 text-gray-800"
+          title="Boolean Union (Ctrl+U)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6"></circle><circle cx="16" cy="16" r="6"></circle></svg>
+        </button>
+        
+        <button
+          onClick={() => performBooleanOperation('subtract')}
+          className="p-1 rounded-md hover:bg-gray-200 text-gray-800"
+          title="Boolean Subtract (Ctrl+S)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6"></circle><circle cx="16" cy="16" r="6"></circle><path d="M2 2l20 20"></path></svg>
+        </button>
+        
+        <button
+          onClick={() => performBooleanOperation('intersect')}
+          className="p-1 rounded-md hover:bg-gray-200 text-gray-800"
+          title="Boolean Intersect (Ctrl+I)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6"></circle><circle cx="16" cy="16" r="6"></circle><path d="M8 14a6 6 0 0 0 8-8"></path></svg>
+        </button>
         </div>
       )}
       {/* Pannello performance */}
@@ -3018,5 +3274,8 @@ declare global {
     cadCanvasScene?: THREE.Scene;
     cadCanvasCamera?: THREE.Camera;
     exposeCADCanvasAPI?: boolean;
+    cadExporter?: {
+      exportSTEP: (scene: THREE.Scene | null, filename: string) => void;
+    };
   }
 }

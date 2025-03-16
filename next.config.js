@@ -1,3 +1,9 @@
+
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false, // Abilita la modalità strict di React per controlli aggiuntivi
@@ -29,13 +35,30 @@ const nextConfig = {
     config.resolve.fallback = { fs: false ,tls: false,net: false};
     return config;
   },
+
+  async rewrites() {
+    return [
+      {
+        source: '/sitemap.xml',
+        destination: '/api/sitemap',
+      },
+      {
+        source: '/robots.txt',
+        destination: '/api/robots',
+      },
+      {
+        source: '/og-image/:path*',
+        destination: '/api/og-image/:path*',
+      },
+    ];
+  },
   async headers() {
     return [
       {
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Referrer-Policy', value: 'strict-origin' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
@@ -46,4 +69,4 @@ const nextConfig = {
 };
 
 // Esporta la configurazione per l'utilizzo da parte di Next.js
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

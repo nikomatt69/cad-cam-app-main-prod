@@ -102,7 +102,7 @@ export const useToolpathVisualization = (
     cameraRefForHooks,
     {
       enabled: true,
-      highDetailThreshold: 200,
+      highDetailThreshold: 50,
       mediumDetailThreshold: 500,
       mediumDetailReduction: 0.5,
       lowDetailReduction: 0.2

@@ -11,7 +11,12 @@
     "prisma:generate": "prisma generate",
     "prisma:migratedev": "prisma migrate dev",
     "prisma:migrate": "prisma migrate deploy",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "optimize:images": "ts-node scripts/optimize-images.js",
+    "generate:og": "ts-node scripts/generate-og-image.js",
+    "optimize": "npm run optimize:images && npm run generate:og",
+    "prebuild": "npm run optimize",
+    "analyze": "cross-env ANALYZE=true next build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.37.0",
@@ -22,6 +27,7 @@
     "@monaco-editor/react": "^4.7.0",
     "@neondatabase/serverless": "^0.10.4",
     "@next-auth/prisma-adapter": "^1.0.7",
+    "@next/bundle-analyzer": "^15.2.2",
     "@nextui-org/react": "^2.6.11",
     "@prisma/adapter-neon": "^6.4.1",
     "@prisma/client": "^5.0.0",
@@ -37,6 +43,7 @@
     "axios": "^1.8.1",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
+    "canvas": "^3.1.0",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "dxf-parser": "^1.1.2",
@@ -69,6 +76,7 @@
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^3.3.5",
     "three": "^0.154.0",
+    "three-csg-ts": "^3.2.0",
     "urlcat": "^3.1.0",
     "vercel": "^41.2.2",
     "viem": "^1.2.0",

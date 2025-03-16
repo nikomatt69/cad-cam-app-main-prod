@@ -193,7 +193,9 @@ export default function OrganizationDetailPage() {
 
   return (
     <>
-      <Metatags title={organization.name} />
+      <Metatags title={organization.name}
+      description={organization.description|| ''}
+      ogImage={`/api/og-image/organization/${organization.id}?title=${encodeURIComponent(organization.name)}`} />
       <Layout>
         <div className="p-6">
           {/* Organization header */}
