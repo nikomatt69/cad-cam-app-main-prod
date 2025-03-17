@@ -30,12 +30,14 @@ import { fetchOrganizationById } from '@/src/lib/api/organizations';
 import LibraryMenu from './LibraryMenu';
 import UnifiedLibraryBrowser from './UnifiedLibraryBrowser';
 import UnifiedToolsBrowser, { ToolLibraryItem } from './UnifiedToolsBrowser';
+import ToolMenus from '../cam/ToolMenus';
 
 interface EnhancedSidebarProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   activeSidebarTab: 'tools' | 'layers' | 'settings'|'machine';
   setActiveSidebarTab: (tab: 'tools' | 'layers' | 'settings'|'machine') => void;
+  onSelectTool?: (tool: any) => void;
 }
 
 interface NavItem {
@@ -51,7 +53,8 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
   isOpen, 
   setIsOpen, 
   activeSidebarTab, 
-  setActiveSidebarTab 
+  setActiveSidebarTab, 
+  onSelectTool
 }) => {
   const router = useRouter();
   const { data: session } = useSession();
@@ -61,6 +64,8 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
     resources: false,
     settings: false
   });
+  const [selectedLibraryComponent, setSelectedLibraryComponent] = useState<string | null>(null);
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [selectedLibraryTool, setSelectedLibraryTool] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   // Generate navigation items with current route indicated
@@ -343,7 +348,14 @@ const renderSidebarContent = () => {
 
   return (
     <div className="p-4 space-y-6">
-      {activeSidebarTab === 'tools' && <> <UnifiedToolsBrowser onSelectTool={(tool) => setSelectedLibraryTool(tool.name || tool.id)} /></>}
+      {activeSidebarTab === 'tools' && <> <ToolMenus onSelectTool={(tool) => {
+            setSelectedLibraryTool(tool);
+            // Se la prop onSelectTool esiste, chiamala
+            if (onSelectTool) {
+              onSelectTool(tool);
+            }
+          }} />
+        </>}
       {activeSidebarTab === 'machine' && (
         <>
         

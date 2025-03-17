@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10" stroke-dasharray="2 2" />
+  <circle cx="12" cy="12" r="1" fill="currentColor" />
+  <path d="M12,2 C16.418,2 20,5.582 20,10" />
+  <polygon points="20,6 21,10 17,9" fill="currentColor" />
+</svg>

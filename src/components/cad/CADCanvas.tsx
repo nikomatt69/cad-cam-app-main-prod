@@ -21,6 +21,9 @@ import { CSG } from 'three-csg-ts';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
+import { useCursorContext } from '@/src/contexts/CursorContext';
+import { InteractionState, ToolCursorType } from '@/src/lib/utils/cursorUtils';
+import { updateCursorClasses } from '@/src/lib/utils/domUtils';
 
 
 interface CADCanvasProps {
@@ -1465,6 +1468,10 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
     }
   };
 
+ 
+  // Handle mouse events to update cursor state
+
+
   // Update grid and axis visibility
   useEffect(() => {
     if (!sceneRef.current) return;
@@ -2182,6 +2189,7 @@ useEffect(() => {
   // Handle mouse move for hover effects and control points
   
   const handleMouseMove = useCallback((event: React.MouseEvent) => {
+    
       // Se stiamo posizionando un componente, usa la logica di anteprima
       if (isPlacingComponent) {
         handleMouseMoveForPreview(event);
@@ -2281,7 +2289,7 @@ useEffect(() => {
 
   // Handle mouse down for element selection or control point dragging
   const handleMouseDown = useCallback((event: React.MouseEvent) => {
-
+   
     if (isPlacingComponent) {
       // Se stiamo posizionando un componente, gestiamo il click per il posizionamento
       handleClickForPlacement(event);
@@ -2372,6 +2380,7 @@ useEffect(() => {
 
   // Handle mouse up to finish dragging
   const handleMouseUp = useCallback(() => {
+    
     if (activeDragPoint) {
       setActiveDragPoint(null);
       if (controlsRef.current) {

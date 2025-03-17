@@ -25,6 +25,53 @@
       Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
 
+  body.cursor-default { cursor: default !important; }
+body.cursor-pointer { cursor: pointer !important; }
+body.cursor-move { cursor: move !important; }
+body.cursor-grab { cursor: grab !important; }
+body.cursor-grabbing { cursor: grabbing !important; }
+body.cursor-crosshair { cursor: crosshair !important; }
+body.cursor-text { cursor: text !important; }
+body.cursor-wait { cursor: wait !important; }
+body.cursor-not-allowed { cursor: not-allowed !important; }
+body.cursor-zoom-in { cursor: zoom-in !important; }
+body.cursor-zoom-out { cursor: zoom-out !important; }
+body.cursor-ns-resize { cursor: ns-resize !important; }
+body.cursor-ew-resize { cursor: ew-resize !important; }
+body.cursor-nesw-resize { cursor: nesw-resize !important; }
+body.cursor-nwse-resize { cursor: nwse-resize !important; }
+body.cursor-col-resize { cursor: col-resize !important; }
+body.cursor-row-resize { cursor: row-resize !important; }
+
+/* Custom tool cursors */
+body.cursor-draw-line { cursor: url('/cursors/draw-line.svg') 12 12, crosshair !important; }
+body.cursor-draw-rectangle { cursor: url('/cursors/draw-rectangle.svg') 12 12, crosshair !important; }
+body.cursor-draw-circle { cursor: url('/cursors/draw-circle.svg') 12 12, crosshair !important; }
+body.cursor-draw-polygon { cursor: url('/cursors/draw-polygon.svg') 12 12, crosshair !important; }
+body.cursor-draw-arc { cursor: url('/cursors/draw-arc.svg') 12 12, crosshair !important; }
+body.cursor-measure { cursor: url('/cursors/measure.svg') 12 12, crosshair !important; }
+body.cursor-cut { cursor: url('/cursors/cut.svg') 12 12, crosshair !important; }
+body.cursor-extrude { cursor: url('/cursors/extrude.svg') 12 12, crosshair !important; }
+body.cursor-revolve { cursor: url('/cursors/revolve.svg') 12 12, crosshair !important; }
+body.cursor-drill { cursor: url('/cursors/drill.svg') 12 12, crosshair !important; }
+body.cursor-mill { cursor: url('/cursors/mill.svg') 12 12, crosshair !important; }
+body.cursor-add-text { cursor: url('/cursors/text.svg') 12 12, text !important; }
+body.cursor-dimension { cursor: url('/cursors/dimension.svg') 12 12, crosshair !important; }
+body.cursor-fillet { cursor: url('/cursors/fillet.svg') 12 12, crosshair !important; }
+body.cursor-chamfer { cursor: url('/cursors/chamfer.svg') 12 12, crosshair !important; }
+body.cursor-mirror { cursor: url('/cursors/mirror.svg') 12 12, crosshair !important; }
+body.cursor-scale { cursor: url('/cursors/scale.svg') 12 12, crosshair !important; }
+body.cursor-rotate { cursor: url('/cursors/rotate.svg') 12 12, crosshair !important; }
+body.cursor-erase { cursor: url('/cursors/erase.svg') 12 12, crosshair !important; }
+
+/* Modifier classes for contextual states */
+.cursor-editable { cursor: url('/cursors/editable.svg') 12 12, pointer !important; }
+.cursor-selectable { cursor: url('/cursors/selectable.svg') 12 12, pointer !important; }
+.cursor-draggable { cursor: grab !important; }
+.cursor-dragging { cursor: grabbing !important; }
+.cursor-rotatable { cursor: url('/cursors/rotate.svg') 12 12, move !important; }
+.cursor-resizable { cursor: nwse-resize !important; }
+
   /* Improved scrollbar styling */
   ::-webkit-scrollbar {
     width: 6px;

@@ -183,7 +183,7 @@ const AIAssistant: React.FC = () => {
       exit={{ opacity: 0, y: 20 }}
       className={`fixed z-50 transition-all duration-200 shadow-xl rounded-lg bg-white ${
         isPanelOpen 
-          ? 'bottom-4 right-4 w-96 h-[500px]' 
+          ? 'bottom-12 right-4 w-96 h-[500px]' 
           : 'bottom-20 right-4 w-auto h-auto'
       }`}
     >

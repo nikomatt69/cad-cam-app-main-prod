@@ -39,7 +39,7 @@ const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({
   };
   
   // Posizione fissa in basso a destra se fixed=true
-  const fixedStyle = fixed ? 'fixed bottom-4 right-4 z-50' : '';
+  const fixedStyle = fixed ? 'fixed bottom-1 right-1 z-10' : '';
   
   // Dimensioni del pulsante
   const buttonSize = compact ? 'p-2' : 'p-3';

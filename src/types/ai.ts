@@ -307,3 +307,213 @@ export interface AIOptimizationStrategy {
     ttl: number;
   };
 }
+export interface CADElement {
+  id: string;
+  type: ElementType;
+  name: string;
+  position: Point3D;
+  material: Material;
+  color: string;
+  surfaceFinish?: string;
+  tolerance?: number;
+  visible?: boolean;
+  locked?: boolean;
+  metadata?: Record<string, any>;
+}
+
+export type ElementType = 
+  // Primitive di base
+  | 'cube' | 'sphere' | 'cylinder' | 'cone' | 'torus' 
+  // Primitive avanzate
+  | 'pyramid' | 'prism' | 'hemisphere' | 'ellipsoid' | 'capsule'
+  // 2D Elements
+  | 'circle' | 'rectangle' | 'triangle' | 'polygon' | 'ellipse' | 'arc'
+  // Curve
+  | 'line' | 'spline' | 'bezier' | 'nurbs'
+  // Operazioni booleane
+  | 'boolean-union' | 'boolean-subtract' | 'boolean-intersect'
+  // Operazioni di trasformazione
+  | 'extrusion' | 'revolution' | 'sweep' | 'loft'
+  // Elementi industriali
+  | 'thread' | 'chamfer' | 'fillet' | 'gear' | 'spring'
+  // Elementi di assemblaggio
+  | 'screw' | 'nut' | 'bolt' | 'washer' | 'rivet'
+  // Elementi architettonici
+  | 'wall' | 'floor' | 'roof' | 'window' | 'door' | 'stair' | 'column'
+  // Elementi speciali
+  | 'text3d' | 'path3d' | 'point-cloud' | 'mesh' | 'group';
+
+export interface Point3D {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface Material {
+  type: string;
+  name: string;
+  density: number;  // kg/m³
+  color: string;
+  shininess?: number;
+  roughness?: number;
+  metallic?: boolean;
+  transparency?: number;
+  refractionIndex?: number;
+  thermalConductivity?: number;
+  youngsModulus?: number;  // Pa
+  tensileStrength?: number; // Pa
+  compressiveStrength?: number; // Pa
+}
+
+// Definizioni per i tipi specifici di elementi
+export interface CubeElement extends CADElement {
+  type: 'cube';
+  width: number;
+  height: number;
+  depth: number;
+  roundedCorners?: boolean;
+  cornerRadius?: number;
+}
+
+export interface SphereElement extends CADElement {
+  type: 'sphere';
+  radius: number;
+  segments?: number;
+}
+
+export interface CylinderElement extends CADElement {
+  type: 'cylinder';
+  radius: number;
+  height: number;
+  segments?: number;
+  capped?: boolean;
+}
+
+export interface ConeElement extends CADElement {
+  type: 'cone';
+  radiusBottom: number;
+  radiusTop: number;
+  height: number;
+  segments?: number;
+  capped?: boolean;
+}
+
+export interface TorusElement extends CADElement {
+  type: 'torus';
+  radius: number;
+  tubeRadius: number;
+  tubularSegments?: number;
+  radialSegments?: number;
+  arc?: number;
+}
+
+export interface ExtrusionElement extends CADElement {
+  type: 'extrusion';
+  profile: Point2D[];
+  depth: number;
+  taper?: number;
+  bevel?: boolean;
+  bevelSize?: number;
+}
+
+export interface RevolutionElement extends CADElement {
+  type: 'revolution';
+  profile: Point2D[];
+  angle: number;
+  axis: 'x' | 'y' | 'z';
+  segments?: number;
+}
+
+export interface SweepElement extends CADElement {
+  type: 'sweep';
+  profile: Point2D[];
+  path: Point3D[];
+  scale?: number[];
+  twist?: number;
+  alignToPath?: boolean;
+}
+
+export interface LoftElement extends CADElement {
+  type: 'loft';
+  profiles: Point2D[][];
+  positions: Point3D[];
+  closed?: boolean;
+  smoothing?: number;
+}
+
+export interface GearElement extends CADElement {
+  type: 'gear';
+  moduleValue: number;  // modulo in mm
+  teeth: number;
+  pressureAngle: number;
+  thickness: number;
+  holeDiameter?: number;
+  profileShift?: number;
+  helicalAngle?: number;
+}
+
+export interface ThreadElement extends CADElement {
+  type: 'thread';
+  diameter: number;
+  pitch: number;
+  length: number;
+  handedness: 'right' | 'left';
+  standard?: 'metric' | 'imperial' | 'whitworth' | 'acme' | 'npt';
+  class?: string;  // e.g. "6g" for external thread
+}
+
+export interface BooleanOperation extends CADElement {
+  type: 'boolean-union' | 'boolean-subtract' | 'boolean-intersect';
+  operands: string[];  // IDs of elements to operate on
+  result?: CADElement;
+}
+
+export interface FilletElement extends CADElement {
+  type: 'fillet';
+  radius: number;
+  edges: string[];  // IDs of edges to fillet
+  variable?: boolean;
+  radiusProfile?: number[];
+}
+
+export interface ChamferElement extends CADElement {
+  type: 'chamfer';
+  distance: number;
+  angle?: number;
+  edges: string[];  // IDs of edges to chamfer
+}
+
+export interface Point2D {
+  x: number;
+  y: number;
+}
+
+export interface Text3DElement extends CADElement {
+  type: 'text3d';
+  text: string;
+  height: number;
+  depth: number;
+  font?: string;
+  bold?: boolean;
+  italic?: boolean;
+  alignment?: 'left' | 'center' | 'right';
+}
+
+export interface StandardComponentElement extends CADElement {
+  type: 'screw' | 'nut' | 'bolt' | 'washer' | 'rivet';
+  standard: string;  // e.g. "ISO 4762", "DIN 934"
+  size: string;      // e.g. "M6", "M8x1.25"
+  length?: number;   // for screws, bolts
+  grade?: string;    // e.g. "8.8", "A2-70"
+  thread?: string;   // e.g. "M6x1"
+}
+
+export interface GroupElement extends CADElement {
+  type: 'group';
+  children: string[];  // IDs of child elements
+  transformation?: Matrix4x4;
+}
+
+export interface Matrix4x4 {
+  elements: number[];  // 16 element array
+}

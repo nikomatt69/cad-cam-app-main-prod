@@ -11,7 +11,7 @@ import useRefreshToken from '@/src/hooks/useRefreshToken';
 import BottomNavigation from '../components/BottomNavigation';
 import CookieConsentBanner from '../components/CookieConsentBanner';
 import { disconnectWebSocket, initializeWebSocket } from '@/src/lib/websocket';
-import { AIAssistantButton } from '../ai/ai-new';
+import { AIAssistant, AIAssistantButton } from '../ai/ai-new';
 
 
 type EnhancedLayoutProps = {
@@ -232,7 +232,9 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
                 </div>
               </div>
             </footer>
-            <AIAssistantButton mode="cad" fixed />
+            <div className="fixed bottom-4 right-4 z-150"><AIAssistant/></div>
+            
+            <AIAssistantButton mode="cad" fixed className='ac' />
             {/* Bottom Navigation for Mobile */}
             <div className="sm:hidden">
               <BottomNavigation/>

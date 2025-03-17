@@ -6,11 +6,12 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import useUserProfileStore from 'src/store/userProfileStore';
 import ImageService from 'src/lib/imageService';
-import { User, Shield, Bell, Globe, Monitor, Key, Tag, HelpCircle } from 'react-feather';
+import { User, Shield, Bell, Globe, Monitor, Key, Tag, HelpCircle, Cpu } from 'react-feather';
 import EnhancedLayout from 'src/components/layout/Layout';
 import MetaTags from 'src/components/layout/Metatags';
 import { useLanguage, SUPPORTED_LANGUAGES } from '../../contexts/LanguageContext';
 import { LanguageSelector } from '../../components/LanguageSelector';
+import { AISettingsPanel } from '@/src/components/ai/ai-new';
 
 export default function Settings() {
   // Funzioni per la gestione dell'immagine del profilo
@@ -120,6 +121,7 @@ export default function Settings() {
     { id: 'account', name: 'Account', icon: <Shield size={18} /> },
     { id: 'notifications', name: 'Notifiche', icon: <Bell size={18} /> },
     { id: 'appearance', name: 'Aspetto', icon: <Monitor size={18} /> },
+    { id: 'ai', name: 'AI', icon: <Cpu size={18} /> },
     { id: 'language', name: 'Lingua', icon: <Globe size={18} /> },
     { id: 'security', name: 'Sicurezza', icon: <Key size={18} /> },
     { id: 'billing', name: 'Abbonamento', icon: <Tag size={18} /> },
@@ -582,6 +584,29 @@ export default function Settings() {
                 </fieldset>
               </div>
             </div>
+            
+          )}
+          {activeTab === 'ai' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">AI</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Configura le impostazioni dell&apos;AI.
+                </p>
+              </div>
+              
+              {/* Notifiche email */}
+              <div className="mt-6">
+                <fieldset>
+                  <legend className="text-base font-medium text-gray-900 dark:text-white">AI</legend>
+                  <div className="mt-4 space-y-4">
+                    <AISettingsPanel />
+                    
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+            
           )}
 
           {/* Tab placeholder per le altre sezioni */}

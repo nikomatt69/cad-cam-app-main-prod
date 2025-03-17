@@ -53,6 +53,7 @@
     "framer-motion": "^12.4.7",
     "jsonwebtoken": "^9.0.0",
     "jszip": "^3.10.1",
+    "lucide-react": "^0.482.0",
     "monaco-editor": "^0.52.2",
     "next": "^13.4.12",
     "next-auth": "^4.22.3",

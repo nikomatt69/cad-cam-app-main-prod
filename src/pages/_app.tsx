@@ -25,6 +25,8 @@ import { Toaster } from 'react-hot-toast';
 import { AnalyticsProvider } from '../contexts/AnalyticsContext';
 import ViewportMeta from '../components/layout/ViewportMeta';
 import { AIContextProvider } from '../components/ai/ai-new/AIContextProvider';
+import { AIAssistant } from '../components/ai/ai-new';
+import { CursorProvider } from '../contexts/CursorContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -64,6 +66,7 @@ export default function App({ Component, pageProps: { session, ...pageProps }, r
                   <PageTransition key={router.route}>
                   <PageViewTracker />
                   <AnalyticsProvider>
+                    <CursorProvider>
                   <AIContextProvider>
                   <style jsx global>{`
                      body {
@@ -74,6 +77,7 @@ export default function App({ Component, pageProps: { session, ...pageProps }, r
                       <Component {...pageProps} />
                      
                       </AIContextProvider>
+                      </CursorProvider>
                       </AnalyticsProvider>
                     <PWAInstallPrompt />
                   </PageTransition>
