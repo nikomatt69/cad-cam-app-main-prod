@@ -24,6 +24,8 @@ import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
 import { useCursorContext } from '@/src/contexts/CursorContext';
 import { InteractionState, ToolCursorType } from '@/src/lib/utils/cursorUtils';
 import { updateCursorClasses } from '@/src/lib/utils/domUtils';
+import SelectionControls from './SelectionControls';
+import useCADSelection from '@/src/hooks/useCadSelection';
 
 
 interface CADCanvasProps {
@@ -100,7 +102,7 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
 
   // Riferimenti per operazioni booleane
   const booleanOperationsObjectsRef = useRef<THREE.Object3D[]>([]);
-
+  const selection = useCADSelection(sceneRef, cameraRef, canvasRef);
   
 
   useEffect(() => {
@@ -115,8 +117,9 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
     }
   }, [sceneRef.current, cameraRef.current, window.exposeCADCanvasAPI]);
 
-  
-  
+  const [showSelectionModal, setShowSelectionModal] = useState(false);
+  const selectionData = selection.createSelectionData();
+  const selectionBounds = selection.getSelectionBounds();
   // Utilizzo dei nuovi hooks
   const { optimizeScene, sceneStatistics } = useThreePerformance(sceneRef);
   const { applyLOD } = useLOD(sceneRef, cameraRef);
@@ -902,6 +905,16 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
         break;
 
       default:
+        if ('x' in element && 'y' in element) {
+          const centerPoint = new THREE.Mesh(pointGeometry, pointMaterial);
+          centerPoint.position.set(element.x, element.y, element.z || 0);
+          centerPoint.userData.isControlPoint = true;
+          centerPoint.userData.elementId = element.id;
+          centerPoint.userData.pointIndex = 0;
+          centerPoint.userData.controlFor = element.type;
+          centerPoint.userData.isCenter = true;
+          controlPoints.push(centerPoint);
+        }
         break;
     }
     useCADStore
@@ -1233,7 +1246,11 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
         break;
         
       default:
-        console.warn(`Unknown element type for control point drag: ${element.type}`);
+        if ('x' in element && 'y' in element) {
+          // For center-based elements
+          updates = { x: newX, y: newY, z: newZ };
+        }
+        break;
     }
     
     // Apply updates if any
@@ -1561,7 +1578,11 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
   // Create Three.js objects from CAD elements
 const createThreeObject = (element: any): THREE.Object3D | null => {
   const { originOffset } = useCADStore.getState();
+   // Check if element is on a visible layer
   
+   
+  
+
   switch (element.type) {
     // ======= BASIC PRIMITIVES =======
     case 'cube':
@@ -3449,6 +3470,7 @@ const createThreeObject = (element: any): THREE.Object3D | null => {
         
         return group;
         
+        
       case 'workpiece':
         // Create a transparent cube to represent the raw workpiece
         const workpieceGeometry = new THREE.BoxGeometry(
@@ -3485,6 +3507,7 @@ const createThreeObject = (element: any): THREE.Object3D | null => {
         console.warn(`Unknown element type: ${element.type}`);
         return null;
     }
+    
   };
 
 const [commandHistory, setCommandHistory] = useState<CommandHistory[]>([]);
@@ -4701,7 +4724,19 @@ useEffect(() => {
         type={snapIndicator.type} 
         visible={snapIndicator.visible} 
       />
-      
+       <div className="absolute top-4 left-4 z-10">
+        <SelectionControls
+          isSelectionMode={selection.isSelectionMode}
+          isMultiSelectMode={selection.isMultiSelectMode}
+          onSelectionModeChange={selection.setSelectionModeActive}
+          onMultiSelectModeToggle={selection.toggleMultiSelectMode}
+          onDeleteSelected={selection.deleteSelectedElements}
+          onDuplicateSelected={selection.duplicateSelectedElements}
+          onMoveToLayer={selection.moveSelectionToLayer}
+          onCreateComponent={() => setShowSelectionModal(true)}
+          bounds={selectionBounds}
+        />
+      </div>
       {/* Istruzioni per il posizionamento */}
       {isPlacingComponent && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg z-100">
