@@ -11,7 +11,7 @@ export interface LibraryItem {
   name: string;
   description?: string;
   category: 'component' | 'tool' | 'material' | 'machine';
-  type: string;
+  type: string; 
   properties: Record<string, any>;
   tags?: string[];
   preview?: string;

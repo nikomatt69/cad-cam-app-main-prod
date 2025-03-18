@@ -3,12 +3,13 @@
  * Esportazioni centralizzate per tutti i componenti AI
  */
 
-// Componenti principali
+// Componenti principali 
 export { default as AIAssistant } from './AIAssistant';
 export { default as AIAssistantButton } from './AIAssistantButton';
 export { default as AIHub } from './AIHub';
 export { default as TextToCADPanel } from './TextToCADPanel';
 export { default as AISettingsPanel } from './AISettingsPanel';
+export {default as MCPInsightsPanel}  from './Mpc'
 
 // Componenti di utilità
 export { default as AIProcessingIndicator } from './AIProcessingIndicator';

@@ -399,363 +399,357 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
   // Create control points for an element
   const createControlPointsForElement = (element: any): THREE.Object3D[] => {
     const controlPoints: THREE.Object3D[] = [];
+    
     // Create smaller control points (reduced size from 5 to 3)
     const pointGeometry = new THREE.SphereGeometry(3, 12, 12);
     const pointMaterial = new THREE.MeshBasicMaterial({ color: 0xff3366 });
     
+    // Add implementation for control points here
+    
+    return controlPoints;
+  };
+
+  /**
+   * Gestisce il trascinamento di un punto di controllo
+   */
+  const handleControlPointDrag = useCallback((
+    elementId: string,
+    pointIndex: number,
+    x: number,
+    y: number,
+    z: number
+  ) => {
+    if (!elementId) return;
+
+    // Trova l'elemento nello store
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    // Crea una copia dell'elemento per modificarlo
+    const updatedElement = { ...element };
+    
+    // A seconda del tipo di elemento, aggiorna i punti di controllo
+    switch (element.type) {
+      case 'rectangle':
+      case 'circle':
+      case 'polygon':
+      case 'cube':
+      case 'cylinder':
+      case 'sphere':
+      case 'cone':
+      case 'torus':
+        // Per gli elementi base, modifica la posizione
+        if (pointIndex === 0) { // Punto centrale
+          updatedElement.x = x;
+          updatedElement.y = y;
+          updatedElement.z = z;
+        }
+        break;
+      // Aggiungi altri casi per tipi di elementi diversi se necessario
+    }
+    
+    // Aggiorna l'elemento nello store
+    updateElement(updatedElement);
+    
+    // Crea una nuova azione nella cronologia
+    const historyAction: CommandHistory = {
+      undo: () => {
+        updateElement(element); // Ripristina l'elemento originale
+      },
+      redo: () => {
+        updateElement(updatedElement); // Applica nuovamente la modifica
+      },
+      description: `Modifica punto di controllo di ${element.type}`
+    };
+    
+    // Aggiungi alla cronologia
+    addToHistory(historyAction);
+  }, [elements, updateElement, addToHistory]);
+
+  // Handle transforms when control points are dragged
+  const handleControlPointDrag = useCallback((
+    elementId: string,
+    pointIndex: number,
+    newX: number,
+    newY: number,
+    newZ: number = 0
+  ) => {
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    // Crea una copia dell'elemento per modificarlo
+    const updatedElement = { ...element };
+    
+    // A seconda del tipo di elemento, aggiorna i punti di controllo
     switch (element.type) {
       case 'line':
-        // Create control points for line endpoints
-        const point1 = new THREE.Mesh(pointGeometry, pointMaterial);
-        point1.position.set(element.x1, element.y1, element.z1 || 0);
-        point1.userData.isControlPoint = true;
-        point1.userData.elementId = element.id;
-        point1.userData.pointIndex = 0; // First endpoint
-        point1.userData.controlFor = 'line';
-        
-        const point2 = new THREE.Mesh(pointGeometry, pointMaterial);
-        point2.position.set(element.x2, element.y2, element.z2 || 0);
-        point2.userData.isControlPoint = true;
-        point2.userData.elementId = element.id;
-        point2.userData.pointIndex = 1; // Second endpoint
-        point2.userData.controlFor = 'line';
-        
-        controlPoints.push(point1, point2);
+        if (pointIndex === 0) {
+          // First endpoint
+          updatedElement.x1 = newX;
+          updatedElement.y1 = newY;
+          updatedElement.z1 = newZ;
+        } else if (pointIndex === 1) {
+          // Second endpoint
+          updatedElement.x2 = newX;
+          updatedElement.y2 = newY;
+          updatedElement.z2 = newZ;
+        }
         break;
         
       case 'rectangle':
-        // Create control points for rectangle corners and midpoints
-        const halfWidth = element.width / 2;
-        const halfHeight = element.height / 2;
-        const rotationRad = (element.angle || 0) * Math.PI / 180;
+      case 'circle':
+      case 'polygon':
+      case 'cube':
+      case 'cylinder':
+      case 'sphere':
+      case 'cone':
+      case 'torus':
+        // Per gli elementi base, modifica la posizione
+        if (pointIndex === 0) { // Punto centrale
+          updatedElement.x = newX;
+          updatedElement.y = newY;
+          updatedElement.z = newZ;
+        }
+        break;
+    }
+    
+    // Aggiorna l'elemento nello store
+    updateElement(updatedElement, false);
+    
+    // Update control points visual positions
+    updateControlPoints();
+  }, [elements, updateElement, updateControlPoints]);
+
+  // Handle transforms when control points are dragged
+  const handleControlPointDrag = useCallback((elementId: string, pointIndex: number, newX: number, newY: number, newZ: number = 0) => {
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    let updates: any = {};
+    
+    switch (element.type) {
+      case 'line':
+        if (pointIndex === 0) {
+          // First endpoint
+          updates = { x1: newX, y1: newY, z1: newZ };
+        } else if (pointIndex === 1) {
+          // Second endpoint
+          updates = { x2: newX, y2: newY, z2: newZ };
+        }
+        break;
         
-        // Helper function to calculate rotated position
-        const getRotatedPos = (x: number, y: number) => {
-          const cos = Math.cos(rotationRad);
-          const sin = Math.sin(rotationRad);
-          const xRot = (x * cos - y * sin) + element.x;
-          const yRot = (x * sin + y * cos) + element.y;
-          return { x: xRot, y: yRot };
-        };
-        
-        // Corner points
-        const corners = [
-          getRotatedPos(-halfWidth, -halfHeight), // Top-left
-          getRotatedPos(halfWidth, -halfHeight),  // Top-right
-          getRotatedPos(halfWidth, halfHeight),   // Bottom-right
-          getRotatedPos(-halfWidth, halfHeight)   // Bottom-left
-        ];
-        
-        corners.forEach((pos, idx) => {
-          const point = new THREE.Mesh(pointGeometry, pointMaterial);
-          point.position.set(pos.x, pos.y, element.z || 0);
-          point.userData.isControlPoint = true;
-          point.userData.elementId = element.id;
-          point.userData.pointIndex = idx;
-          point.userData.controlFor = 'rectangle';
-          point.userData.isCorner = true;
-          controlPoints.push(point);
-        });
-        
-        // Midpoints
-        const midpoints = [
-          getRotatedPos(0, -halfHeight),  // Top
-          getRotatedPos(halfWidth, 0),    // Right
-          getRotatedPos(0, halfHeight),   // Bottom
-          getRotatedPos(-halfWidth, 0)    // Left
-        ];
-        
-        midpoints.forEach((pos, idx) => {
-          const point = new THREE.Mesh(pointGeometry, pointMaterial);
-          point.position.set(pos.x, pos.y, element.z || 0);
-          point.userData.isControlPoint = true;
-          point.userData.elementId = element.id;
-          point.userData.pointIndex = idx + 4; // Offset after corners
-          point.userData.controlFor = 'rectangle';
-          point.userData.isMidpoint = true;
-          controlPoints.push(point);
-        });
-        
-        // Rotation handle - slightly smaller than in the previous implementation
-        const rotationPoint = new THREE.Mesh(
-          new THREE.CylinderGeometry(2, 2, 10, 12),
-          new THREE.MeshBasicMaterial({ color: 0x00aaff })
-        );
-        const rotHandlePos = getRotatedPos(0, -halfHeight - 15);
-        rotationPoint.position.set(rotHandlePos.x, rotHandlePos.y, element.z || 0);
-        rotationPoint.userData.isControlPoint = true;
-        rotationPoint.userData.elementId = element.id;
-        rotationPoint.userData.pointIndex = 8;
-        rotationPoint.userData.controlFor = 'rectangle';
-        rotationPoint.userData.isRotationHandle = true;
-        controlPoints.push(rotationPoint);
+      case 'rectangle':
+        // Handle rectangle control points differently based on the point type
+        if (pointIndex < 4) {
+          // It's a corner - we need to recalculate dimensions
+          const originalCenter = { x: element.x, y: element.y };
+          const angle = (element.angle || 0) * Math.PI / 180;
+          
+          // Rotate the new position back to get aligned coordinates
+          const cosAngle = Math.cos(-angle);
+          const sinAngle = Math.sin(-angle);
+          const alignedX = (newX - originalCenter.x) * cosAngle - (newY - originalCenter.y) * sinAngle;
+          const alignedY = (newX - originalCenter.x) * sinAngle + (newY - originalCenter.y) * cosAngle;
+          
+          // Which corner is it?
+          const isLeft = (pointIndex === 0 || pointIndex === 3);
+          const isTop = (pointIndex === 0 || pointIndex === 1);
+          
+          // Get the opposite corner
+          const oppCornerIdx = pointIndex < 2 ? pointIndex + 2 : pointIndex - 2;
+          const oppCornerPoint = controlPointsRef.current.find(
+            pt => pt.userData.elementId === elementId && pt.userData.pointIndex === oppCornerIdx
+          );
+          
+          if (!oppCornerPoint) return;
+          
+          // Rotate the opposite corner position back too
+          const oppX = (oppCornerPoint.position.x - originalCenter.x) * cosAngle - 
+                      (oppCornerPoint.position.y - originalCenter.y) * sinAngle;
+          const oppY = (oppCornerPoint.position.x - originalCenter.x) * sinAngle + 
+                      (oppCornerPoint.position.y - originalCenter.y) * cosAngle;
+          
+          // Calculate new width, height and center
+          const newWidth = Math.abs(alignedX - oppX);
+          const newHeight = Math.abs(alignedY - oppY);
+          const newCenterX = (alignedX + oppX) / 2;
+          const newCenterY = (alignedY + oppY) / 2;
+          
+          // Rotate the center back to world coordinates
+          const worldCenterX = originalCenter.x + newCenterX * Math.cos(angle) - newCenterY * Math.sin(angle);
+          const worldCenterY = originalCenter.y + newCenterX * Math.sin(angle) + newCenterY * Math.cos(angle);
+          
+          updates = {
+            width: newWidth,
+            height: newHeight,
+            x: worldCenterX,
+            y: worldCenterY
+          };
+          
+        } else if (pointIndex < 8) {
+          // It's a midpoint - adjust one dimension
+          const angle = (element.angle || 0) * Math.PI / 180;
+          const direction = pointIndex - 4; // 0: top, 1: right, 2: bottom, 3: left
+          
+          // Get vector from center to new point
+          const deltaX = newX - element.x;
+          const deltaY = newY - element.y;
+          
+          // Rotate it to align with rectangle
+          const rotDeltaX = deltaX * Math.cos(-angle) - deltaY * Math.sin(-angle);
+          const rotDeltaY = deltaX * Math.sin(-angle) + deltaY * Math.cos(-angle);
+          
+          if (direction === 0 || direction === 2) {
+            // Top or bottom - adjust height
+            const newHeight = Math.abs(rotDeltaY) * 2;
+            updates = { height: newHeight };
+          } else {
+            // Left or right - adjust width
+            const newWidth = Math.abs(rotDeltaX) * 2;
+            updates = { width: newWidth };
+          }
+          
+        } else if (pointIndex === 8) {
+          // Rotation handle
+          // Calculate angle from center to current position
+          const deltaX = newX - element.x;
+          const deltaY = newY - element.y;
+          const newAngle = (Math.atan2(deltaY, deltaX) * 180 / Math.PI) + 90;
+          updates = { angle: newAngle };
+        }
         break;
         
       case 'circle':
-        // Create control points for circle - center and radius points
-        const centerPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-        centerPoint.position.set(element.x, element.y, element.z || 0);
-        centerPoint.userData.isControlPoint = true;
-        centerPoint.userData.elementId = element.id;
-        centerPoint.userData.pointIndex = 0;
-        centerPoint.userData.controlFor = 'circle';
-        centerPoint.userData.isCenter = true;
-        
-        // Points at cardinal directions for radius control
-        const radiusPoints = [];
-        for (let i = 0; i < 4; i++) {
-          const angle = i * Math.PI / 2;
-          const radiusPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-          radiusPoint.position.set(
-            element.x + element.radius * Math.cos(angle),
-            element.y + element.radius * Math.sin(angle),
-            element.z || 0
-          );
-          radiusPoint.userData.isControlPoint = true;
-          radiusPoint.userData.elementId = element.id;
-          radiusPoint.userData.pointIndex = i + 1;
-          radiusPoint.userData.controlFor = 'circle';
-          radiusPoint.userData.isRadiusControl = true;
-          radiusPoints.push(radiusPoint);
+        if (pointIndex === 0) {
+          // Center point
+          updates = { x: newX, y: newY, z: newZ };
+        } else {
+          // Radius control point
+          const dx = newX - element.x;
+          const dy = newY - element.y;
+          const newRadius = Math.sqrt(dx*dx + dy*dy);
+          updates = { radius: newRadius };
         }
-        
-        controlPoints.push(centerPoint, ...radiusPoints);
         break;
         
       case 'cube':
-        // Create control points for cube - center and size controls
-        const cubeCenter = new THREE.Mesh(pointGeometry, pointMaterial);
-        cubeCenter.position.set(element.x, element.y, element.z || 0);
-        cubeCenter.userData.isControlPoint = true;
-        cubeCenter.userData.elementId = element.id;
-        cubeCenter.userData.pointIndex = 0;
-        cubeCenter.userData.controlFor = 'cube';
-        cubeCenter.userData.isCenter = true;
-        
-        // Eight corners of the cube
-        const corners3D = [];
-        for (let i = 0; i < 8; i++) {
+        if (pointIndex === 0) {
+          // Center point
+          updates = { x: newX, y: newY, z: newZ };
+        } else {
+          // Corner point - need to recalculate dimensions
+          const i = pointIndex - 1;
           const xSign = (i & 1) ? 1 : -1;
           const ySign = (i & 2) ? 1 : -1;
           const zSign = (i & 4) ? 1 : -1;
           
-          const cornerPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-          cornerPoint.position.set(
-            element.x + xSign * element.width / 2,
-            element.y + ySign * element.height / 2,
-            element.z + zSign * element.depth / 2
-          );
-          cornerPoint.userData.isControlPoint = true;
-          cornerPoint.userData.elementId = element.id;
-          cornerPoint.userData.pointIndex = i + 1;
-          cornerPoint.userData.controlFor = 'cube';
-          cornerPoint.userData.isCorner = true;
-          corners3D.push(cornerPoint);
+          // Distance from corner to center along each axis
+          const dx = Math.abs(newX - element.x);
+          const dy = Math.abs(newY - element.y);
+          const dz = Math.abs(newZ - element.z);
+          
+          updates = {
+            width: dx * 2,
+            height: dy * 2,
+            depth: dz * 2
+          };
         }
-        
-        controlPoints.push(cubeCenter, ...corners3D);
         break;
         
       case 'sphere':
-        // Create control points for sphere - center and radius controls
-        const sphereCenter = new THREE.Mesh(pointGeometry, pointMaterial);
-        sphereCenter.position.set(element.x, element.y, element.z || 0);
-        sphereCenter.userData.isControlPoint = true;
-        sphereCenter.userData.elementId = element.id;
-        sphereCenter.userData.pointIndex = 0;
-        sphereCenter.userData.controlFor = 'sphere';
-        sphereCenter.userData.isCenter = true;
-        
-        // Six direction controls for radius
-        const directions = [
-          [1, 0, 0], [-1, 0, 0],  // X axis
-          [0, 1, 0], [0, -1, 0],  // Y axis
-          [0, 0, 1], [0, 0, -1]   // Z axis
-        ];
-        
-        const radiusControls = directions.map((dir, idx) => {
-          const radiusPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-          radiusPoint.position.set(
-            element.x + dir[0] * element.radius,
-            element.y + dir[1] * element.radius,
-            element.z + dir[2] * element.radius
-          );
-          radiusPoint.userData.isControlPoint = true;
-          radiusPoint.userData.elementId = element.id;
-          radiusPoint.userData.pointIndex = idx + 1;
-          radiusPoint.userData.controlFor = 'sphere';
-          radiusPoint.userData.isRadiusControl = true;
-          radiusPoint.userData.direction = dir;
-          return radiusPoint;
-        });
-        
-        controlPoints.push(sphereCenter, ...radiusControls);
+        if (pointIndex === 0) {
+          // Center point
+          updates = { x: newX, y: newY, z: newZ };
+        } else {
+          // Radius control point
+          const dx = newX - element.x;
+          const dy = newY - element.y;
+          const dz = newZ - element.z;
+          const newRadius = Math.sqrt(dx*dx + dy*dy + dz*dz);
+          updates = { radius: newRadius };
+        }
         break;
         
       case 'cylinder':
-        // Create control points for cylinder
-        const cylinderCenter = new THREE.Mesh(pointGeometry, pointMaterial);
-        cylinderCenter.position.set(element.x, element.y, element.z || 0);
-        cylinderCenter.userData.isControlPoint = true;
-        cylinderCenter.userData.elementId = element.id;
-        cylinderCenter.userData.pointIndex = 0;
-        cylinderCenter.userData.controlFor = 'cylinder';
-        
-        // Radius control point
-        const cylinderRadiusPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-        cylinderRadiusPoint.position.set(
-          element.x + element.radius, 
-          element.y, 
-          element.z || 0
-        );
-        cylinderRadiusPoint.userData.isControlPoint = true;
-        cylinderRadiusPoint.userData.elementId = element.id;
-        cylinderRadiusPoint.userData.pointIndex = 1;
-        cylinderRadiusPoint.userData.controlFor = 'cylinder';
-        
-        // Height control points
-        const topPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-        topPoint.position.set(
-          element.x,
-          element.y,
-          element.z + element.height / 2
-        );
-        topPoint.userData.isControlPoint = true;
-        topPoint.userData.elementId = element.id;
-        topPoint.userData.pointIndex = 2;
-        topPoint.userData.controlFor = 'cylinder';
-        
-        const bottomPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-        bottomPoint.position.set(
-          element.x,
-          element.y,
-          element.z - element.height / 2
-        );
-        bottomPoint.userData.isControlPoint = true;
-        bottomPoint.userData.elementId = element.id;
-        bottomPoint.userData.pointIndex = 3;
-        bottomPoint.userData.controlFor = 'cylinder';
-        
-        controlPoints.push(cylinderCenter, cylinderRadiusPoint, topPoint, bottomPoint);
+        if (pointIndex === 0) {
+          // Center point
+          updates = { x: newX, y: newY, z: newZ };
+        } else if (pointIndex === 1) {
+          // Radius control point
+          const dx = newX - element.x;
+          const dy = newY - element.y;
+          const newRadius = Math.sqrt(dx*dx + dy*dy);
+          updates = { radius: newRadius };
+        } else if (pointIndex === 2 || pointIndex === 3) {
+          // Height control points
+          const dz = Math.abs(newZ - element.z);
+          updates = { height: dz * 2 };
+        }
         break;
         
       case 'cone':
-        // Create control points for cone
-        const coneBaseCenter = new THREE.Mesh(pointGeometry, pointMaterial);
-        coneBaseCenter.position.set(element.x, element.y, element.z || 0);
-        coneBaseCenter.userData.isControlPoint = true;
-        coneBaseCenter.userData.elementId = element.id;
-        coneBaseCenter.userData.pointIndex = 0;
-        coneBaseCenter.userData.controlFor = 'cone';
-        
-        // Base radius control point
-        const coneRadiusPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-        coneRadiusPoint.position.set(
-          element.x + element.radius,
-          element.y,
-          element.z || 0
-        );
-        coneRadiusPoint.userData.isControlPoint = true;
-        coneRadiusPoint.userData.elementId = element.id;
-        coneRadiusPoint.userData.pointIndex = 1;
-        coneRadiusPoint.userData.controlFor = 'cone';
-        
-        // Tip (height) control point
-        const coneTipPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-        coneTipPoint.position.set(
-          element.x,
-          element.y,
-          element.z + element.height
-        );
-        coneTipPoint.userData.isControlPoint = true;
-        coneTipPoint.userData.elementId = element.id;
-        coneTipPoint.userData.pointIndex = 2;
-        coneTipPoint.userData.controlFor = 'cone';
-        
-        controlPoints.push(coneBaseCenter, coneRadiusPoint, coneTipPoint);
+        if (pointIndex === 0) {
+          // Center point (base center)
+          updates = { x: newX, y: newY, z: newZ };
+        } else if (pointIndex === 1) {
+          // Base radius control point
+          const dx = newX - element.x;
+          const dy = newY - element.y;
+          const newRadius = Math.sqrt(dx*dx + dy*dy);
+          updates = { radius: newRadius };
+        } else if (pointIndex === 2) {
+          // Height control point (tip of cone)
+          const dz = Math.abs(newZ - element.z);
+          updates = { height: dz };
+        }
         break;
         
       case 'torus':
-        // Create control points for torus
-        const torusCenter = new THREE.Mesh(pointGeometry, pointMaterial);
-        torusCenter.position.set(element.x, element.y, element.z || 0);
-        torusCenter.userData.isControlPoint = true;
-        torusCenter.userData.elementId = element.id;
-        torusCenter.userData.pointIndex = 0;
-        torusCenter.userData.controlFor = 'torus';
-        
-        // Main radius control point
-        const mainRadiusPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-        mainRadiusPoint.position.set(
-          element.x + element.radius,
-          element.y,
-          element.z || 0
-        );
-        mainRadiusPoint.userData.isControlPoint = true;
-        mainRadiusPoint.userData.elementId = element.id;
-        mainRadiusPoint.userData.pointIndex = 1;
-        mainRadiusPoint.userData.controlFor = 'torus';
-        
-        // Tube radius control point
-        const tubeRadius = element.tube || element.radius / 4;
-        const tubeRadiusPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-        tubeRadiusPoint.position.set(
-          element.x + element.radius + tubeRadius,
-          element.y,
-          element.z || 0
-        );
-        tubeRadiusPoint.userData.isControlPoint = true;
-        tubeRadiusPoint.userData.elementId = element.id;
-        tubeRadiusPoint.userData.pointIndex = 2;
-        tubeRadiusPoint.userData.controlFor = 'torus';
-        
-        controlPoints.push(torusCenter, mainRadiusPoint, tubeRadiusPoint);
+        if (pointIndex === 0) {
+          // Center point
+          updates = { x: newX, y: newY, z: newZ };
+        } else if (pointIndex === 1) {
+          // Main radius control point
+          const dx = newX - element.x;
+          const dy = newY - element.y;
+          const newRadius = Math.sqrt(dx*dx + dy*dy);
+          updates = { radius: newRadius };
+        } else if (pointIndex === 2) {
+          // Tube radius control point
+          const tubeRadius = element.tube || element.radius / 4;
+          const mainRadius = element.radius;
+          
+          // Calculate new tube radius based on drag distance from torus ring
+          const dx = newX - element.x;
+          const dy = newY - element.y;
+          const distanceFromCenter = Math.sqrt(dx*dx + dy*dy);
+          const newTubeRadius = Math.abs(distanceFromCenter - mainRadius);
+          
+          updates = { tube: newTubeRadius };
+        }
         break;
         
       case 'polygon':
-        // Create control points for polygon
-        const polygonCenter = new THREE.Mesh(pointGeometry, pointMaterial);
-        polygonCenter.position.set(element.x, element.y, element.z || 0);
-        polygonCenter.userData.isControlPoint = true;
-        polygonCenter.userData.elementId = element.id;
-        polygonCenter.userData.pointIndex = 0;
-        polygonCenter.userData.controlFor = 'polygon';
-        
-        const polygonPoints = [polygonCenter];
-        
-        // If it's a regular polygon with radius
-        if (element.radius) {
-          const radiusPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-          radiusPoint.position.set(
-            element.x + element.radius,
-            element.y,
-            element.z || 0
-          );
-          radiusPoint.userData.isControlPoint = true;
-          radiusPoint.userData.elementId = element.id;
-          radiusPoint.userData.pointIndex = 1;
-          radiusPoint.userData.controlFor = 'polygon';
-          polygonPoints.push(radiusPoint);
+        if (pointIndex === 0) {
+          // Center point
+          updates = { x: newX, y: newY, z: newZ };
+        } else if (pointIndex === 1) {
+          // Radius control point
+          const dx = newX - element.x;
+          const dy = newY - element.y;
+          const newRadius = Math.sqrt(dx*dx + dy*dy);
+          updates = { radius: newRadius };
+        } else if (pointIndex > 1 && element.points) {
+          // Vertex control point
+          const vertexIndex = pointIndex - 2;
+          if (vertexIndex < element.points.length) {
+            // Create a copy of points array
+            const newPoints = [...element.points];
+            // Update the point being dragged
+            newPoints[vertexIndex] = { x: newX, y: newY, z: newZ };
+            updates = { points: newPoints };
+          }
         }
-        
-        // If it has custom points, add control points for each vertex
-        if (element.points && element.points.length >= 3) {
-          element.points.forEach((point: any, idx: number) => {
-            const vertexPoint = new THREE.Mesh(pointGeometry, pointMaterial);
-            vertexPoint.position.set(
-              point.x || 0,
-              point.y || 0,
-              point.z || element.z || 0
-            );
-            vertexPoint.userData.isControlPoint = true;
-            vertexPoint.userData.elementId = element.id;
-            vertexPoint.userData.pointIndex = idx + 2; // Offset for center and radius points
-            vertexPoint.userData.controlFor = 'polygon';
-            polygonPoints.push(vertexPoint);
-          });
-        }
-        
-        controlPoints.push(...polygonPoints);
         break;
         
       case 'extrusion':
@@ -907,6 +901,63 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
     useCADStore
     return controlPoints;
   };
+
+  /**
+   * Gestisce il trascinamento di un punto di controllo
+   */
+  const handleControlPointDrag = useCallback((
+    elementId: string,
+    pointIndex: number,
+    x: number,
+    y: number,
+    z: number
+  ) => {
+    if (!elementId) return;
+
+    // Trova l'elemento nello store
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    // Crea una copia dell'elemento per modificarlo
+    const updatedElement = { ...element };
+    
+    // A seconda del tipo di elemento, aggiorna i punti di controllo
+    switch (element.type) {
+      case 'rectangle':
+      case 'circle':
+      case 'polygon':
+      case 'cube':
+      case 'cylinder':
+      case 'sphere':
+      case 'cone':
+      case 'torus':
+        // Per gli elementi base, modifica la posizione
+        if (pointIndex === 0) { // Punto centrale
+          updatedElement.x = x;
+          updatedElement.y = y;
+          updatedElement.z = z;
+        }
+        break;
+      // Aggiungi altri casi per tipi di elementi diversi se necessario
+    }
+    
+    // Aggiorna l'elemento nello store
+    updateElement(updatedElement);
+    
+    // Crea una nuova azione nella cronologia
+    const historyAction: CommandHistory = {
+      undo: () => {
+        updateElement(element); // Ripristina l'elemento originale
+      },
+      redo: () => {
+        updateElement(updatedElement); // Applica nuovamente la modifica
+      },
+      description: `Modifica punto di controllo di ${element.type}`
+    };
+    
+    // Aggiungi alla cronologia
+    addToHistory(historyAction);
+  }, [elements, updateElement, addToHistory]);
 
   // Handle transforms when control points are dragged
   const handleControlPointDrag = useCallback((elementId: string, pointIndex: number, newX: number, newY: number, newZ: number = 0) => {
@@ -3766,13 +3817,28 @@ useEffect(() => {
       child => child.userData && child.userData.isCADElement
     );
     
-    if (selectableObjects.length > 0) {
-      const intersectedObject = selectableObjects[0];
-      const elementId = intersectedObject.userData.elementId;
+    // Controlla le intersezioni con gli elementi selezionabili
+    const elementIntersects = raycasterRef.current.intersectObjects(selectableObjects, true);
+    
+    if (elementIntersects.length > 0) {
+      // Ottieni l'elemento ID, considerando sia l'oggetto che i suoi genitori
+      let elementId = null;
+      let currentObj: THREE.Object3D | null = elementIntersects[0].object;
+      
+      // Risali nella gerarchia per trovare l'ID dell'elemento
+      while (currentObj && !elementId) {
+        if (currentObj.userData && currentObj.userData.elementId) {
+          elementId = currentObj.userData.elementId;
+        }
+        currentObj = currentObj.parent;
+      }
       
       if (elementId) {
         setHoveredElementId(elementId);
         canvasRef.current.style.cursor = 'pointer';
+      } else {
+        setHoveredElementId(null);
+        canvasRef.current.style.cursor = 'default';
       }
     } else {
       setHoveredElementId(null);

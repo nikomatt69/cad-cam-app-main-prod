@@ -5,6 +5,7 @@ import { useAI } from './AIContextProvider';
 import { useElementsStore } from 'src/store/elementsStore';
 import AIProcessingIndicator from './AIProcessingIndicator';
 import AIFeedbackCollector from './AIFeedbackCollector';
+import { mcpCadService } from '@/src/lib/ai/mcp/mcpCadService';
 
 // Preset di vincoli predefiniti per scenari comuni
 const CONSTRAINT_PRESETS = [
@@ -142,22 +143,29 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
     
     setGenerationStatus('generating');
     setErrorMessage(null);
-    setRequestId(`text_to_cad_${Date.now()}`);
+    const requestId = `text_to_cad_${Date.now()}`;
+    setRequestId(requestId);
     
     try {
-      // Ottieni il preset di vincoli selezionato
+      // Get the preset of constraints
       const constraints = selectedPreset 
         ? CONSTRAINT_PRESETS.find(preset => preset.id === selectedPreset)?.constraints 
         : undefined;
       
-      // Chiama il servizio AI
-      const result = await textToCAD(description, constraints);
+      // Use MCP to enhance the request
+      const enhancedDescription = mcpCadService.enhancePrompt(description, generatedElements || []);
+      
+      // Show that we're using MCP (optional)
+      console.log('Using MCP enhanced prompt:', enhancedDescription);
+      
+      // Call the AI service with the enhanced description
+      const result = await textToCAD(enhancedDescription, constraints);
       
       if (result.success && result.data) {
         setGeneratedElements(result.data);
         setGenerationStatus('success');
         
-        // Aggiorna la cronologia
+        // Add to generation history
         const newHistoryItem = {
           id: `gen_${Date.now()}`,
           description,
@@ -167,17 +175,17 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
         
         setGenerationHistory(prev => [newHistoryItem, ...prev.slice(0, 9)]);
         
-        // Esegui il callback di successo se fornito
+        // Execute success callback if provided
         if (onSuccess) {
           onSuccess(result.data);
         }
       } else {
-        setErrorMessage(result.error || 'Si è verificato un errore durante la generazione. Riprova.');
+        setErrorMessage(result.error || 'An error occurred during generation. Please try again.');
         setGenerationStatus('error');
       }
     } catch (error) {
       console.error('Error generating CAD elements:', error);
-      setErrorMessage(error instanceof Error ? error.message : 'Si è verificato un errore imprevisto.');
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred.');
       setGenerationStatus('error');
     }
   };

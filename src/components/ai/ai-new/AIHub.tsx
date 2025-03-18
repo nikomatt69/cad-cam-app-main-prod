@@ -23,9 +23,10 @@ import AISettingsPanel from './AISettingsPanel';
 import { AIModelType } from '@/src/types/AITypes';
 import AIDesignAssistant from '../AIDesignAssistant';
 import AIToolpathOptimizer from '../AIToolpathOptimizer';
+import MCPInsightsPanel from './Mpc';
 
 // Tipi di tool AI disponibili
-type AITool = 'textToCad' | 'designAssistant' | 'toolpathOptimizer' | 'settings' | 'analytics';
+type AITool = 'textToCad' | 'designAssistant' | 'toolpathOptimizer' | 'settings' | 'analytics' | 'mpc';
 
 interface AIHubProps {
   initialTool?: AITool;
@@ -87,7 +88,13 @@ const AIHub: React.FC<AIHubProps> = ({
       name: 'Impostazioni AI', 
       icon: <Settings size={18} />,
       description: 'Configura comportamento AI'
-    }
+    },
+    { 
+      id: 'mpc' as AITool, 
+      name: 'Impostazioni MPC AI', 
+      icon: <Settings size={18} />,
+      description: 'Configura comportamento MPC AI'
+    },
   ];
 
   // Indicatore di performance colorato
@@ -133,6 +140,8 @@ const AIHub: React.FC<AIHubProps> = ({
         return <AIDesignAssistant />;
       case 'toolpathOptimizer':
         return <AIToolpathOptimizer />;
+        case 'mpc':
+          return <MCPInsightsPanel />;
       case 'analytics':
         return (
           <div className="p-4 space-y-4">

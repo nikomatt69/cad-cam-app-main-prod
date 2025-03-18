@@ -499,7 +499,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
     let currentY: number | null = null;
     let currentZ: number | null = null;
     let currentF: number | null = null;
-    
+     
     // Utility to parse coordinates from G-code line
     const parseCoordinate = (line: string, axis: string): number | null => {
       const match = line.match(new RegExp(`${axis}([+-]?\\d*\\.?\\d+)`));
@@ -583,7 +583,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
       }
       
       // Show success message
-      setSuccess('G-code generato con successo!');
+      setSuccess('G-code generated successfully!');
       
       // Reset success message after a timeout
       successTimerRef.current = setTimeout(() => {
@@ -593,11 +593,11 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
       // Pass generated G-code back to parent
       onGCodeGenerated(gcode);
     } catch (err) {
-      setError('Errore nella generazione del G-code. Controlla le impostazioni.');
+      setError('Error generating G-code. Check your settings.');
       console.error('G-code generation error:', err);
     } finally {
-      setIsGenerating(false);
-    }
+      setIsGenerating(false); 
+    } 
   };
 
   const applyOriginOffset = (x: number, y: number, z: number = 0): { x: number, y: number, z: number } => {
@@ -920,7 +920,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
         gcode += `G0 Z0 ; Return to face\n`;
       }
     } else if (turningOperation === 'internal') {
-      // Internal turning (boring)
+      // Internall turning (boring)
       const holeDiameter = stockDiameter! / 2; // Assuming a pre-drilled hole
       
       gcode += 'G0 X' + (holeDiameter - 1).toFixed(3) + ' Z2 ; Position tool\n';
@@ -2268,7 +2268,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
           className="flex items-center justify-between cursor-pointer"
           onClick={() => toggleSection('machine')}
         >
-          <h3 className="text-lg font-medium text-gray-900">Tipo di Macchina</h3>
+          <h3 className="text-lg font-medium text-gray-900">Machine Type</h3>
           {expanded.machine ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
         
@@ -2283,9 +2283,9 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                 value={settings.machineType}
                 onChange={(e) => updateSettings('machineType', e.target.value)}
               >
-                <option value="mill">Fresatrice CNC</option>
-                <option value="lathe">Tornio CNC</option>
-                <option value="3dprinter">Stampante 3D</option>
+                <option value="mill">CNC Mill</option>
+                <option value="lathe">CNC Lathe</option>
+                <option value="3dprinter">3D Printer</option>
               </select>
             </div>
             
@@ -2293,13 +2293,13 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             <div className="p-3 bg-blue-50 rounded-md">
               <p className="text-sm text-blue-800">
                 {settings.machineType === 'mill' && (
-                  <>Fresatrice CNC - Ideale per lavorazioni su superfici piane, contorni e tasche.</>
+                  <>CNC Mill - Ideal for machining flat surfaces, contours, and pockets.</>
                 )}
                 {settings.machineType === 'lathe' && (
-                  <>Tornio CNC - Ideale per parti cilindriche, alberi, e componenti rotazionali.</>
+                  <>CNC Lathe - Ideal for cylindrical parts, shafts, and rotational components.</>
                 )}
                 {settings.machineType === '3dprinter' && (
-                  <>Stampante 3D - Produzione additiva per modelli e prototipi.</>
+                  <>3D Printer - Additive manufacturing for models and prototypes.</>
                 )}
               </p>
             </div>
@@ -2317,7 +2317,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
           className="flex items-center justify-between cursor-pointer"
           onClick={() => toggleSection('origin')}
         >
-          <h3 className="text-lg font-medium text-gray-900">Origine Coordinate</h3>
+          <h3 className="text-lg font-medium text-gray-900">Coordinate Origin</h3>
           {expanded.origin ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
         
@@ -2325,18 +2325,18 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
           <div className="mt-3 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo di Origine
+                Origin Type
               </label>
               <select
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 value={settings.originType}
                 onChange={(e) => updateSettings('originType', e.target.value)}
               >
-                <option value="workpiece-center">Centro Pezzo</option>
-                <option value="workpiece-corner">Angolo Pezzo (in basso a sinistra)</option>
-                <option value="workpiece-corner2">Angolo Pezzo (in alto a sinistra)</option>
-                <option value="machine-zero">Zero Macchina</option>
-                <option value="custom">Coordinate Personalizzate</option>
+                <option value="workpiece-center">Workpiece Center</option>
+                <option value="workpiece-corner">Workpiece Corner (bottom left)</option>
+                <option value="workpiece-corner2">Workpiece Corner (top left)</option>
+                <option value="machine-zero">Machine Zero</option>
+                <option value="custom">Custom Coordinates</option>
               </select>
             </div>
             
@@ -2404,13 +2404,13 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                   {/* Rettangolo del pezzo */}
                   <rect x="50" y="20" width="100" height="60" fill="none" stroke="#9CA3AF" strokeWidth="1" />
                   
-                  {/* Origine basata sul tipo selezionato */}
+                  {/* Origin basata sul tipo selezionato */}
                   {settings.originType === 'workpiece-center' && (
                     <>
                       <circle cx="100" cy="50" r="4" fill="#3B82F6" />
                       <line x1="100" y1="10" x2="100" y2="90" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
                       <line x1="20" y1="50" x2="180" y2="50" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
-                      <text x="110" y="40" fontSize="12" fill="#3B82F6">Origine</text>
+                      <text x="110" y="40" fontSize="12" fill="#3B82F6">Origin</text>
                     </>
                   )}
                   
@@ -2419,7 +2419,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                       <circle cx="50" cy="80" r="4" fill="#3B82F6" />
                       <line x1="50" y1="10" x2="50" y2="90" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
                       <line x1="20" y1="80" x2="180" y2="80" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
-                      <text x="35" y="95" fontSize="12" fill="#3B82F6">Origine</text>
+                      <text x="35" y="95" fontSize="12" fill="#3B82F6">Origin</text>
                     </>
                   )}
                   
@@ -2428,7 +2428,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                       <circle cx="50" cy="20" r="4" fill="#3B82F6" />
                       <line x1="50" y1="10" x2="50" y2="90" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
                       <line x1="20" y1="20" x2="180" y2="20" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4,2" />
-                      <text x="35" y="15" fontSize="12" fill="#3B82F6">Origine</text>
+                      <text x="35" y="15" fontSize="12" fill="#3B82F6">Origin</text>
                     </>
                   )}
                   
@@ -2445,7 +2445,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                     <>
                       <circle cx={(settings.originX/2) + 100} cy={50 - (settings.originY/2)} r="4" fill="#3B82F6" />
                       <text x={(settings.originX/2) + 105} cy={45 - (settings.originY/2)} fontSize="12" fill="#3B82F6">
-                        Personalizzato
+                        Custom
                       </text>
                     </>
                   )}
@@ -2461,11 +2461,11 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             <div className="p-3 bg-blue-50 rounded-md">
               <p className="text-sm text-blue-800">
                 {settings.originType === 'workpiece-center' && 
-                  'Il percorso verrà generato considerando il centro del pezzo come origine (X0, Y0, Z0).'}
+                  'The toolpath will be generated using the center of the workpiece as origin (X0, Y0, Z0).'}
                 {settings.originType === 'workpiece-corner' && 
                   'Il percorso verrà generato considerando l\'angolo inferiore sinistro del pezzo come origine (X0, Y0), con Z0 sulla superficie superiore.'}
                 {settings.originType === 'machine-zero' && 
-                  'Il percorso verrà generato utilizzando le coordinate della macchina senza offset.'}
+                  'The toolpath will be generated using machine coordinates without offset.'}
                 {settings.originType === 'custom' && 
                   'Imposta coordinate personalizzate per l\'origine del percorso utensile.'}
               </p>
@@ -2486,7 +2486,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
           className="flex items-center justify-between cursor-pointer"
           onClick={() => toggleSection('lathe')}
         >
-          <h3 className="text-lg font-medium text-gray-900">Parametri Tornio</h3>
+          <h3 className="text-lg font-medium text-gray-900">Lathe Parameters</h3>
           {expanded.lathe ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
         
@@ -2494,7 +2494,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
           <div className="mt-3 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Diametro Grezzo (mm)
+                Stock Diameter (mm)
               </label>
               <input
                 type="number"
@@ -2513,7 +2513,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lunghezza Grezzo (mm)
+                Stock Length (mm)
               </label>
               <input
                 type="number"
@@ -2532,30 +2532,30 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Direzione Mandrino
+                Spindle Direction
               </label>
               <select
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 value={settings.spindleDirection}
                 onChange={(e) => updateSettings('spindleDirection', e.target.value as 'cw' | 'ccw')}
               >
-                <option value="cw">Senso orario (CW)</option>
-                <option value="ccw">Senso antiorario (CCW)</option>
+                <option value="cw">Clockwise (CW)</option>
+                <option value="ccw">Counterclockwise (CCW)</option>
               </select>
             </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo di Tornitura
+                Turning Type
               </label>
               <select
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 value={settings.turningOperation}
                 onChange={(e) => updateSettings('turningOperation', e.target.value as 'external' | 'internal' | 'face')}
               >
-                <option value="external">Esterna</option>
-                <option value="internal">Interna</option>
-                <option value="face">Frontale</option>
+                <option value="external">External</option>
+                <option value="internal">Internal</option>
+                <option value="face">Face</option>
               </select>
             </div>
             
@@ -2568,7 +2568,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                 onChange={(e) => updateSettings('applyToolCompensation', e.target.checked)}
               />
               <label htmlFor="toolCompensation" className="ml-2 block text-sm text-gray-700">
-                Applica compensazione raggio utensile
+                Apply tool radius compensation
               </label>
             </div>
           </div>
@@ -2587,7 +2587,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
           className="flex items-center justify-between cursor-pointer"
           onClick={() => toggleSection('printer')}
         >
-          <h3 className="text-lg font-medium text-gray-900">Parametri Stampante 3D</h3>
+          <h3 className="text-lg font-medium text-gray-900">3D Printer Parameters</h3>
           {expanded.printer ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
         
@@ -2595,7 +2595,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
           <div className="mt-3 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Diametro Ugello (mm)
+                Nozzle Diameter (mm)
               </label>
               <input
                 type="number"
@@ -2614,7 +2614,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Diametro Filamento (mm)
+                Filament Diameter (mm)
               </label>
               <select
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -2629,7 +2629,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Altezza Layer (mm)
+                 Layer Height (mm)
               </label>
               <input
                 type="number"
@@ -2649,7 +2649,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Larghezza Estrusione (mm)
+                Extrusion Width (mm)
               </label>
               <input
                 type="number"
@@ -2668,7 +2668,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Velocità di Stampa (mm/s)
+                Print Speed (mm/s)
               </label>
               <input
                 type="number"
@@ -2688,7 +2688,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Temperatura Estrusore (°C)
+                  Print Temperature (°C)
                 </label>
                 <input
                   type="number"
@@ -2706,7 +2706,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Temperatura Piatto (°C)
+                Plate Temperature (°C)
                 </label>
                 <input
                   type="number"
@@ -2740,7 +2740,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
           className="flex items-center justify-between cursor-pointer"
           onClick={() => toggleSection('operation')}
         >
-          <h3 className="text-lg font-medium text-gray-900">Operazione</h3>
+          <h3 className="text-lg font-medium text-gray-900">Opertion</h3>
           {expanded.operation ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
         
@@ -2748,7 +2748,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
           <div className="mt-3 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo di Operazione
+                Operation Type
               </label>
               {settings.machineType === 'mill' && (
                 <select
@@ -2849,7 +2849,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                     <option value="circle">Cerchio</option>
                     <option value="polygon">Poligono</option>
                     <option value="selected">Da elemento selezionato</option>
-                    <option value="custom">Personalizzato</option>
+                    <option value="custom">Custom</option>
                   </select>
                 </div>
                 
@@ -3256,7 +3256,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                       </div>
                       <div className="col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Spessore (mm)(Z)
+                          Thickness (mm)(Z)
                         </label>
                         <input
                           type="number"
@@ -3274,9 +3274,9 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                       </div>
                     </div>
                     
-                    {/* Anteprima Geometria - Stilizzata come nell'immagine richiesta */}
+                    {/* Geometry Preview - Stilizzata come nell'immagine richiesta */}
                     <div className="border border-gray-200 rounded-md p-4 bg-white">
-                      <h4 className="text-sm font-medium text-gray-700 mb-4 text-center">Anteprima Geometria</h4>
+                      <h4 className="text-sm font-medium text-gray-700 mb-4 text-center">Geometry Preview</h4>
                       <div className="w-full h-64 relative">
                         <svg width="100%" height="100%" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
                           {/* Griglia leggera */}
@@ -3333,9 +3333,9 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                           Spessore: {settings.depth}mm
                         </text>
                         
-                        {/* Origine al centro */}
+                        {/* Origin al centro */}
                         <circle cx="200" cy="150" r="5" fill="#EF4444" />
-                        <text x="210" y="160" fontSize="12" fontWeight="500" fill="#EF4444">Origine</text>
+                        <text x="210" y="160" fontSize="12" fontWeight="500" fill="#EF4444">Origin</text>
                       </svg>
                     </div>
                   </div>
@@ -3359,7 +3359,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Spessore (mm)(Z)
+                        Thickness (mm)(Z)
                       </label>
                       <input
                         type="number"
@@ -3377,10 +3377,10 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                     </div>
                   </div>
                   
-                  {/* Anteprima Geometria Cerchio - Stilizzata come nell'immagine richiesta */}
+                  {/* Geometry Preview Cerchio - Stilizzata come nell'immagine richiesta */}
                   <div className="border border-gray-200 rounded-md p-4 bg-white">
-                    <h4 className="text-sm font-medium text-gray-700 mb-4 text-center">Anteprima Geometria</h4>
-                    <div className="w-full h-64 relative">
+                    <h4 className="text-sm font-medium text-gray-700 mb-4 text-center">Geometry Preview</h4>
+                    <div className="w-full h-64 relative"> 
                       <svg width="100%" height="100%" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
                         {/* Griglia leggera */}
                         {Array.from({length: 21}).map((_, i) => (
@@ -3435,9 +3435,9 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                           Spessore: {settings.depth}mm
                         </text>
                         
-                        {/* Origine al centro */}
+                        {/* Origin al centro */}
                         <circle cx="200" cy="150" r="5" fill="#EF4444" />
-                        <text x="210" y="160" fontSize="12" fontWeight="500" fill="#EF4444">Origine</text>
+                        <text x="210" y="160" fontSize="12" fontWeight="500" fill="#EF4444">Origin</text>
                       </svg>
                     </div>
                   </div>
@@ -3479,7 +3479,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                     </div>
                     <div className="col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Spessore (mm)(Z)
+                        Thickness (mm)(Z)
                       </label>
                       <input
                         type="number"
@@ -3497,9 +3497,9 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                     </div>
                   </div>
                   
-                  {/* Anteprima Geometria Poligono - Stilizzata come nell'immagine richiesta */}
+                  {/* Geometry Preview Poligono - Stilizzata come nell'immagine richiesta */}
                   <div className="border border-gray-200 rounded-md p-4 bg-white">
-                    <h4 className="text-sm font-medium text-gray-700 mb-4 text-center">Anteprima Geometria</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-4 text-center">Geometry Preview</h4>
                     <div className="w-full h-64 relative">
                       <svg width="100%" height="100%" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
                         {/* Griglia leggera */}
@@ -3558,9 +3558,9 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                           Spessore: {settings.depth}mm
                         </text>
                         
-                        {/* Origine al centro */}
+                        {/* Origin al centro */}
                         <circle cx="200" cy="150" r="5" fill="#EF4444" />
-                        <text x="210" y="160" fontSize="12" fontWeight="500" fill="#EF4444">Origine</text>
+                        <text x="210" y="160" fontSize="12" fontWeight="500" fill="#EF4444">Origin</text>
                       </svg>
                     </div>
                   </div>
@@ -3570,7 +3570,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
               {geometryType === 'custom' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    G-code Personalizzato
+                    G-code Custom
                   </label>
                   <div className="relative">
                     <textarea
@@ -3638,7 +3638,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Spessore (mm)(Z)
+                        Thickness (mm)(Z)
                       </label>
                       <input
                         type="number"
@@ -4228,7 +4228,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             
             {/* Tool library management */}
             <div className="mt-2 flex justify-between items-center pt-2 border-t border-gray-200">
-              <span className="text-sm text-gray-600">Carica dalla libreria</span>
+              <span className="text-sm text-gray-600">Upload dalla libreria</span>
               <button
                 type="button"
                 className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
@@ -4262,7 +4262,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                   }, 3000);
                 }}
               >
-                <Upload size={14} className="mr-1" /> Carica
+                <Upload size={14} className="mr-1" /> Upload
               </button>
             </div>
           </div>
@@ -4866,7 +4866,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             className="p-1 rounded-md hover:bg-gray-100 text-gray-600"
             title="Aiuto"
             onClick={() => {
-              alert("Questo è il generatore di percorsi utensile. Per iniziare, scegli un'operazione e configura i parametri di taglio.");
+              alert("This is the toolpath generator. To start, choose an'operation and configure the cutting parameters.");
             }}
           >
             <HelpCircle size={18} />
@@ -4953,14 +4953,14 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
                     setSuccess(null);
                   }, 3000);
                 } else {
-                  setError('Nessuna configurazione salvata trovata');
+                  setError('No saved configuration found');
                   setTimeout(() => {
                     setError(null);
                   }, 3000);
                 }
               }}
             >
-              <Upload size={14} className="mr-1" /> Carica
+              <Upload size={14} className="mr-1" /> Upload
             </button>
           </div>
         </div>

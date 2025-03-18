@@ -1,9 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <line x1="4" y1="16" x2="20" y2="16" />
-  <line x1="4" y1="16" x2="4" y2="12" />
-  <line x1="20" y1="16" x2="20" y2="12" />
-  <rect x="9" y="12" width="6" height="4" fill="#fff" stroke="currentColor" />
-  <text x="10" y="15.5" font-family="sans-serif" font-size="3" fill="currentColor">16</text>
-  <path d="M17,6 L19,8 L14,13 L12,13 L12,11 Z" fill="none" />
-  <line x1="17" y1="6" x2="19" y2="8" />
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16h16M4 16v-4m16 4v-4"/><path fill="#fff" d="M9 12h6v4H9z"/><text x="10" y="15.5" fill="currentColor" font-family="sans-serif" font-size="3">16</text><path d="m17 6 2 2-5 5h-2v-2Zm0 0 2 2"/></svg>
