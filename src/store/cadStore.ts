@@ -41,7 +41,9 @@ interface CADState {
   workpiece: Workpiece;
   selectedMachine: MachineConfig | null;
   originOffset: OriginOffset;
-  
+  layerPanelVisible: boolean;
+  elementsPanelVisible: boolean;
+  propertiesPanelVisible: boolean;
   // Actions
   setViewMode: (mode: ViewMode) => void;
   setActiveTool: (tool: string) => void;
@@ -50,7 +52,19 @@ interface CADState {
   setWorkpiece: (workpiece: Workpiece) => void;
   setSelectedMachine: (machine: MachineConfig | null) => void;
   
-  // Origin actions
+  // OrisCtrlKeyPressed: boolean;
+  isCtrlKeyPressed: boolean;
+  isShiftKeyPressed: boolean;
+  isAltKeyPressed: boolean;
+  
+  
+  // Actions aggiuntivi
+  setLayerPanelVisible: (visible: boolean) => void;
+  setElementsPanelVisible: (visible: boolean) => void;
+  setPropertiesPanelVisible: (visible: boolean) => void;
+  setCtrlKeyPressed: (pressed: boolean) => void;
+  setShiftKeyPressed: (pressed: boolean) => void;
+  setAltKeyPressed: (pressed: boolean) => void;
   setOriginOffset: (offset: OriginOffset) => void;
   resetOrigin: () => void;
   setOriginPreset: (preset: OriginPreset) => void;
@@ -70,7 +84,20 @@ export const useCADStore = create<CADState>((set, get) => ({
   },
   selectedMachine: null,
   originOffset: { x: 0, y: 0, z: 0 },
+  layerPanelVisible: false,
+  elementsPanelVisible: false,
+  propertiesPanelVisible: false,
+  isCtrlKeyPressed: false,
+  isShiftKeyPressed: false,
+  isAltKeyPressed: false,
   
+  // Nuovi action
+  setLayerPanelVisible: (visible) => set({ layerPanelVisible: visible }),
+  setElementsPanelVisible: (visible) => set({ elementsPanelVisible: visible }),
+  setPropertiesPanelVisible: (visible) => set({ propertiesPanelVisible: visible }),
+  setCtrlKeyPressed: (pressed) => set({ isCtrlKeyPressed: pressed }),
+  setShiftKeyPressed: (pressed) => set({ isShiftKeyPressed: pressed }),
+  setAltKeyPressed: (pressed) => set({ isAltKeyPressed: pressed }),
   setViewMode: (mode) => set({ viewMode: mode }),
   setActiveTool: (tool) => set({ activeTool: tool }),
   toggleGrid: () => set((state) => ({ gridVisible: !state.gridVisible })),

@@ -26,7 +26,7 @@ export default async function handler(
       systemPrompt,
       model,
       temperature,
-      maxTokens: 2000
+      maxTokens: 3000
     });
 
     return res.status(200).json(response);

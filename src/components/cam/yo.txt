@@ -1,0 +1,26 @@
+// src/components/cam/ToolpathGenerator.tsx
+import React, { useState, useEffect, useRef } from 'react';
+import { AlertTriangle, Check, ChevronDown, ChevronUp, Code, Cpu, Edit, Download, Play, Minimize2, Maximize2, Upload, HelpCircle, Save } from 'react-feather';
+import { useCADStore } from 'src/store/cadStore';
+import { useElementsStore } from 'src/store/elementsStore';
+import { predefinedTools, predefinedMaterials } from 'src/lib/predefinedLibraries';
+import ToolsList from '@/src/pages/tools';
+// Import useLibrary hook at the top of the file
+import { useLibrary } from '../../hooks/useLibrary';
+import { calculateCuttingStatistics, calculateOptimalChipLoad, calculateRecommendedPlungeRate, getCuttingFeedback } from '@/src/lib/gCodeGenerationUtils';
+import { getOperationDescription } from '@/src/lib/operationDescriptions';
+import { materialProperties } from '@/src/lib/materialProperties';
+import { string } from 'zod';
+// Add the import at the top of the file
+import { generateComponentToolpath } from 'src/lib/componentToolpathUtils';
+import { 
+  generatePyramidToolpath,
+  generateHemisphereToolpath,
+  generatePrismToolpath,
+  generateEllipsoidToolpath,
+  generateCapsuleToolpath,
+  generateTriangleToolpath,
+  generateArcToolpath,
+  generateEllipseToolpath,
+  generateText3DToolpath
+} from 'src/lib/elementToolpathUtils';

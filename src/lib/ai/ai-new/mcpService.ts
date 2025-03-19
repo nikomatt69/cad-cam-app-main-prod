@@ -152,7 +152,7 @@ export class MCPService {
     
     try {
       // Prepare the request body
-      const { model = 'claude-3-5-sonnet-20240229', systemPrompt, prompt, temperature = 0.7, maxTokens = 4000 } = request;
+      const { model = 'claude-3-5-sonnet-20240229', systemPrompt, prompt, temperature = 0.3, maxTokens = 4000 } = request;
       
       // Call our proxy endpoint instead of Anthropic directly
       const response = await fetch('/api/ai/proxy', {

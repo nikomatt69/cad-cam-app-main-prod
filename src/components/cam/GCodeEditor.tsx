@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, ChevronLeft, ChevronRight, Plus, Minus, AlertTriangle, ChevronUp, Cpu } from 'react-feather';
 import AIOptimizer from './AIOptimizer';
-import GCodeCopilot from './GCodeCopilot';
+
 import AIEnhancedEditor from './AIEnhancedEditor';
 
 import axios from 'axios';
@@ -527,9 +527,7 @@ const GCodeEditor: React.FC<GCodeEditorProps> = ({ height, value, onChange }) =>
       </div>
       
       {/* G-Code Copilot */}
-      {lines.length > 0 && (
-        <GCodeCopilot gcode={value} onSuggestionApply={handleApplySuggestion} />
-      )}
+      
       
       {/* Context Menu */}
       <GCodeContextMenu

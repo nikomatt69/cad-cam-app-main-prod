@@ -48,9 +48,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
           {toasts.map((toast) => (
             <Toast
               key={toast.id}
-              message={toast.message}
-              type={toast.type}
-              duration={toast.duration}
+              toast={toast}
               onClose={() => removeToast(toast.id)}
             />
           ))}

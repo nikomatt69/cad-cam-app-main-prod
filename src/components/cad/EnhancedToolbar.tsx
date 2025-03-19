@@ -1,5 +1,5 @@
 // src/components/cad/EnhancedToolbar.tsx
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Save, 
   Upload, 
@@ -11,9 +11,12 @@ import {
   X,
   PlusSquare,
   MousePointer,
+  ChevronDown,
+  Copy
 } from 'react-feather';
 import { useRouter } from 'next/router';
 import { useElementsStore } from 'src/store/elementsStore';
+import { useCADSelection } from 'src/hooks/useCadSelection';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -50,8 +53,31 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
   setIsPlacingComponent
 }) => {
   const router = useRouter();
-  const { elements, selectedElement, undo, redo } = useElementsStore();
+  const { elements, selectedElement, undo, redo, selectedElements } = useElementsStore();
+  // Simply add a helper function to create selection data
+  const createSelectionData = () => {
+    // Return data with the selected elements based on selectedElements IDs
+    return {
+      elements: elements.filter(element => selectedElements.includes(element.id)),
+    };
+  };
+  const [showElementsPopup, setShowElementsPopup] = useState(false);
+  const elementsPopupRef = useRef<HTMLDivElement>(null);
   
+  // Close popup when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (elementsPopupRef.current && !elementsPopupRef.current.contains(event.target as Node)) {
+        setShowElementsPopup(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Handle creating a component from selected element
   const handleCreateComponentFromSelected = () => {
     if (!selectedElement) return;
@@ -68,11 +94,35 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
     toast.success('Element prepared for component creation');
   };
 
+  const handleCreateComponentFromSelection = () => {
+    const selectionData = createSelectionData();
+    if (!selectionData || !selectionData.elements || selectionData.elements.length === 0) {
+      toast.error('No elements selected');
+      return;
+    }
+    
+    // Save the selected elements IDs to localStorage
+    localStorage.setItem('cadSelectionForComponent', JSON.stringify(selectionData));
+    
+    // Redirect to the component creation page
+    router.push({
+      pathname: '/components',
+      query: { createFromSelection: 'true' }
+    });
+    
+    toast.success('Selection prepared for component creation');
+    setShowElementsPopup(false);
+  };
+
   const handleStartPlacement = () => {
     if (setIsPlacingComponent && selectedLibraryComponent) {
       setIsPlacingComponent(true);
     }
   };
+
+  // Get selected elements data
+  const selectionData = createSelectionData();
+  const selectedElementsCount = selectionData?.elements?.length || 0;
 
   return (
     <div className="bg-white dark:bg-gray-900 border-b w-full px-4 py-2 rounded-xl flex items-center justify-between">
@@ -185,9 +235,81 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             </button>
           </div>
         )}
-        <div className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-md flex items-center bg-gray-50 dark:bg-gray-800">
-          <span className="text-xs text-gray-500 dark:text-gray-400 mr-2">Elements:</span>
-          <span className="text-sm font-medium">{elements.length}</span>
+        <div className="relative">
+          <button
+            onClick={() => setShowElementsPopup(!showElementsPopup)}
+            className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-md flex items-center bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+          >
+            <span className="text-xs text-gray-500 dark:text-gray-400 mr-2">Elements:</span>
+            <span className="text-sm font-medium">{elements.length}</span>
+            {selectedElementsCount > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs rounded-full">
+                {selectedElementsCount} selected
+              </span>
+            )}
+            <ChevronDown size={14} className="ml-1 text-gray-500" />
+          </button>
+          
+          {showElementsPopup && (
+            <div 
+              ref={elementsPopupRef}
+              className="absolute top-full right-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50"
+            >
+              <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Selected Elements ({selectedElementsCount})
+                </h3>
+                {selectedElementsCount > 0 && (
+                  <button
+                    onClick={handleCreateComponentFromSelection}
+                    className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-md flex items-center"
+                  >
+                    <PlusSquare size={14} className="mr-1" />
+                    Create Component
+                  </button>
+                )}
+              </div>
+              <div className="max-h-48 overflow-y-auto p-2">
+                {selectedElementsCount > 0 ? (
+                  <div className="space-y-1">
+                    {selectedElement?.elements?.map((element: any, index: number) => (
+                      <div key={selectedElement?.elements.id} className="flex items-center justify-between p-1.5 bg-gray-50 dark:bg-gray-700 rounded text-xs">
+                        <div className="flex items-center">
+                          <div 
+                            className="w-3 h-3 rounded-full mr-2" 
+                            style={{ backgroundColor: selectedElement?.elements.id.color || '#1e88e5' }}
+                          />
+                          <span className="font-medium">{element.type}</span>
+                          <span className="ml-2 text-gray-500 dark:text-gray-400 font-mono">
+                            {element.id.substring(0, 12)}...
+                          </span>
+                        </div>
+                        <button 
+                          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                          onClick={() => {
+                            navigator.clipboard.writeText(element.id);
+                            toast.success('Element ID copied to clipboard');
+                          }}
+                          title="Copy ID"
+                        >
+                          <Copy size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                   {selectedElement?.elements?.map && (
+          <div className="px-3 py-1.5 border border-green-200 dark:border-green-800 rounded-md flex items-center bg-green-50 dark:bg-green-900">
+            <span className="text-xs text-green-600 dark:text-green-300 mr-2">Selected:</span>
+            <span className="text-sm font-medium">{selectedElement.id.substring(0, 8)}...</span>
+          </div>
+        )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         {selectedElement && (
           <div className="px-3 py-1.5 border border-green-200 dark:border-green-800 rounded-md flex items-center bg-green-50 dark:bg-green-900">

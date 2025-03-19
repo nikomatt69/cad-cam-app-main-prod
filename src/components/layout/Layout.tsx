@@ -12,6 +12,7 @@ import BottomNavigation from '../components/BottomNavigation';
 import CookieConsentBanner from '../components/CookieConsentBanner';
 import { disconnectWebSocket, initializeWebSocket } from '@/src/lib/websocket';
 import { AIAssistant, AIAssistantButton } from '../ai/ai-new';
+import ToastContainer from '../ui/ToastContainer';
 
 
 type EnhancedLayoutProps = {
@@ -216,7 +217,7 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
                 }
               }}
             />
-            
+            <ToastContainer />
             {/* Footer */}
             <footer className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-inner mt-6 sm:mt-8 pb-16 sm:pb-0">
               <div className="max-w-7xl mx-auto px-3 py-4 sm:px-6 sm:py-6 text-center sm:text-left">

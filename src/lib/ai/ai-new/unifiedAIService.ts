@@ -323,7 +323,7 @@ export class UnifiedAIService {
       systemPrompt: promptTemplates.machiningParameters.system,
       model: 'claude-3-5-sonnet-20240229',
       temperature: 0.3,
-      maxTokens: 2000,
+      maxTokens: 4000,
       parseResponse: this.parseMachiningResponse,
       metadata: {
         type: 'machining_parameters',
@@ -390,7 +390,7 @@ export class UnifiedAIService {
       systemPrompt: contextPrefix + 'Provide helpful, concise, and accurate responses to the user.',
       model: 'claude-3-5-sonnet-20240229',
       temperature: 0.7,
-      maxTokens: 2000,
+      maxTokens: 4000,
       parseResponse: (text) => Promise.resolve(text),
       metadata: {
         type: 'assistant_message',

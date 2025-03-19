@@ -6,7 +6,7 @@ import { unifiedAIService } from '@/src/lib/ai/ai-new/unifiedAIService';
 import { aiAnalytics } from '@/src/lib/ai/ai-new/aiAnalytics';
 import { aiCache } from '@/src/lib/ai/ai-new/aiCache';
 import { AI_MODELS, AI_MODES, aiConfigManager } from '@/src/lib/ai/ai-new/aiConfigManager';
-import { mcpCadService } from '@/src/lib/ai/mcp/mcpCadService';
+
 // Stato iniziale dell'AI
 const initialState: AIState = {
   isEnabled: true,
@@ -203,17 +203,8 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const model = selectOptimalModel('medium');
       const startTime = Date.now();
       
-      // Check if MCP is enabled
-      const useMCP = state.settings.mcpEnabled;
-      
-      // Enhance the prompt if MCP is enabled
-      const enhancedDescription = useMCP
-        ? mcpCadService.enhancePrompt(description)
-        : description;
-      
-      // Make the request
       const result = await unifiedAIService.textToCADElements({
-        description: enhancedDescription,
+        description,
         constraints,
         complexity: 'moderate',
         style: 'precise'
@@ -221,28 +212,26 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       const processingTime = Date.now() - startTime;
       
-      // Add to history
+      // Aggiungi alla cronologia
       if (result.success && result.data) {
-        const historyItem = {
-          id: `cad_${Date.now()}`,
-          type: 'text_to_cad',
-          timestamp: Date.now(),
-          prompt: description,
-          result: result.data,
-          modelUsed: model,
-          processingTime,
-          tokenUsage: {
-            prompt: result.usage?.promptTokens || 0,
-            completion: result.usage?.completionTokens || 0, 
-            total: result.usage?.totalTokens || 0
-          },
-          // Add MCP metadata
-          fromMCP: useMCP
-        };
-        
-        dispatch({ type: 'ADD_TO_HISTORY', payload: historyItem });
+        dispatch({ 
+          type: 'ADD_TO_HISTORY', 
+          payload: {
+            id: `cad_${Date.now()}`,
+            type: 'text_to_cad',
+            timestamp: Date.now(),
+            prompt: description,
+            result: result.data,
+            modelUsed: model,
+            processingTime,
+            tokenUsage: {
+              prompt: result.usage?.promptTokens || 0,
+              completion: result.usage?.completionTokens || 0, 
+              total: result.usage?.totalTokens || 0
+            }
+          }
+        });
       }
-      
       return result;
     } catch (error) {
       console.error('Error in textToCAD:', error);

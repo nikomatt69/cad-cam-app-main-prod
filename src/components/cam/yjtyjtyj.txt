@@ -1,3 +1,4 @@
+// src/components/cam/ToolpathGenerator.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, Check, ChevronDown, ChevronUp, Code, Cpu, Edit, Download, Play, Minimize2, Maximize2, Upload, HelpCircle, Save } from 'react-feather';
 import { useCADStore } from 'src/store/cadStore';
@@ -12,25 +13,6 @@ import { materialProperties } from '@/src/lib/materialProperties';
 import { string } from 'zod';
 // Add the import at the top of the file
 import { generateComponentToolpath } from 'src/lib/componentToolpathUtils';
-import { 
-  generatePyramidToolpath,
-  generateHemisphereToolpath,
-  generatePrismToolpath,
-  generateEllipsoidToolpath,
-  generateCapsuleToolpath,
-  generateTriangleToolpath,
-  generateArcToolpath,
-  generateEllipseToolpath,
-  generateText3DToolpath
-} from 'src/lib/elementToolpathUtils';
-
-
-// Importa le funzioni dal nuovo file unifiedGeometryCalculator
-import { generateComponentUnifiedGcode } from '@/src/lib/unifiedGeometryCalculator';
-import GCodeSettings, { GCodeSettings as GCodeSettingsType } from './GCodeSettings';
-import { convertUnifiedGcode } from '@/src/lib/gCodeConverter';
-import { MillingOperationType } from 'src/types/GCode';
-import { GeometryToolpathIntegrator, createUnifiedComponentFromElement, GeometryToolpathOptions } from 'src/lib/cam/geometryToolpathIntegrator';
 
 interface ToolpathGeneratorProps {
   onGCodeGenerated: (gcode: string) => void;
@@ -116,21 +98,6 @@ export interface ToolpathSettings {
   originZ: number;
 }
 
-// Interfaccia per gli elementi CAD
-interface Element {
-  id: string;
-  name?: string;
-  type: string;
-  x: number;
-  y: number;
-  z: number;
-  width?: number;
-  height?: number;
-  depth?: number;
-  radius?: number;
-  // altre proprietà specifiche per tipo...
-}
-
 const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated, onToolSelected }) => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     machine: true,
@@ -210,7 +177,6 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [warning, setWarning] = useState<string | null>(null);
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   
@@ -1481,131 +1447,85 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
   
   // Generate from selected CAD elements
   const generateFromSelectedElements = () => {
-    const store = useElementsStore;
-    // Uso un cast a unknown prima del cast a Element[]
-    const selectedElements = store.getState().selectedElements as unknown as Element[];
-    
-    if (!selectedElements || selectedElements.length === 0) {
-      setError('Nessun elemento selezionato. Seleziona uno o più elementi prima di generare il percorso utensile.');
-      return;
+    if (!selectedElement) {
+      return '; Nessun elemento selezionato per la generazione del percorso\n';
     }
     
-    try {
-      let gcode = '';
-      
-      // Verifica se utilizzare il nuovo integrator per la generazione del G-code
-      if (settings.useAI) {
-        // Per elementi complessi, utilizziamo il nuovo integrator
-        const geometryOptions: GeometryToolpathOptions = {
-          toolDiameter: settings.toolDiameter,
-          stepSize: settings.stepdown,
-          stepover: settings.stepover,
-          offset: settings.offset as 'inside' | 'outside' | 'center',
-          direction: settings.direction as 'climb' | 'conventional',
-          feedRate: settings.feedrate,
-          plungeRate: settings.plungerate,
-          spindleSpeed: settings.rpm,
-          finishingPass: settings.finishingPass,
-          includeTop: true,
-          includeBottom: true,
-          resolution: 20, // Alta risoluzione per buona qualità
-          detectIslands: true,
-          operationType: settings.operationType as unknown as MillingOperationType,
-          safeHeight: 5
-        };
-        
-        for (const element of selectedElements) {
-          try {
-            // Crea un componente unificato dall'elemento
-            const component = createUnifiedComponentFromElement(element);
-            
-            // Genera il percorso utensile
-            const integrator = new GeometryToolpathIntegrator(geometryOptions);
-            const result = integrator.generateToolpath(component);
-            
-            // Aggiungi il G-code generato
-            gcode += `\n; Elemento: ${element.name || element.id || 'Senza nome'}\n`;
-            gcode += result.gcode;
-            
-            console.log(`Tempo stimato per ${element.name || element.id}: ${result.estimatedTime.toFixed(2)} minuti`);
-          } catch (err: unknown) {
-            console.error(`Errore nella generazione per l'elemento ${element.id}:`, err);
-            setError(`Errore nella generazione per l'elemento ${element.name || element.id}: ${err instanceof Error ? err.message : 'Errore sconosciuto'}`);
-          }
-        }
-      } else {
-        // Approccio tradizionale per casi semplici
-        for (const element of selectedElements) {
-          try {
-            switch (element.type) {
-              case 'cube':
-                gcode += generateCubeFromElement(element);
-                break;
-              case 'sphere':
-                gcode += generateSphereFromElement(element);
-                break;
-              case 'cylinder':
-                gcode += generateCylinderFromElement(element);
-                break;
-              case 'cone':
-                gcode += generateConeFromElement(element);
-                break;
-              case 'torus':
-                gcode += generateTorusFromElement(element);
-                break;
-              case 'extrude':
-                gcode += generateExtrudeFromElement(element);
-                break;
-              case 'text':
-              case 'text3d':
-                gcode += generateTextFromElement(element);
-                break;
-              case 'polygon':
-                gcode += generatePolygonFromElement(element);
-                break;
-              case 'composite':
-                gcode += generateCompositeFromElement(element);
-                break;
-              case 'rectangle':
-                gcode += generateRectangleFromElement(element);
-                break;
-              case 'line':
-                gcode += generateLineFromElement(element);
-                break;
-              case 'circle':
-                gcode += generateCircleFromElement(element);
-                break;
-              default:
-                setWarning(`Tipo elemento ${element.type} non supportato`);
-                break;
-            }
-          } catch (err: unknown) {
-            console.error(`Errore nella generazione per l'elemento ${element.id}:`, err);
-            setError(`Errore nella generazione per l'elemento ${element.name || element.id}: ${err instanceof Error ? err.message : 'Errore sconosciuto'}`);
-          }
-        }
-      }
-      
-      if (gcode) {
-        // Applica ottimizzazioni se necessario
-        if (settings.useArcFitting) {
-          gcode = convertLinesToArcs(gcode, settings.tolerance);
-        }
-        
-        if (settings.optimizePath) {
-          gcode = optimizeToolpath(gcode);
-        }
-        
-        // Invia il G-code generato
-        onGCodeGenerated(gcode);
-        setSuccess(`G-code generato con successo per ${selectedElements.length} elementi.`);
-      } else {
-        setError('Nessun G-code generato. Verifica la selezione e le impostazioni.');
-      }
-    } catch (err: unknown) {
-      console.error('Errore generale nella generazione:', err);
-      setError(`Errore nella generazione del G-code: ${err instanceof Error ? err.message : 'Errore sconosciuto'}`);
+    let gcode = `; Toolpath from selected element (${selectedElement.type})\n`;
+    
+    // Logic based on selected element type
+    switch (selectedElement.type) {
+      case 'circle':
+        gcode += generateCircleFromElement(selectedElement);
+        break;
+      case 'rectangle':
+        gcode += generateRectangleFromElement(selectedElement);
+        break;
+      case 'line':
+        gcode += generateLineFromElement(selectedElement);
+        break;
+      case 'cube':
+        gcode += generateCubeFromElement(selectedElement);
+        break;
+      case 'sphere':
+        gcode += generateSphereFromElement(selectedElement);
+        break;
+      case 'cylinder':
+        gcode += generateCylinderFromElement(selectedElement);
+        break;
+      case 'cone':
+        gcode += generateConeFromElement(selectedElement);
+        break;
+      case 'torus':
+        gcode += generateTorusFromElement(selectedElement);
+        break;
+      case 'extrude':
+        gcode += generateExtrudeFromElement(selectedElement);
+        break;
+      case 'text':
+        gcode += generateTextFromElement(selectedElement);
+        break;
+      case 'polygon':
+        gcode += generatePolygonFromElement(selectedElement);
+        break;
+      case 'component':
+        gcode += generateComponentToolpath(selectedElement, settings);
+        break;
+      case 'composite':
+        gcode += generateCompositeFromElement(selectedElement);
+        break;
+      case 'pyramid':
+      gcode += generatePyramidToolpath(selectedElement, settings);
+      break;
+    case 'hemisphere':
+      gcode += generateHemisphereToolpath(selectedElement, settings);
+      break;
+    case 'prism':
+      gcode += generatePrismToolpath(selectedElement, settings);
+      break;
+    case 'ellipsoid':
+      gcode += generateEllipsoidToolpath(selectedElement, settings);
+      break;
+    case 'capsule':
+      gcode += generateCapsuleToolpath(selectedElement, settings);
+      break;
+    case 'triangle':
+      gcode += generateTriangleToolpath(selectedElement, settings);
+      break;
+    case 'arc':
+      gcode += generateArcToolpath(selectedElement, settings);
+      break;
+    case 'ellipse':
+      gcode += generateEllipseToolpath(selectedElement, settings);
+      break;
+    case 'text3d':
+      gcode += generateText3DToolpath(selectedElement, settings);
+      break;
+      default:
+        gcode += generateCompositeFromElement(selectedElement);
     }
+    
+    return gcode;
   };
 
   // Generate from a selected cube element
@@ -2372,8 +2292,830 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
     return gcode;
   };
 
+/**
+ * Generate toolpath for a pyramid element
+ */
+function generatePyramidToolpath(element: any, settings: any): string {
+  const { toolDiameter, depth, stepdown, feedrate, plungerate, offset, direction } = settings;
+  
+  let gcode = `; Pyramid: center (${element.x}, ${element.y}, ${element.z}), base width ${element.baseWidth || element.width}mm, base depth ${element.baseDepth || element.depth}mm, height ${element.height}mm\n`;
+  
+  // Calculate offset distance based on selected offset type
+  let offsetDistance = 0;
+  if (offset === 'inside') {
+    offsetDistance = -toolDiameter / 2;
+  } else if (offset === 'outside') {
+    offsetDistance = toolDiameter / 2;
+  }
+  
+  // Get base dimensions
+  const baseWidth = element.baseWidth || element.width || 50;
+  const baseDepth = element.baseDepth || element.depth || 50;
+  const height = element.height || 50;
+  
+  // Calculate the top Z of the pyramid
+  const topZ = element.z + height / 2;
+  const bottomZ = element.z - height / 2;
+  
+  // For each Z level from top to bottom
+  for (let z = 0; z > -Math.min(depth, height); z -= stepdown) {
+    const currentZ = Math.max(-Math.min(depth, height), z);
+    const actualZ = topZ + currentZ;
+    
+    // Calculate the slice dimensions at this Z level
+    // As we move down from the top, the slice gets larger
+    const ratio = 1 - (actualZ - bottomZ) / height;
+    const sliceWidth = baseWidth * ratio;
+    const sliceDepth = baseDepth * ratio;
+    
+    // Calculate the corners of this slice
+    const halfSliceWidth = sliceWidth / 2;
+    const halfSliceDepth = sliceDepth / 2;
+    
+    // Apply offset to the slice dimensions
+    const offsetWidth = sliceWidth + offsetDistance * 2 * (offset === 'outside' ? 1 : -1);
+    const offsetDepth = sliceDepth + offsetDistance * 2 * (offset === 'outside' ? 1 : -1);
+    
+    // Skip if dimensions are too small
+    if (offsetWidth <= 0 || offsetDepth <= 0) {
+      gcode += `\n; Z Level: ${actualZ.toFixed(3)} - Offset dimensions too small, skipping\n`;
+      continue;
+    }
+    
+    const halfOffsetWidth = offsetWidth / 2;
+    const halfOffsetDepth = offsetDepth / 2;
+    
+    // Start point
+    const startX = element.x - halfOffsetWidth;
+    const startY = element.y - halfOffsetDepth;
+    
+    gcode += `\n; Z Level: ${actualZ.toFixed(3)}, Slice width: ${offsetWidth.toFixed(3)}, Slice depth: ${offsetDepth.toFixed(3)}\n`;
+    gcode += `G0 X${startX.toFixed(3)} Y${startY.toFixed(3)} Z${(actualZ + 5).toFixed(3)} ; Move above start position\n`;
+    gcode += `G1 Z${actualZ.toFixed(3)} F${plungerate} ; Plunge to cutting depth\n`;
+    
+    // Contour of the slice (rectangular)
+    const corners = [
+      [startX, startY],
+      [startX + offsetWidth, startY],
+      [startX + offsetWidth, startY + offsetDepth],
+      [startX, startY + offsetDepth],
+      [startX, startY] // Close the loop
+    ];
+    
+    // Reverse order for conventional milling
+    if (direction === 'conventional') {
+      corners.reverse();
+    }
+    
+    for (let i = 0; i < corners.length; i++) {
+      gcode += `G1 X${corners[i][0].toFixed(3)} Y${corners[i][1].toFixed(3)} F${feedrate} ; Corner ${i+1}\n`;
+    }
+  }
+  
+  return gcode;
+}
 
+/**
+ * Generate toolpath for a hemisphere element
+ */
+function generateHemisphereToolpath(element: any, settings: any): string {
+  const { toolDiameter, depth, stepdown, feedrate, plungerate, offset, direction: millingDirection } = settings;
+  
+  let gcode = `; Hemisphere: center (${element.x}, ${element.y}, ${element.z}), radius ${element.radius}mm, direction ${element.direction || 'up'}\n`;
+  
+  // Get hemisphere properties
+  const radius = element.radius || 25;
+  const hemisphereDirection = element.direction || 'up'; // 'up' or 'down'
+  
+  // Determine the Z extents of the hemisphere
+  let topZ, bottomZ;
+  if (hemisphereDirection === 'up') {
+    topZ = element.z + radius;
+    bottomZ = element.z;
+  } else {
+    topZ = element.z;
+    bottomZ = element.z - radius;
+  }
+  
+  // For each Z level from top to bottom
+  for (let z = 0; z > -Math.min(depth, radius); z -= stepdown) {
+    const currentZ = Math.max(-Math.min(depth, radius), z);
+    const actualZ = topZ + currentZ;
+    
+    // Skip if we're below the hemisphere
+    if (actualZ < bottomZ) {
+      continue;
+    }
+    
+    // Calculate radius at this height using the sphere equation
+    const distanceFromCenter = Math.abs(actualZ - (hemisphereDirection === 'up' ? element.z : element.z));
+    const radiusAtHeight = Math.sqrt(Math.max(0, Math.pow(radius, 2) - Math.pow(distanceFromCenter, 2)));
+    
+    // Apply offset to the radius
+    let effectiveRadius = radiusAtHeight;
+    if (offset === 'inside') {
+      effectiveRadius -= toolDiameter / 2;
+    } else if (offset === 'outside') {
+      effectiveRadius += toolDiameter / 2;
+    }
+    
+    // Skip if radius is too small
+    if (effectiveRadius <= 0) {
+      gcode += `\n; Z Level: ${actualZ.toFixed(3)} - Radius too small, skipping\n`;
+      continue;
+    }
+    
+    gcode += `\n; Z Level: ${actualZ.toFixed(3)}, Radius: ${effectiveRadius.toFixed(3)}\n`;
+    
+    // Move to start point on circle
+    gcode += `G0 X${(element.x + effectiveRadius).toFixed(3)} Y${element.y.toFixed(3)} Z${(actualZ + 5).toFixed(3)} ; Move above start position\n`;
+    gcode += `G1 Z${actualZ.toFixed(3)} F${plungerate} ; Plunge to cutting depth\n`;
+    
+    // Full circle
+    if (millingDirection === 'climb') {
+      gcode += `G3 X${(element.x + effectiveRadius).toFixed(3)} Y${element.y.toFixed(3)} I${(-effectiveRadius).toFixed(3)} J0 F${feedrate} ; Clockwise full circle\n`;
+    } else {
+      gcode += `G2 X${(element.x + effectiveRadius).toFixed(3)} Y${element.y.toFixed(3)} I${(-effectiveRadius).toFixed(3)} J0 F${feedrate} ; Counter-clockwise full circle\n`;
+    }
+  }
+  
+  return gcode;
+}
 
+/**
+ * Generate toolpath for a prism element
+ */
+function generatePrismToolpath(element: any, settings: any): string {
+  const { toolDiameter, depth, stepdown, feedrate, plungerate, offset, direction } = settings;
+  
+  let gcode = `; Prism: center (${element.x}, ${element.y}, ${element.z}), radius ${element.radius}mm, height ${element.height}mm, sides ${element.sides || 6}\n`;
+  
+  // Get prism properties
+  const radius = element.radius || 25;
+  const height = element.height || 50;
+  const sides = element.sides || 6;
+  
+  // Calculate the top Z of the prism
+  const topZ = element.z + height / 2;
+  const bottomZ = element.z - height / 2;
+  
+  // Apply offset to the radius
+  let effectiveRadius = radius;
+  if (offset === 'inside') {
+    effectiveRadius -= toolDiameter / 2;
+  } else if (offset === 'outside') {
+    effectiveRadius += toolDiameter / 2;
+  }
+  
+  // Skip if radius is too small
+  if (effectiveRadius <= 0) {
+    return `; Prism radius after offset too small, cannot generate toolpath\n`;
+  }
+  
+  // For each Z level from top to bottom
+  for (let z = 0; z > -Math.min(depth, height); z -= stepdown) {
+    const currentZ = Math.max(-Math.min(depth, height), z);
+    const actualZ = topZ + currentZ;
+    
+    // Skip if we're below the prism
+    if (actualZ < bottomZ) {
+      continue;
+    }
+    
+    gcode += `\n; Z Level: ${actualZ.toFixed(3)}\n`;
+    
+    // Generate points for the polygon representing the prism cross-section
+    const points = [];
+    for (let i = 0; i < sides; i++) {
+      const angle = i * (2 * Math.PI / sides);
+      const x = element.x + effectiveRadius * Math.cos(angle);
+      const y = element.y + effectiveRadius * Math.sin(angle);
+      points.push([x, y]);
+    }
+    points.push(points[0]); // Close the loop
+    
+    // Reverse for conventional milling if needed
+    if (direction === 'conventional') {
+      points.reverse();
+    }
+    
+    // Move to first point
+    gcode += `G0 X${points[0][0].toFixed(3)} Y${points[0][1].toFixed(3)} Z${(actualZ + 5).toFixed(3)} ; Move above start position\n`;
+    gcode += `G1 Z${actualZ.toFixed(3)} F${plungerate} ; Plunge to cutting depth\n`;
+    
+    // Move along the polygon
+    for (let i = 1; i < points.length; i++) {
+      gcode += `G1 X${points[i][0].toFixed(3)} Y${points[i][1].toFixed(3)} F${feedrate} ; Point ${i}\n`;
+    }
+  }
+  
+  return gcode;
+}
+
+/**
+ * Generate toolpath for an ellipsoid element
+ */
+function generateEllipsoidToolpath(element: any, settings: any): string {
+  const { toolDiameter, depth, stepdown, feedrate, plungerate, offset, direction } = settings;
+  
+  let gcode = `; Ellipsoid: center (${element.x}, ${element.y}, ${element.z}), radiusX ${element.radiusX || element.width/2 || 25}mm, radiusY ${element.radiusY || element.height/2 || 15}mm, radiusZ ${element.radiusZ || element.depth/2 || 20}mm\n`;
+  
+  // Get ellipsoid properties
+  const radiusX = element.radiusX || element.width/2 || 25;
+  const radiusY = element.radiusY || element.height/2 || 15;
+  const radiusZ = element.radiusZ || element.depth/2 || 20;
+  
+  // Calculate the top Z of the ellipsoid
+  const topZ = element.z + radiusZ;
+  const bottomZ = element.z - radiusZ;
+  
+  // For each Z level from top to bottom
+  for (let z = 0; z > -Math.min(depth, radiusZ * 2); z -= stepdown) {
+    const currentZ = Math.max(-Math.min(depth, radiusZ * 2), z);
+    const actualZ = topZ + currentZ;
+    
+    // Skip if we're below the ellipsoid
+    if (actualZ < bottomZ) {
+      continue;
+    }
+    
+    // Calculate ratio of distance from center on Z axis
+    const zRatio = Math.abs(actualZ - element.z) / radiusZ;
+    
+    // Skip if we're outside the ellipsoid
+    if (zRatio > 1) {
+      continue;
+    }
+    
+    // Calculate X and Y radii at this Z level using the ellipsoid equation
+    // For an ellipsoid, we scale the circle based on the Z ratio
+    const scaleForZ = Math.sqrt(1 - Math.pow(zRatio, 2));
+    const ellipseRadiusX = radiusX * scaleForZ;
+    const ellipseRadiusY = radiusY * scaleForZ;
+    
+    // We need to approximate the ellipse with line segments for the G-code
+    // Generate points along the ellipse
+    const numPoints = 36; // More points for smoother ellipse
+    const points = [];
+    
+    for (let i = 0; i <= numPoints; i++) {
+      const angle = (i / numPoints) * Math.PI * 2;
+      
+      // Apply tool offset to the ellipse equation
+      // This is a simplification - proper ellipse offsetting is complex
+      const offsetRadiusX = offset === 'outside' ? ellipseRadiusX + toolDiameter / 2 : 
+                           offset === 'inside' ? Math.max(0, ellipseRadiusX - toolDiameter / 2) : 
+                           ellipseRadiusX;
+                           
+      const offsetRadiusY = offset === 'outside' ? ellipseRadiusY + toolDiameter / 2 : 
+                           offset === 'inside' ? Math.max(0, ellipseRadiusY - toolDiameter / 2) : 
+                           ellipseRadiusY;
+      
+      // Skip if any radius is too small
+      if (offsetRadiusX <= 0 || offsetRadiusY <= 0) {
+        continue;
+      }
+      
+      const x = element.x + offsetRadiusX * Math.cos(angle);
+      const y = element.y + offsetRadiusY * Math.sin(angle);
+      
+      points.push([x, y]);
+    }
+    
+    // Skip if we couldn't generate points
+    if (points.length <= 2) {
+      gcode += `\n; Z Level: ${actualZ.toFixed(3)} - Offset dimensions too small, skipping\n`;
+      continue;
+    }
+    
+    gcode += `\n; Z Level: ${actualZ.toFixed(3)}, X Radius: ${ellipseRadiusX.toFixed(3)}, Y Radius: ${ellipseRadiusY.toFixed(3)}\n`;
+    
+    // Reverse points for conventional milling if needed
+    if (direction === 'conventional') {
+      points.reverse();
+    }
+    
+    // Move to first point
+    gcode += `G0 X${points[0][0].toFixed(3)} Y${points[0][1].toFixed(3)} Z${(actualZ + 5).toFixed(3)} ; Move above start position\n`;
+    gcode += `G1 Z${actualZ.toFixed(3)} F${plungerate} ; Plunge to cutting depth\n`;
+    
+    // Move along the ellipse points
+    for (let i = 1; i < points.length; i++) {
+      gcode += `G1 X${points[i][0].toFixed(3)} Y${points[i][1].toFixed(3)} F${feedrate} ; Ellipse point ${i}\n`;
+    }
+  }
+  
+  return gcode;
+}
+
+/**
+ * Generate toolpath for a capsule element
+ */
+function generateCapsuleToolpath(element: any, settings: any): string {
+  const { toolDiameter, depth, stepdown, feedrate, plungerate, offset, direction } = settings;
+  
+  let gcode = `; Capsule: center (${element.x}, ${element.y}, ${element.z}), radius ${element.radius || 15}mm, height ${element.height || 50}mm, direction ${element.direction || 'z'}\n`;
+  
+  // Get capsule properties
+  const radius = element.radius || 15;
+  const height = element.height || 50;
+  const capsuleDirection = element.direction || 'z';
+  
+  // Calculate the cylinder section length (total height minus the two hemispheres)
+  const cylinderLength = Math.max(0, height - 2 * radius);
+  
+  // Calculate the extents of the capsule
+  let minX, maxX, minY, maxY, minZ, maxZ;
+  
+  if (capsuleDirection === 'x') {
+    minX = element.x - height / 2;
+    maxX = element.x + height / 2;
+    minY = element.y - radius;
+    maxY = element.y + radius;
+    minZ = element.z - radius;
+    maxZ = element.z + radius;
+  } else if (capsuleDirection === 'y') {
+    minX = element.x - radius;
+    maxX = element.x + radius;
+    minY = element.y - height / 2;
+    maxY = element.y + height / 2;
+    minZ = element.z - radius;
+    maxZ = element.z + radius;
+  } else { // z-direction
+    minX = element.x - radius;
+    maxX = element.x + radius;
+    minY = element.y - radius;
+    maxY = element.y + radius;
+    minZ = element.z - height / 2;
+    maxZ = element.z + height / 2;
+  }
+  
+  // Apply offset to the radius
+  let effectiveRadius = radius;
+  if (offset === 'inside') {
+    effectiveRadius = Math.max(0, radius - toolDiameter / 2);
+  } else if (offset === 'outside') {
+    effectiveRadius = radius + toolDiameter / 2;
+  }
+  
+  // Skip if radius is too small
+  if (effectiveRadius <= 0) {
+    return `; Capsule radius after offset too small, cannot generate toolpath\n`;
+  }
+  
+  // For each Z level from top to bottom
+  for (let z = 0; z > -Math.min(depth, maxZ - minZ); z -= stepdown) {
+    const currentZ = Math.max(-Math.min(depth, maxZ - minZ), z);
+    const actualZ = maxZ + currentZ;
+    
+    // Skip if we're below the capsule
+    if (actualZ < minZ) {
+      continue;
+    }
+    
+    let slice;
+    
+    if (capsuleDirection === 'z') {
+      // For Z-direction capsule, we need to determine if we're in the hemispheres or cylinder part
+      if (actualZ > element.z + cylinderLength / 2) {
+        // Top hemisphere
+        const distFromTop = maxZ - actualZ;
+        const radiusAtZ = Math.sqrt(Math.max(0, Math.pow(radius, 2) - Math.pow(radius - distFromTop, 2)));
+        slice = { type: 'circle', x: element.x, y: element.y, radius: radiusAtZ };
+      } else if (actualZ < element.z - cylinderLength / 2) {
+        // Bottom hemisphere
+        const distFromBottom = actualZ - minZ;
+        const radiusAtZ = Math.sqrt(Math.max(0, Math.pow(radius, 2) - Math.pow(radius - distFromBottom, 2)));
+        slice = { type: 'circle', x: element.x, y: element.y, radius: radiusAtZ };
+      } else {
+        // Cylinder part
+        slice = { type: 'circle', x: element.x, y: element.y, radius: radius };
+      }
+    } else if (capsuleDirection === 'y') {
+      // For Y-direction capsule, we need to determine the slice shape based on Z position
+      // This is a simplification - for exact Y-axis capsule, we would need more complex calculations
+      slice = { type: 'ellipse', x: element.x, y: element.y, radiusX: radius, radiusY: height / 2 };
+    } else { // x-direction
+      // For X-direction capsule, we need to determine the slice shape based on Z position
+      // This is a simplification - for exact X-axis capsule, we would need more complex calculations
+      slice = { type: 'ellipse', x: element.x, y: element.y, radiusX: height / 2, radiusY: radius };
+    }
+    
+    gcode += `\n; Z Level: ${actualZ.toFixed(3)}, Slice type: ${slice.type}\n`;
+    
+    if (slice.type === 'circle') {
+      // Generate circle toolpath
+      const points = [];
+      const numPoints = 36;
+      
+      for (let i = 0; i <= numPoints; i++) {
+        const angle = (i / numPoints) * Math.PI * 2;
+        const x = slice.x + effectiveRadius * Math.cos(angle);
+        const y = slice.y + effectiveRadius * Math.sin(angle);
+        points.push([x, y]);
+      }
+      
+      // Reverse for conventional milling if needed
+      if (direction === 'conventional') {
+        points.reverse();
+      }
+      
+      // Move to first point
+      gcode += `G0 X${points[0][0].toFixed(3)} Y${points[0][1].toFixed(3)} Z${(actualZ + 5).toFixed(3)} ; Move above start position\n`;
+      gcode += `G1 Z${actualZ.toFixed(3)} F${plungerate} ; Plunge to cutting depth\n`;
+      
+      // Move along the circle
+      for (let i = 1; i < points.length; i++) {
+        gcode += `G1 X${points[i][0].toFixed(3)} Y${points[i][1].toFixed(3)} F${feedrate} ; Circle point ${i}\n`;
+      }
+    } else { // ellipse
+      // Generate ellipse toolpath
+      const points = [];
+      const numPoints = 36;
+      
+      for (let i = 0; i <= numPoints; i++) {
+        const angle = (i / numPoints) * Math.PI * 2;
+        const x = slice.x + slice.radiusX * Math.cos(angle);
+        const y = slice.y + slice.radiusY * Math.sin(angle);
+        points.push([x, y]);
+      }
+      
+      // Reverse for conventional milling if needed
+      if (direction === 'conventional') {
+        points.reverse();
+      }
+      
+      // Move to first point
+      gcode += `G0 X${points[0][0].toFixed(3)} Y${points[0][1].toFixed(3)} Z${(actualZ + 5).toFixed(3)} ; Move above start position\n`;
+      gcode += `G1 Z${actualZ.toFixed(3)} F${plungerate} ; Plunge to cutting depth\n`;
+      
+      // Move along the ellipse
+      for (let i = 1; i < points.length; i++) {
+        gcode += `G1 X${points[i][0].toFixed(3)} Y${points[i][1].toFixed(3)} F${feedrate} ; Ellipse point ${i}\n`;
+      }
+    }
+  }
+  
+  return gcode;
+}
+
+/**
+ * Generate toolpath for a triangle element
+ */
+function generateTriangleToolpath(element: any, settings: any): string {
+  const { toolDiameter, depth, stepdown, feedrate, plungerate, offset, direction } = settings;
+  
+  // Check if we have array of points or individual point coordinates
+  const hasPoints = element.points && Array.isArray(element.points) && element.points.length >= 3;
+  const hasCoordinates = element.x1 !== undefined && element.y1 !== undefined &&
+                         element.x2 !== undefined && element.y2 !== undefined &&
+                         element.x3 !== undefined && element.y3 !== undefined;
+  
+  if (!hasPoints && !hasCoordinates) {
+    return `; Triangle missing points or coordinates\n`;
+  }
+  
+  // Determine the triangle points
+  let points;
+  
+  if (hasPoints) {
+    points = element.points.slice(0, 3);
+  } else {
+    points = [
+      { x: element.x1, y: element.y1, z: element.z1 || element.z || 0 },
+      { x: element.x2, y: element.y2, z: element.z2 || element.z || 0 },
+      { x: element.x3, y: element.y3, z: element.z3 || element.z || 0 }
+    ];
+  }
+  
+  let gcode = `; Triangle: points [(${points[0].x}, ${points[0].y}), (${points[1].x}, ${points[1].y}), (${points[2].x}, ${points[2].y})]\n`;
+  
+  // Calculate the depth range
+  const zValues = points.map((p: {x: number, y: number, z?: number}) => p.z || 0);
+  const maxZ = Math.max(...zValues);
+  const minZ = Math.min(...zValues);
+  const triangleDepth = maxZ - minZ;
+  
+  // Convert points to the format expected by the rest of the code
+  const trianglePoints = points.map((p: {x: number, y: number, z?: number}) => [p.x, p.y]);
+  trianglePoints.push(trianglePoints[0]); // Close the loop
+  
+  // Apply offset if needed
+  let offsetPoints = trianglePoints;
+  
+  if (offset !== 'center') {
+    const newOffsetPoints = offsetPolygon(trianglePoints, offset === 'outside' ? toolDiameter / 2 : -toolDiameter / 2);
+    
+    // Check if offset was successful
+    if (newOffsetPoints && newOffsetPoints.length >= 3) {
+      offsetPoints = newOffsetPoints;
+    } else {
+      gcode += `; Could not apply offset to triangle, using original points\n`;
+    }
+  }
+  
+  // For each Z level
+  for (let z = 0; z > -Math.min(depth, triangleDepth); z -= stepdown) {
+    const currentZ = Math.max(-Math.min(depth, triangleDepth), z);
+    const actualZ = maxZ + currentZ;
+    
+    gcode += `\n; Z Level: ${actualZ.toFixed(3)}\n`;
+    
+    // Make a copy of the points for this level
+    let levelPoints = [...offsetPoints];
+    
+    // Reverse for conventional milling if needed
+    if (direction === 'conventional') {
+      levelPoints.reverse();
+    }
+    
+    // Move to first point
+    gcode += `G0 X${levelPoints[0][0].toFixed(3)} Y${levelPoints[0][1].toFixed(3)} Z${(actualZ + 5).toFixed(3)} ; Move above start position\n`;
+    gcode += `G1 Z${actualZ.toFixed(3)} F${plungerate} ; Plunge to cutting depth\n`;
+    
+    // Move along the triangle
+    for (let i = 1; i < levelPoints.length; i++) {
+      gcode += `G1 X${levelPoints[i][0].toFixed(3)} Y${levelPoints[i][1].toFixed(3)} F${feedrate} ; Point ${i}\n`;
+    }
+  }
+  
+  return gcode;
+}
+
+/**
+ * Helper function to offset a polygon by a distance
+ * Positive distance offsets outward, negative offsets inward
+ * This is a simplified algorithm and may not work for all polygons
+ */
+function offsetPolygon(points: number[][], distance: number): number[][] | null {
+  // If there are not enough points, return null
+  if (points.length < 3) {
+    return null;
+  }
+  
+  // Calculate the centroid of the polygon
+  const centroid = calculateCentroid(points);
+  
+  // Create a new array for the offset points
+  const offsetPoints: number[][] = [];
+  
+  // Process each point
+  for (let i = 0; i < points.length; i++) {
+    // Get the current point
+    const point = points[i];
+    
+    // Calculate the direction from the centroid to the point
+    const dx = point[0] - centroid[0];
+    const dy = point[1] - centroid[1];
+    
+    // Calculate the length of the vector
+    const length = Math.sqrt(dx * dx + dy * dy);
+    
+    // Skip if the point is too close to the centroid
+    if (length < 0.0001) {
+      continue;
+    }
+    
+    // Calculate the unit vector
+    const ux = dx / length;
+    const uy = dy / length;
+    
+    // Calculate the offset point
+    const offsetX = point[0] + ux * distance;
+    const offsetY = point[1] + uy * distance;
+    
+    // Add the offset point
+    offsetPoints.push([offsetX, offsetY]);
+  }
+  
+  // If we don't have enough points after offsetting, return null
+  if (offsetPoints.length < 3) {
+    return null;
+  }
+  
+  // Close the loop if needed
+  if (offsetPoints.length > 0 && 
+     (offsetPoints[0][0] !== offsetPoints[offsetPoints.length - 1][0] || 
+      offsetPoints[0][1] !== offsetPoints[offsetPoints.length - 1][1])) {
+    offsetPoints.push([...offsetPoints[0]]);
+  }
+  
+  return offsetPoints;
+}
+
+/**
+ * Helper function to calculate the centroid of a polygon
+ */
+function calculateCentroid(points: number[][]): number[] {
+  let sumX = 0;
+  let sumY = 0;
+  
+  // Skip the last point if it's the same as the first (closed loop)
+  const count = points.length > 1 && 
+               points[0][0] === points[points.length - 1][0] && 
+               points[0][1] === points[points.length - 1][1] 
+               ? points.length - 1 : points.length;
+  
+  for (let i = 0; i < count; i++) {
+    sumX += points[i][0];
+    sumY += points[i][1];
+  }
+  
+  return [sumX / count, sumY / count];
+}
+
+/**
+ * Generate toolpath for an arc element
+ */
+function generateArcToolpath(element: any, settings: any): string {
+  const { toolDiameter, depth, stepdown, feedrate, plungerate, offset, direction } = settings;
+  
+  let gcode = `; Arc: center (${element.x}, ${element.y}, ${element.z}), radius ${element.radius}mm, startAngle ${element.startAngle || 0}°, endAngle ${element.endAngle || 360}°\n`;
+  
+  // Get arc properties
+  const radius = element.radius || 25;
+  const startAngle = (element.startAngle || 0) * Math.PI / 180; // Convert to radians
+  const endAngle = (element.endAngle || 360) * Math.PI / 180; // Convert to radians
+  const clockwise = direction === 'climb'; // Climb milling uses G3 (clockwise)
+  
+  // Apply offset to the radius
+  let effectiveRadius = radius;
+  if (offset === 'inside') {
+    effectiveRadius = Math.max(0, radius - toolDiameter / 2);
+  } else if (offset === 'outside') {
+    effectiveRadius = radius + toolDiameter / 2;
+  }
+  
+  // Skip if radius is too small
+  if (effectiveRadius <= 0) {
+    return `; Arc radius after offset too small, cannot generate toolpath\n`;
+  }
+  
+  // For each Z level
+  for (let z = 0; z > -depth; z -= stepdown) {
+    const currentZ = Math.max(-depth, z);
+    const actualZ = element.z + currentZ;
+    
+    gcode += `\n; Z Level: ${actualZ.toFixed(3)}\n`;
+    
+    // Calculate start and end points of the arc
+    const startX = element.x + effectiveRadius * Math.cos(startAngle);
+    const startY = element.y + effectiveRadius * Math.sin(startAngle);
+    const endX = element.x + effectiveRadius * Math.cos(endAngle);
+    const endY = element.y + effectiveRadius * Math.sin(endAngle);
+    
+    // Move to start point
+    gcode += `G0 X${startX.toFixed(3)} Y${startY.toFixed(3)} Z${(actualZ + 5).toFixed(3)} ; Move above start position\n`;
+    gcode += `G1 Z${actualZ.toFixed(3)} F${plungerate} ; Plunge to cutting depth\n`;
+    
+    // Calculate I and J values for arc
+    const i = element.x - startX; // Distance from start point to center in X
+    const j = element.y - startY; // Distance from start point to center in Y
+    
+    // If start and end angles are the same or differ by 360 degrees (full circle)
+    if (Math.abs(startAngle - endAngle) < 0.001 || Math.abs(Math.abs(startAngle - endAngle) - 2 * Math.PI) < 0.001) {
+      // Full circle
+      if (clockwise) {
+        gcode += `G3 X${startX.toFixed(3)} Y${startY.toFixed(3)} I${i.toFixed(3)} J${j.toFixed(3)} F${feedrate} ; Clockwise full circle\n`;
+      } else {
+        gcode += `G2 X${startX.toFixed(3)} Y${startY.toFixed(3)} I${i.toFixed(3)} J${j.toFixed(3)} F${feedrate} ; Counter-clockwise full circle\n`;
+      }
+    } else {
+      // Partial arc
+      if (clockwise) {
+        gcode += `G3 X${endX.toFixed(3)} Y${endY.toFixed(3)} I${i.toFixed(3)} J${j.toFixed(3)} F${feedrate} ; Clockwise arc\n`;
+      } else {
+        gcode += `G2 X${endX.toFixed(3)} Y${endY.toFixed(3)} I${i.toFixed(3)} J${j.toFixed(3)} F${feedrate} ; Counter-clockwise arc\n`;
+      }
+    }
+  }
+  
+  return gcode;
+}
+
+/**
+ * Generate toolpath for an ellipse element
+ */
+function generateEllipseToolpath(element: any, settings: any): string {
+  const { toolDiameter, depth, stepdown, feedrate, plungerate, offset, direction } = settings;
+  
+  let gcode = `; Ellipse: center (${element.x}, ${element.y}, ${element.z}), radiusX ${element.radiusX || element.width/2 || 25}mm, radiusY ${element.radiusY || element.height/2 || 15}mm\n`;
+  
+  // Get ellipse properties
+  const radiusX = element.radiusX || element.width/2 || 25;
+  const radiusY = element.radiusY || element.height/2 || 15;
+  
+  // We need to approximate the ellipse with line segments for the G-code
+  // Generate points along the ellipse
+  const numPoints = 72; // More points for smoother ellipse
+  
+  // For each Z level
+  for (let z = 0; z > -depth; z -= stepdown) {
+    const currentZ = Math.max(-depth, z);
+    const actualZ = element.z + currentZ;
+    
+    gcode += `\n; Z Level: ${actualZ.toFixed(3)}\n`;
+    
+    // Apply tool offset to the ellipse equation (simplified approach)
+    const offsetRadiusX = offset === 'outside' ? radiusX + toolDiameter / 2 : 
+                         offset === 'inside' ? Math.max(0, radiusX - toolDiameter / 2) : 
+                         radiusX;
+                         
+    const offsetRadiusY = offset === 'outside' ? radiusY + toolDiameter / 2 : 
+                         offset === 'inside' ? Math.max(0, radiusY - toolDiameter / 2) : 
+                         radiusY;
+    
+    // Skip if any radius is too small
+    if (offsetRadiusX <= 0 || offsetRadiusY <= 0) {
+      gcode += `; Offset dimensions too small, skipping this Z level\n`;
+      continue;
+    }
+    
+    // Generate points for ellipse
+    const points = [];
+    for (let i = 0; i <= numPoints; i++) {
+      const angle = (i / numPoints) * Math.PI * 2;
+      const x = element.x + offsetRadiusX * Math.cos(angle);
+      const y = element.y + offsetRadiusY * Math.sin(angle);
+      points.push([x, y]);
+    }
+    
+    // Reverse points for conventional milling if needed
+    if (direction === 'conventional') {
+      points.reverse();
+    }
+    
+    // Move to first point
+    gcode += `G0 X${points[0][0].toFixed(3)} Y${points[0][1].toFixed(3)} Z${(actualZ + 5).toFixed(3)} ; Move above start position\n`;
+    gcode += `G1 Z${actualZ.toFixed(3)} F${plungerate} ; Plunge to cutting depth\n`;
+    
+    // Move along the ellipse points
+    for (let i = 1; i < points.length; i++) {
+      gcode += `G1 X${points[i][0].toFixed(3)} Y${points[i][1].toFixed(3)} F${feedrate} ; Ellipse point ${i}\n`;
+    }
+  }
+  
+  return gcode;
+}
+
+/**
+ * Generate toolpath for a 3D text element
+ */
+function generateText3DToolpath(element: any, settings: any): string {
+  const { toolDiameter, depth, stepdown, feedrate, plungerate } = settings;
+  
+  let gcode = `; 3D Text: position (${element.x}, ${element.y}, ${element.z}), text "${element.text || ''}", height ${element.height || 10}mm, depth ${element.depth || 5}mm\n`;
+  
+  // This is a simplified approximation for text
+  // In a real implementation, you would need to:
+  // 1. Convert the text to paths/outlines
+  // 2. Generate toolpaths for each character
+  
+  // Get text properties
+  const text = element.text || '';
+  const textHeight = element.height || 10;
+  const textDepth = element.depth || 5;
+  
+  // Skip if no text
+  if (!text) {
+    return `; No text content provided\n`;
+  }
+  
+  gcode += `; Note: Text toolpath is approximated - for production use, convert text to paths first\n`;
+  
+  // For each Z level
+  for (let z = 0; z > -Math.min(depth, textDepth); z -= stepdown) {
+    const currentZ = Math.max(-Math.min(depth, textDepth), z);
+    const actualZ = element.z + currentZ;
+    
+    gcode += `\n; Z Level: ${actualZ.toFixed(3)}\n`;
+    
+    // Approximate the text bounds
+    const textWidth = text.length * textHeight * 0.6; // Rough estimate of text width
+    
+    // Generate a box around the text area
+    const left = element.x;
+    const right = element.x + textWidth;
+    const top = element.y + textHeight;
+    const bottom = element.y;
+    
+    // Simple rectangular outline for text bounds (placeholder)
+    gcode += `G0 X${left.toFixed(3)} Y${bottom.toFixed(3)} Z${(actualZ + 5).toFixed(3)} ; Move above start position\n`;
+    gcode += `G1 Z${actualZ.toFixed(3)} F${plungerate} ; Plunge to cutting depth\n`;
+    gcode += `G1 X${right.toFixed(3)} Y${bottom.toFixed(3)} F${feedrate} ; Bottom edge\n`;
+    gcode += `G1 X${right.toFixed(3)} Y${top.toFixed(3)} F${feedrate} ; Right edge\n`;
+    gcode += `G1 X${left.toFixed(3)} Y${top.toFixed(3)} F${feedrate} ; Top edge\n`;
+    gcode += `G1 X${left.toFixed(3)} Y${bottom.toFixed(3)} F${feedrate} ; Left edge\n`;
+    
+    // Add note about how text would actually be machined
+    gcode += `; Note: For actual text engraving, each character would need to be converted to paths\n`;
+    gcode += `; Characters would be machined individually with appropriate tool movement\n`;
+  }
+  
+  gcode += `; For production text machining, please export text as SVG or DXF and import as paths\n`;
+  
+  return gcode;
+}
   
   // Generate circular toolpath
   const generateCircleToolpath = () => {
@@ -5075,40 +5817,6 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
     </div>
   );
   }
-
-  // Definire gli stati all'inizio del componente ToolpathGenerator, insieme agli altri stati
-  const [previewGCode, setPreviewGCode] = useState<string>('');
-  const [gCodeSettings, setGCodeSettings] = useState<GCodeSettingsType>({
-    controller: 'fanuc',
-    programName: 'CAD_CAM',
-    toolNumber: 1,
-    spindleSpeed: 12000,
-    feedrate: 800,
-    plungerate: 300,
-    safeHeight: 30,
-    useMetricUnits: true,
-    useAbsoluteCoordinates: true,
-    optimizeRapidMoves: true,
-    includeComments: true,
-    coolantOn: true,
-    useHighPrecision: false,
-    useRadiusCompensation: false,
-    radiusCompensationValue: 0
-  });
-
-  // Modificare il metodo per convertire G-code per usare previewGCode invece di toolpathGcode
-  const convertGCode = (format: 'fanuc' | 'heidenhain' | 'generic') => {
-    const options = {
-      ...gCodeSettings,
-      controller: format
-    };
-    
-    // Per convertire il G-code
-    const convertedGCode = convertUnifiedGcode(previewGCode, options);
-    setPreviewGCode(convertedGCode);
-  };
-
-  // Nella parte di rendering del componente, aggiungiamo il componente GCodeSettings
   return (
     <div className={`bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white p-4 rounded-md shadow-md ${showFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}>
       <div className="flex justify-between items-center mb-4">
@@ -5225,42 +5933,6 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
             </button>
           </div>
         </div>
-      </div>
-      
-      {/* Aggiungere dopo il resto delle impostazioni, prima o dopo il G-code generato */}
-      <div className="mb-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Impostazioni G-code</h3>
-          <div className="flex space-x-2">
-            <button 
-              className="px-3 py-1 bg-blue-500 text-white rounded shadow hover:bg-blue-600"
-              onClick={() => convertGCode('fanuc')}
-            >
-              Fanuc
-            </button>
-            <button 
-              className="px-3 py-1 bg-green-500 text-white rounded shadow hover:bg-green-600"
-              onClick={() => convertGCode('heidenhain')}
-            >
-              Heidenhain
-            </button>
-            <button 
-              className="px-3 py-1 bg-gray-500 text-white rounded shadow hover:bg-gray-600"
-              onClick={() => convertGCode('generic')}
-            >
-              Generico
-            </button>
-          </div>
-        </div>
-        
-        <GCodeSettings 
-          onSettingsChange={setGCodeSettings}
-          initialSettings={{
-            ...gCodeSettings,
-            feedrate: settings.feedrate,
-            plungerate: settings.plungerate
-          }}
-        />
       </div>
     </div>
   );
