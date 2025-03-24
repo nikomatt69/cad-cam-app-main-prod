@@ -41,7 +41,7 @@ export default function MetaTags({
   structuredData,
 }: MetaTagsProps) {
   const router = useRouter();
-  const siteUrl = process.env.NEXTAUTH_URL || 'https://cadcamfun.xyz';
+  const siteUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
   const currentPath = router.asPath;
   const fullUrl = canonicalUrl || `${siteUrl}${currentPath}`;
   const fullTitle = `${title}${title === 'CAD/CAM FUN' ? '' : ' | CAD/CAM FUN'}`;

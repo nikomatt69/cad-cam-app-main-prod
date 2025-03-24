@@ -8,6 +8,8 @@ import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { Drawing } from '@/src/types/mainTypes';
 import Metatags from '@/src/components/layout/Metatags';
 import { cn } from '@/src/lib/utils';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 // Animation variants
 const containerVariants = {
@@ -49,7 +51,8 @@ export default function ProjectDrawingsList({ projectId }: ProjectDrawingsListPr
   const [selectedDrawing, setSelectedDrawing] = useState<Drawing | null>(null);
   const [drawingName, setDrawingName] = useState('');
   const [drawingDescription, setDrawingDescription] = useState('');
-  
+  const { data: session, status } = useSession();
+ 
   // Fetch project drawings using our custom hook
   const { 
     drawings, 
@@ -70,7 +73,11 @@ export default function ProjectDrawingsList({ projectId }: ProjectDrawingsListPr
       setDrawingDescription(selectedDrawing.description || '');
     }
   }, [showModal, selectedDrawing]);
-  
+  const router = useRouter(); 
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  }
   // Handle drawing creation
   const handleCreateDrawing = async (e: React.FormEvent) => {
     e.preventDefault();

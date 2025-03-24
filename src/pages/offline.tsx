@@ -3,8 +3,16 @@ import Image from 'next/image';
 import { AlertTriangle } from 'react-feather';
 import Link from 'next/link';
 import MetaTags from '@/src/components/layout/Metatags';
+import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 
 export default function Offline() {
+  const { data: session, status } = useSession();
+  const router = useRouter(); 
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  } 
   return (
     <>
       <MetaTags title="You're Offline - CAM/CAM FUN" />

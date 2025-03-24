@@ -264,14 +264,14 @@ export default function ComponentsList() {
                   
                   <div className="flex space-x-3">
                     <button
-                      onClick={() => handleEditClick(component)}
+                      onClick={() => handleEditClick(component.data.id)}
                       className="p-1 text-green-600 hover:bg-green-50 rounded"
                       title="Edit"
                     >
                       <Edit size={16} />
                     </button>
                     <button
-                      onClick={() => handleDeleteComponent(component.id)}
+                      onClick={() => handleDeleteComponent(component.data.id)}
                       className="p-1 text-red-600 hover:bg-red-50 rounded"
                       title="Delete"
                     >
@@ -340,14 +340,14 @@ export default function ComponentsList() {
                     {component.projectId || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(component.updatedAt).toLocaleDateString()}
+                    {new Date(component.data.updatedAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleEditClick(component);
+                          handleEditClick(component.data.id);
                         }}
                         className="p-1 text-green-600 hover:bg-green-50 rounded"
                         title="Edit"
@@ -357,7 +357,7 @@ export default function ComponentsList() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteComponent(component.id);
+                          handleDeleteComponent(component.data.id);
                         }}
                         className="p-1 text-red-600 hover:bg-red-50 rounded"
                         title="Delete"

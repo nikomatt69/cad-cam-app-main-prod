@@ -10,9 +10,10 @@ import {
   useDisclosure
 } from '@nextui-org/react';
 import * as React from 'react';
-import { BookOpen } from 'react-feather';
+import { BookOpen, Cpu } from 'react-feather';
 import TextToCADPanel from '../ai/ai-new/TextToCADPanel';
 import AIAssistantButton from '../ai/ai-new/AIAssistantButton';
+import { AIHub } from '../ai/ai-new';
 
 
 
@@ -29,8 +30,10 @@ const AIModal: FC<Props> = () => {
   return (
     <div className="flex flex-col gap-1 ">
       <button type="button" onClick={onOpen}>
-        <div className="lt-text-gray-500 ml-1 flex items-center font-bold">
-          <BookOpen className="h-4 w-4" />
+        <div className="px-3 py-1.5 bg-pink-50 dark:bg-pink-900 border border-pink-300 dark:border-pink-700 hover:bg-pink-100 dark:hover:bg-pink-800 text-pink-700 dark:text-pink-300 rounded-md shadow-sm flex items-center animate-pulse">
+          <Cpu className="h-4 w-4" />
+          <span className='text-sm px-1'>AI</span>
+          
         </div>
       </button>
       <Modal
@@ -63,15 +66,17 @@ const AIModal: FC<Props> = () => {
       >
         <ModalContent
           autoFocus={false}
-          className="h-[flex] max-h-[73vh]  justify-between rounded-xl border border-b-0 border-gray-500 bg-white dark:bg-gray-900 "
+          className="h-[flex] max-h-[73vh] bg-gray-100 justify-between rounded-xl flex border  border-gray-500  dark:bg-gray-900 "
         >
-          <ModalHeader autoFocus />
+          <ModalHeader autoFocus  className='justify-between g-gray-100 '>
+            AI Modal
+            </ModalHeader>
           <ModalBody
             autoFocus={false}
-            className="max-w-lg overflow-y-auto overflow-y-hidden   bg-white dark:bg-gray-900"
+            className="max-w-xl overflow-y-auto overflow-y-hidden border-l-2 border-r-2 border-gray-300  bg-gray-100 dark:bg-gray-900"
           >
             
-            <AIAssistantButton mode="cad" fixed />
+            <AIHub/>
            
           </ModalBody>
         </ModalContent>

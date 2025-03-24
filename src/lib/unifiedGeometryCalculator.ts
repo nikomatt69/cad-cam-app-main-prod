@@ -84,6 +84,13 @@ export interface Component3D {
   orientation?: 'x' | 'y' | 'z';
   elements?: Component3D[];
   operation?: 'union' | 'subtract' | 'intersect';
+  sides?: number; // Numero di lati per prismi e altri poligoni
+
+  // Proprietà per geometrie generiche
+  vertices?: {x: number, y: number, z: number}[]; // Vertici della mesh
+  faces?: number[][];                              // Indici dei vertici che formano le facce
+  edges?: [number, number][];                      // Indici dei vertici che formano gli spigoli
+  boundingDimensions?: ElementDimensions;          // Dimensioni precompute per ottimizzare
 }
 
 /**
@@ -286,6 +293,56 @@ export function calculateElementDimensions(element: Component3D): ElementDimensi
       break;
     }
     
+    case 'pyramid': {
+      // Per le piramidi, consideriamo che:
+      // - La base è centrata in (x,y,z) con una metà dell'altezza sotto e una metà sopra
+      // - width e depth specificano le dimensioni della base
+      // - height specifica l'altezza totale
+      const baseWidth = element.width || 0;
+      const baseDepth = element.depth || element.width || 0;
+      const height = element.height || 0;
+      
+      bbox = {
+        minX: element.x - baseWidth / 2,
+        maxX: element.x + baseWidth / 2,
+        minY: element.y - baseDepth / 2,
+        maxY: element.y + baseDepth / 2,
+        minZ: element.z - height / 2,
+        maxZ: element.z + height / 2,
+        width: baseWidth,
+        height: height,
+        depth: baseDepth,
+        center: { x: element.x, y: element.y, z: element.z }
+      };
+      break;
+    }
+    
+    case 'prism': {
+      // Per i prismi, consideriamo che:
+      // - Hanno una base poligonale regolare definita da un raggio e un numero di lati
+      // - Il prisma è centrato in (x,y,z) e si estende height/2 verso l'alto e verso il basso
+      const radius = element.radius || 0;
+      const height = element.height || 0;
+      const sides = element.sides || 6; // Default a un esagono
+      
+      // Per un prisma, il bounding box è un rettangolo che contiene completamente il poligono
+      // Per un poligono regolare, questo dipende dall'orientamento
+      // Calcolo conservativo: utilizziamo il diametro come larghezza e profondità
+      bbox = {
+        minX: element.x - radius,
+        maxX: element.x + radius,
+        minY: element.y - radius,
+        maxY: element.y + radius,
+        minZ: element.z - height / 2,
+        maxZ: element.z + height / 2,
+        width: radius * 2,
+        height: height,
+        depth: radius * 2,
+        center: { x: element.x, y: element.y, z: element.z }
+      };
+      break;
+    }
+    
     case 'ellipsoid': {
       const radiusX = element.radiusX || (element.width ? element.width / 2 : 0);
       const radiusY = element.radiusY || (element.height ? element.height / 2 : 0);
@@ -306,10 +363,79 @@ export function calculateElementDimensions(element: Component3D): ElementDimensi
       break;
     }
       
+    case 'custom':
+    case 'mesh':
+    case 'imported': {
+      // Se l'elemento ha un bounding box precalcolato, utilizzalo
+      if (element.boundingDimensions) {
+        return element.boundingDimensions;
+      }
+      
+      // Se l'elemento ha vertici, calcola il bounding box dai vertici
+      if (element.vertices && element.vertices.length > 0) {
+        // Trasliamo i vertici nella posizione dell'elemento
+        const translatedVertices = element.vertices.map(v => ({
+          x: v.x + element.x,
+          y: v.y + element.y,
+          z: v.z + element.z
+        }));
+        
+        return calculateBoundingBoxFromVertices(translatedVertices);
+      }
+      
+      // Fallback: utilizza le dimensioni esplicite se fornite
+      if (element.width !== undefined && element.height !== undefined) {
+        const width = element.width || 0;
+        const height = element.height || 0;
+        const depth = element.depth || height || 0;
+        
+        bbox = {
+          minX: element.x - width / 2,
+          maxX: element.x + width / 2,
+          minY: element.y - depth / 2,
+          maxY: element.y + depth / 2,
+          minZ: element.z - height / 2,
+          maxZ: element.z + height / 2,
+          width: width,
+          height: height,
+          depth: depth,
+          center: { x: element.x, y: element.y, z: element.z }
+        };
+      } else {
+        // Se non ci sono informazioni sufficienti, crea un bbox di default
+        bbox = {
+          minX: element.x - 1,
+          maxX: element.x + 1,
+          minY: element.y - 1,
+          maxY: element.y + 1,
+          minZ: element.z - 1,
+          maxZ: element.z + 1,
+          width: 2,
+          height: 2,
+          depth: 2,
+          center: { x: element.x, y: element.y, z: element.z }
+        };
+        console.warn('Geometria generica senza informazioni sufficienti per calcolare dimensioni accurate');
+      }
+      break;
+    }
+    
     // Aggiungere altri tipi di elementi secondo necessità
     
     default: {
-      // Per tipi sconosciuti, creare un piccolo bbox attorno al centro
+      // Per tipi sconosciuti, proviamo a trattarli come mesh generiche
+      if (element.vertices && element.vertices.length > 0) {
+        // Trasliamo i vertici nella posizione dell'elemento
+        const translatedVertices = element.vertices.map(v => ({
+          x: v.x + element.x,
+          y: v.y + element.y,
+          z: v.z + element.z
+        }));
+        
+        return calculateBoundingBoxFromVertices(translatedVertices);
+      }
+      
+      // Se non ci sono vertici, creiamo un bbox piccolo attorno al centro
       bbox = {
         minX: element.x - 0.1,
         maxX: element.x + 0.1,
@@ -797,6 +923,87 @@ export function calculateElementZLevelIntersection(element: Component3D, zLevel:
       break;
     }
     
+    case 'pyramid': {
+      const baseWidth = element.width || 0;
+      const baseDepth = element.depth || element.width || 0;
+      const height = element.height || 0;
+      
+      // Verifica se il livello Z interseca la piramide
+      if (zLevel >= element.z - height / 2 && zLevel <= element.z + height / 2) {
+        // Calcola la proporzione di altezza dalla base alla punta
+        const zFromBase = (zLevel - (element.z - height / 2)) / height;
+        
+        // La sezione trasversale di una piramide a qualsiasi altezza è un rettangolo
+        // che si riduce proporzionalmente man mano che ci si avvicina all'apice
+        const scaleAtZ = 1 - zFromBase;
+        
+        // Calcola le dimensioni del rettangolo a questa altezza
+        const widthAtZ = baseWidth * scaleAtZ;
+        const depthAtZ = baseDepth * scaleAtZ;
+        
+        // Se le dimensioni sono troppo piccole, potremmo essere all'apice
+        if (widthAtZ < 0.001 || depthAtZ < 0.001) {
+          // Alla punta, rappresentiamo come un punto
+          intersection = {
+            elementId: element.id || '',
+            elementType: element.type,
+            center: { x: element.x, y: element.y },
+            shape: 'circle',
+            parameters: {
+              radius: 0.001 // Raggio minimo per rappresentare un punto
+            }
+          };
+        } else {
+          // Rappresentiamo come un rettangolo
+          intersection = {
+            elementId: element.id || '',
+            elementType: element.type,
+            center: { x: element.x, y: element.y },
+            shape: 'rectangle',
+            parameters: {
+              width: widthAtZ,
+              height: depthAtZ
+            }
+          };
+        }
+      }
+      break;
+    }
+    
+    case 'prism': {
+      const radius = element.radius || 0;
+      const height = element.height || 0;
+      const sides = element.sides || 6;
+      
+      // Verifica se il livello Z interseca il prisma
+      if (zLevel >= element.z - height / 2 && zLevel <= element.z + height / 2) {
+        // Genera i punti del poligono della base
+        const points: number[][] = [];
+        for (let i = 0; i < sides; i++) {
+          const angle = (i / sides) * Math.PI * 2;
+          const x = element.x + radius * Math.cos(angle);
+          const y = element.y + radius * Math.sin(angle);
+          points.push([x, y]);
+        }
+        
+        // Chiudi il poligono ripetendo il primo punto
+        points.push([...points[0]]);
+        
+        // La sezione di un prisma è costante a tutte le altezze, quindi
+        // rappresentiamo l'intersezione come un poligono
+        intersection = {
+          elementId: element.id || '',
+          elementType: element.type,
+          center: { x: element.x, y: element.y },
+          shape: 'polygon',
+          parameters: {
+            points: points
+          }
+        };
+      }
+      break;
+    }
+    
     case 'ellipsoid': {
       const radiusX = element.radiusX || (element.width ? element.width / 2 : 0);
       const radiusY = element.radiusY || (element.height ? element.height / 2 : 0);
@@ -826,14 +1033,390 @@ export function calculateElementZLevelIntersection(element: Component3D, zLevel:
       break;
     }
     
+    case 'custom':
+    case 'mesh':
+    case 'imported': {
+      // Per le geometrie generiche, calcoliamo l'intersezione con il piano Z
+      // Questo è un calcolo complesso che richiede analisi delle facce della mesh
+      
+      // Verifichiamo innanzitutto se il livello Z interseca il bounding box dell'elemento
+      const bbox = calculateElementDimensions(element);
+      if (zLevel < bbox.minZ || zLevel > bbox.maxZ) {
+        return null; // Nessuna intersezione
+      }
+      
+      // Se abbiamo vertici e facce, possiamo calcolare un'intersezione precisa
+      if (element.vertices && element.vertices.length > 0 && element.faces && element.faces.length > 0) {
+        // Calcoliamo i punti di intersezione delle facce con il piano Z
+        const intersectionPoints = calculateMeshZIntersection(element, zLevel);
+        
+        // Se abbiamo dei punti di intersezione, creiamo un poligono
+        if (intersectionPoints.length > 2) {
+          intersection = {
+            elementId: element.id || '',
+            elementType: element.type,
+            center: { x: element.x, y: element.y },
+            shape: 'polygon',
+            parameters: {
+              points: intersectionPoints
+            }
+          };
+        }
+      } 
+      // Se non abbiamo informazioni sulla mesh ma abbiamo dimensioni, approssimiamo
+      else if (element.width !== undefined && element.height !== undefined) {
+        // Se la geometria non ha mesh dettagliata, usiamo una rappresentazione
+        // semplificata basata sulle sue dimensioni (es. rettangolo)
+        const width = element.width || 0;
+        const depth = element.depth || element.height || 0;
+        
+        intersection = {
+          elementId: element.id || '',
+          elementType: element.type,
+          center: { x: element.x, y: element.y },
+          shape: 'rectangle',
+          parameters: {
+            width,
+            height: depth
+          }
+        };
+      }
+      break;
+    }
+    
     // Aggiungere altri tipi di elementi secondo necessità
     
     default: {
-      console.warn(`Tipo di elemento non supportato: ${element.type}`);
+      // Per tipi sconosciuti con vertici, proviamo a calcolare l'intersezione con la mesh
+      if (element.vertices && element.vertices.length > 0 && element.faces && element.faces.length > 0) {
+        // Calcoliamo i punti di intersezione della geometria generica
+        const intersectionPoints = calculateMeshZIntersection(element, zLevel);
+        
+        // Se abbiamo dei punti di intersezione, creiamo un poligono
+        if (intersectionPoints.length > 2) {
+          intersection = {
+            elementId: element.id || '',
+            elementType: element.type,
+            center: { x: element.x, y: element.y },
+            shape: 'polygon',
+            parameters: {
+              points: intersectionPoints
+            }
+          };
+        }
+      }
     }
   }
   
   return intersection;
+}
+
+/**
+ * Calcola l'intersezione di una mesh con un piano Z
+ * @param element Elemento mesh da intersecare
+ * @param zLevel Livello Z del piano
+ * @returns Array di punti che formano il poligono di intersezione
+ */
+function calculateMeshZIntersection(element: Component3D, zLevel: number): number[][] {
+  // Array per memorizzare i punti di intersezione
+  const intersectionPoints: number[][] = [];
+  
+  // Se non abbiamo vertici o facce, non possiamo calcolare l'intersezione
+  if (!element.vertices || !element.faces) {
+    return intersectionPoints;
+  }
+  
+  // Trasferiamo i vertici nella posizione dell'elemento
+  const translatedVertices = element.vertices.map(v => ({
+    x: v.x + element.x,
+    y: v.y + element.y,
+    z: v.z + element.z
+  }));
+  
+  // Per ogni faccia della mesh
+  for (const face of element.faces) {
+    // Abbiamo bisogno di almeno 3 vertici per una faccia
+    if (face.length < 3) continue;
+    
+    // Per ogni spigolo della faccia
+    for (let i = 0; i < face.length; i++) {
+      // Ottieni i due vertici dell'edge
+      const v1 = translatedVertices[face[i]];
+      const v2 = translatedVertices[face[(i + 1) % face.length]];
+      
+      // Controlla se l'edge attraversa il piano Z
+      // Un edge attraversa il piano Z se un vertice è sopra e uno sotto
+      if ((v1.z >= zLevel && v2.z <= zLevel) || (v1.z <= zLevel && v2.z >= zLevel)) {
+        // Se i vertici sono alla stessa altezza Z esattamente, usiamo un punto medio
+        if (v1.z === v2.z && v1.z === zLevel) {
+          intersectionPoints.push([(v1.x + v2.x) / 2, (v1.y + v2.y) / 2]);
+          continue;
+        }
+        
+        // Calcola il punto di intersezione usando interpolazione lineare
+        // t rappresenta quanto siamo lungo il segmento
+        const t = (zLevel - v1.z) / (v2.z - v1.z);
+        
+        // Ottieni le coordinate X e Y del punto di intersezione
+        const x = v1.x + t * (v2.x - v1.x);
+        const y = v1.y + t * (v2.y - v1.y);
+        
+        // Aggiungi il punto all'array
+        intersectionPoints.push([x, y]);
+      }
+    }
+  }
+  
+  // Ordina i punti per creare un poligono convesso
+  if (intersectionPoints.length > 2) {
+    return orderPointsClockwise(intersectionPoints, element.x, element.y);
+  }
+  
+  return intersectionPoints;
+}
+
+/**
+ * Ordina i punti in senso orario attorno a un centro
+ * @param points Array di punti [x, y]
+ * @param centerX Coordinata X del centro
+ * @param centerY Coordinata Y del centro
+ * @returns Array di punti ordinati in senso orario
+ */
+function orderPointsClockwise(points: number[][], centerX: number, centerY: number): number[][] {
+  // Calcola il centro se non fornito
+  if (centerX === undefined || centerY === undefined) {
+    centerX = 0;
+    centerY = 0;
+    for (const point of points) {
+      centerX += point[0];
+      centerY += point[1];
+    }
+    centerX /= points.length;
+    centerY /= points.length;
+  }
+  
+  // Ordina i punti in base all'angolo rispetto al centro
+  return [...points].sort((a, b) => {
+    const angleA = Math.atan2(a[1] - centerY, a[0] - centerX);
+    const angleB = Math.atan2(b[1] - centerY, b[0] - centerX);
+    return angleA - angleB;
+  });
+}
+
+/**
+ * Calcola volume e area superficiale di un elemento
+ * @param element Elemento da analizzare
+ * @returns Volume e area superficiale approssimati
+ */
+function calculateElementVolumeAndSurface(element: Component3D): { 
+  elementVolume: number; 
+  elementSurfaceArea: number 
+} {
+  let elementVolume = 0;
+  let elementSurfaceArea = 0;
+  
+  switch (element.type) {
+    case 'sphere': {
+      const radius = element.radius || 0;
+      elementVolume = (4/3) * Math.PI * Math.pow(radius, 3);
+      elementSurfaceArea = 4 * Math.PI * Math.pow(radius, 2);
+      break;
+    }
+    
+    case 'cube':
+    case 'rectangle': {
+      const width = element.width || 0;
+      const height = element.height || 0;
+      const depth = element.depth || height || 0;
+      elementVolume = width * height * depth;
+      elementSurfaceArea = 2 * (width * height + width * depth + height * depth);
+      break;
+    }
+    
+    case 'cylinder': {
+      const radius = element.radius || 0;
+      const height = element.height || 0;
+      elementVolume = Math.PI * Math.pow(radius, 2) * height;
+      elementSurfaceArea = 2 * Math.PI * radius * (radius + height);
+      break;
+    }
+    
+    case 'capsule': {
+      const radius = element.radius || 0;
+      const height = element.height || 0;
+      // Volume = cilindro + due semisfere
+      elementVolume = Math.PI * Math.pow(radius, 2) * height + (4/3) * Math.PI * Math.pow(radius, 3);
+      // Area = area laterale cilindro + area due semisfere
+      elementSurfaceArea = 2 * Math.PI * radius * height + 4 * Math.PI * Math.pow(radius, 2);
+      break;
+    }
+    
+    case 'custom':
+    case 'mesh':
+    case 'imported': {
+      // Per una mesh generica, possiamo calcolare volume e superficie
+      // se abbiamo a disposizione vertici e facce
+      if (element.vertices && element.vertices.length > 0 && 
+          element.faces && element.faces.length > 0) {
+        // Calcoliamo il volume e l'area superficiale della mesh
+        const result = calculateMeshVolumeAndSurface(element);
+        elementVolume = result.volume;
+        elementSurfaceArea = result.surfaceArea;
+      } else {
+        // Se non abbiamo i dettagli della mesh, usiamo un'approssimazione dal bounding box
+        const bbox = calculateElementDimensions(element);
+        elementVolume = bbox.width * bbox.height * bbox.depth;
+        elementSurfaceArea = 2 * (
+          bbox.width * bbox.height + 
+          bbox.width * bbox.depth + 
+          bbox.height * bbox.depth
+        );
+      }
+      break;
+    }
+    
+    default:
+      // Approssimazione grossolana per tipi non implementati tramite bounding box
+      const dimensions = calculateElementDimensions(element);
+      elementVolume = dimensions.width * dimensions.height * dimensions.depth;
+      elementSurfaceArea = 2 * (
+        dimensions.width * dimensions.height + 
+        dimensions.width * dimensions.depth + 
+        dimensions.height * dimensions.depth
+      );
+  }
+  
+  return { elementVolume, elementSurfaceArea };
+}
+
+/**
+ * Calcola il volume e l'area superficiale di una mesh triangolare
+ * @param element Elemento mesh
+ * @returns Volume e area superficiale
+ */
+function calculateMeshVolumeAndSurface(element: Component3D): {
+  volume: number;
+  surfaceArea: number;
+} {
+  let volume = 0;
+  let surfaceArea = 0;
+  
+  // Se non abbiamo vertici o facce, non possiamo calcolare
+  if (!element.vertices || !element.faces) {
+    return { volume, surfaceArea };
+  }
+  
+  // Trasferiamo i vertici nella posizione dell'elemento
+  const translatedVertices = element.vertices.map(v => ({
+    x: v.x + element.x,
+    y: v.y + element.y,
+    z: v.z + element.z
+  }));
+  
+  // Calcoliamo l'area superficiale
+  for (const face of element.faces) {
+    // Abbiamo bisogno di almeno 3 vertici per una faccia
+    if (face.length < 3) continue;
+    
+    // Per mesh generiche, approssimiamo le facce con triangoli
+    // e calcoliamo l'area di ogni triangolo
+    for (let i = 1; i < face.length - 1; i++) {
+      const v1 = translatedVertices[face[0]];
+      const v2 = translatedVertices[face[i]];
+      const v3 = translatedVertices[face[i + 1]];
+      
+      // Calcola l'area del triangolo usando la formula dell'area del triangolo in 3D
+      const ab = {
+        x: v2.x - v1.x,
+        y: v2.y - v1.y,
+        z: v2.z - v1.z
+      };
+      
+      const ac = {
+        x: v3.x - v1.x,
+        y: v3.y - v1.y,
+        z: v3.z - v1.z
+      };
+      
+      // Area calcolata come la metà della lunghezza del prodotto vettoriale
+      const crossProduct = {
+        x: ab.y * ac.z - ab.z * ac.y,
+        y: ab.z * ac.x - ab.x * ac.z,
+        z: ab.x * ac.y - ab.y * ac.x
+      };
+      
+      const triangleArea = 0.5 * Math.sqrt(
+        crossProduct.x * crossProduct.x +
+        crossProduct.y * crossProduct.y +
+        crossProduct.z * crossProduct.z
+      );
+      
+      surfaceArea += triangleArea;
+      
+      // Calcola il volume del tetraedro formato dal triangolo e dall'origine
+      // usando la formula del prodotto misto diviso 6
+      volume += Math.abs(
+        v1.x * (v2.y * v3.z - v3.y * v2.z) +
+        v1.y * (v2.z * v3.x - v3.z * v2.x) +
+        v1.z * (v2.x * v3.y - v3.x * v2.y)
+      ) / 6.0;
+    }
+  }
+  
+  return {
+    volume: Math.abs(volume), // Il volume deve essere positivo
+    surfaceArea
+  };
+}
+
+/**
+ * Calcola il bounding box di un insieme di vertici
+ * @param vertices Array di vertici 3D
+ * @returns Dimensioni del bounding box
+ */
+function calculateBoundingBoxFromVertices(vertices: {x: number, y: number, z: number}[]): ElementDimensions {
+  if (!vertices || vertices.length === 0) {
+    throw new Error('Nessun vertice fornito');
+  }
+
+  // Inizializza con i valori del primo vertice
+  const bbox: ElementDimensions = {
+    minX: vertices[0].x,
+    maxX: vertices[0].x,
+    minY: vertices[0].y,
+    maxY: vertices[0].y,
+    minZ: vertices[0].z,
+    maxZ: vertices[0].z,
+    width: 0,
+    height: 0,
+    depth: 0,
+    center: { x: 0, y: 0, z: 0 }
+  };
+
+  // Trova i valori minimi e massimi per ogni coordinata
+  for (let i = 1; i < vertices.length; i++) {
+    const vertex = vertices[i];
+    bbox.minX = Math.min(bbox.minX, vertex.x);
+    bbox.maxX = Math.max(bbox.maxX, vertex.x);
+    bbox.minY = Math.min(bbox.minY, vertex.y);
+    bbox.maxY = Math.max(bbox.maxY, vertex.y);
+    bbox.minZ = Math.min(bbox.minZ, vertex.z);
+    bbox.maxZ = Math.max(bbox.maxZ, vertex.z);
+  }
+
+  // Calcola le dimensioni
+  bbox.width = bbox.maxX - bbox.minX;
+  bbox.height = bbox.maxZ - bbox.minZ;
+  bbox.depth = bbox.maxY - bbox.minY;
+
+  // Calcola il centro
+  bbox.center = {
+    x: (bbox.minX + bbox.maxX) / 2,
+    y: (bbox.minY + bbox.maxY) / 2,
+    z: (bbox.minZ + bbox.maxZ) / 2
+  };
+
+  return bbox;
 }
 
 /**
@@ -1520,68 +2103,4 @@ export function calculate3DComponentDetails(component: Component3D): {
     surfaceArea,
     centerOfMass
   };
-}
-
-/**
- * Calcola volume e area superficiale di un elemento
- * @param element Elemento da analizzare
- * @returns Volume e area superficiale approssimati
- */
-function calculateElementVolumeAndSurface(element: Component3D): { 
-  elementVolume: number; 
-  elementSurfaceArea: number 
-} {
-  let elementVolume = 0;
-  let elementSurfaceArea = 0;
-  
-  switch (element.type) {
-    case 'sphere': {
-      const radius = element.radius || 0;
-      elementVolume = (4/3) * Math.PI * Math.pow(radius, 3);
-      elementSurfaceArea = 4 * Math.PI * Math.pow(radius, 2);
-      break;
-    }
-    
-    case 'cube':
-    case 'rectangle': {
-      const width = element.width || 0;
-      const height = element.height || 0;
-      const depth = element.depth || height || 0;
-      elementVolume = width * height * depth;
-      elementSurfaceArea = 2 * (width * height + width * depth + height * depth);
-      break;
-    }
-    
-    case 'cylinder': {
-      const radius = element.radius || 0;
-      const height = element.height || 0;
-      elementVolume = Math.PI * Math.pow(radius, 2) * height;
-      elementSurfaceArea = 2 * Math.PI * radius * (radius + height);
-      break;
-    }
-    
-    case 'capsule': {
-      const radius = element.radius || 0;
-      const height = element.height || 0;
-      // Volume = cilindro + due semisfere
-      elementVolume = Math.PI * Math.pow(radius, 2) * height + (4/3) * Math.PI * Math.pow(radius, 3);
-      // Area = area laterale cilindro + area due semisfere
-      elementSurfaceArea = 2 * Math.PI * radius * height + 4 * Math.PI * Math.pow(radius, 2);
-      break;
-    }
-    
-    // Aggiungere altri tipi secondo necessità
-    
-    default:
-      // Approssimazione grossolana per tipi non implementati
-      const dimensions = calculateElementDimensions(element);
-      elementVolume = dimensions.width * dimensions.height * dimensions.depth;
-      elementSurfaceArea = 2 * (
-        dimensions.width * dimensions.height + 
-        dimensions.width * dimensions.depth + 
-        dimensions.height * dimensions.depth
-      );
-  }
-  
-  return { elementVolume, elementSurfaceArea };
 } 

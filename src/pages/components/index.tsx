@@ -70,6 +70,7 @@ export default function ComponentsList() {
   
   // Form state
   const [formData, setFormData] = useState({
+
     name: '',
     description: '',
     type: 'mechanical',
@@ -174,7 +175,7 @@ export default function ComponentsList() {
         
       });
       
-      setComponents(componentsData);
+      setComponents(componentsData as Component[]);
     } catch (err) {
       console.error('Error fetching components:', err);
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
@@ -220,9 +221,10 @@ export default function ComponentsList() {
   // Reset form data
   const resetForm = () => {
     setFormData({
+    
       name: '',
       description: '',
-      type: 'mechanical',
+      type: '',
       projectId: filters.projectId || '',
       isPublic: false,
       thumbnail: ''
@@ -302,6 +304,11 @@ export default function ComponentsList() {
   // Handle component deletion
   const handleDeleteComponent = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    if (!id) {
+      toast.error('Cannot delete: Component ID is missing');
+      return;
+    }
+    
     if (!confirm('Are you sure you want to delete this component?')) return;
     
     setIsLoading(true);
@@ -327,9 +334,10 @@ export default function ComponentsList() {
       
       // Create component from library item
       const componentData = {
+       
         name: item.name,
         description: item.description || '',
-        type: item.type || 'mechanical',
+        type: item.type || '',
         projectId: filters.projectId || '',
         data: item.data || { type: item.type, version: "1.0" },
         isPublic: false
@@ -361,9 +369,10 @@ export default function ComponentsList() {
       setIsLoading(true);
       
       const componentData = {
+        
         name: component.name,
         description: component.description || '',
-        type: component.type || 'mechanical',
+        type: component.type || '',
         projectId: filters.projectId || '',
         data: component.data || { type: component.type, version: "1.0" },
         isPublic: false
@@ -394,6 +403,12 @@ export default function ComponentsList() {
     if (e) e.stopPropagation();
     
     try {
+      // Check if component and component.id exist
+      if (!component || !component.id) {
+        toast.error('Cannot send to CAD: Component data is missing');
+        return;
+      }
+      
       // Save to localStorage for CAD to pick up
       localStorage.setItem('componentToLoadInCAD', JSON.stringify({
         id: component.id,

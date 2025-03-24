@@ -12,7 +12,7 @@ import { getOperationDescription } from '@/src/lib/operationDescriptions';
 import { materialProperties } from '@/src/lib/materialProperties';
 import { string } from 'zod';
 // Add the import at the top of the file
-import { generateComponentToolpath } from 'src/lib/componentToolpathUtils';
+import { generateComponentToolpath, generateElementToolpath } from 'src/lib/componentToolpathUtils';
 
 interface ToolpathGeneratorProps {
   onGCodeGenerated: (gcode: string) => void;
@@ -1448,7 +1448,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
   // Generate from selected CAD elements
   const generateFromSelectedElements = () => {
     if (!selectedElement) {
-      return '; Nessun elemento selezionato per la generazione del percorso\n';
+      return '; No element selected for toolpath generation\n';
     }
     
     let gcode = `; Toolpath from selected element (${selectedElement.type})\n`;
@@ -1489,43 +1489,49 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
         gcode += generatePolygonFromElement(selectedElement);
         break;
       case 'component':
-        gcode += generateComponentToolpath(selectedElement, settings);
+        gcode += generateElementToolpath(selectedElement, settings);
         break;
       case 'composite':
         gcode += generateCompositeFromElement(selectedElement);
         break;
       case 'pyramid':
-      gcode += generatePyramidToolpath(selectedElement, settings);
-      break;
-    case 'hemisphere':
-      gcode += generateHemisphereToolpath(selectedElement, settings);
-      break;
-    case 'prism':
-      gcode += generatePrismToolpath(selectedElement, settings);
-      break;
-    case 'ellipsoid':
-      gcode += generateEllipsoidToolpath(selectedElement, settings);
-      break;
-    case 'capsule':
-      gcode += generateCapsuleToolpath(selectedElement, settings);
-      break;
-    case 'triangle':
-      gcode += generateTriangleToolpath(selectedElement, settings);
-      break;
-    case 'arc':
-      gcode += generateArcToolpath(selectedElement, settings);
-      break;
-    case 'ellipse':
-      gcode += generateEllipseToolpath(selectedElement, settings);
-      break;
-      case 'component':
-        gcode += generateComponentToolpath(selectedElement, settings);
+        gcode += generatePyramidToolpath(selectedElement, settings);
         break;
-    case 'text3d':
-      gcode += generateText3DToolpath(selectedElement, settings);
-      break;
+      case 'hemisphere':
+        gcode += generateHemisphereToolpath(selectedElement, settings);
+        break;
+      case 'prism':
+        gcode += generatePrismToolpath(selectedElement, settings);
+        break;
+      case 'ellipsoid':
+        gcode += generateEllipsoidToolpath(selectedElement, settings);
+        break;
+      case 'capsule':
+        gcode += generateCapsuleToolpath(selectedElement, settings);
+        break;
+      case 'triangle':
+        gcode += generateTriangleToolpath(selectedElement, settings);
+        break;
+      case 'arc':
+        gcode += generateArcToolpath(selectedElement, settings);
+        break;
+      case 'ellipse':
+        gcode += generateEllipseToolpath(selectedElement, settings);
+        break;
+      case 'text3d':
+        gcode += generateText3DToolpath(selectedElement, settings);
+        break;
       default:
-        gcode += generateComponentToolpath(selectedElement, settings);
+        // Use the generic toolpath generator for any other element type
+        try {
+          // Import from our new toolpath generator modules
+          const { generateDefaultToolpath } = require('src/lib/toolpath');
+          gcode += generateDefaultToolpath(selectedElement, settings);
+        } catch (error) {
+          console.error('Error generating toolpath:', error);
+          gcode += `; Error generating generic toolpath: ${error}\n; Falling back to component toolpath\n`;
+          gcode += generateElementToolpath(selectedElement, settings);
+        }
     }
     
     return gcode;
@@ -2108,6 +2114,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
           } else {
             gcode += `; Empty group, no toolpath generated\n`;
           }
+        
           break;
         case 'tube':
           gcode += `; Tube element: ${subElement.path?.length || 0} path points, radius=${subElement.radius}\n`;

@@ -1,10 +1,12 @@
 // src/components/ai/TextToCADPanel.tsx
 import React, { useState, useEffect } from 'react';
-import { PenTool, Loader, Check, AlertTriangle, ThumbsUp, ThumbsDown, RefreshCw } from 'react-feather';
+import { PenTool, Loader, Check, AlertTriangle, ThumbsUp, ThumbsDown, RefreshCw, File } from 'react-feather';
 import { useAI } from './AIContextProvider';
 import { useElementsStore } from 'src/store/elementsStore';
+import { useContextStore } from 'src/store/contextStore';
 import AIProcessingIndicator from './AIProcessingIndicator';
 import AIFeedbackCollector from './AIFeedbackCollector';
+import ContextPanel from './ContextPanel';
 
 // Preset di vincoli predefiniti per scenari comuni
 const CONSTRAINT_PRESETS = [
@@ -81,10 +83,12 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
     timestamp: number;
     elements: any[];
   }>>([]);
+  const [isContextPanelExpanded, setIsContextPanelExpanded] = useState(false);
   
   // Hook per lo stato AI e elements
   const { textToCAD, state } = useAI();
   const { addElements } = useElementsStore();
+  const { activeContextIds } = useContextStore();
   
   // Carica la cronologia dal localStorage all'avvio
   useEffect(() => {
@@ -201,16 +205,44 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
     setGeneratedElements([]);
   };
   
+  // Toggle del pannello di contesto
+  const toggleContextPanel = () => {
+    setIsContextPanelExpanded(!isContextPanelExpanded);
+  };
+  
   const isGenerateDisabled = !description.trim() || generationStatus === 'generating';
   
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow p-4 ${className}`}>
       <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center mb-4">
         <PenTool className="mr-2" size={20} />
         Text to CAD
       </h2>
       
       <div className="space-y-4">
+        {/* Pannello del contesto */}
+        {isContextPanelExpanded ? (
+          <ContextPanel 
+            isExpanded={isContextPanelExpanded}
+            onToggle={toggleContextPanel}
+          />
+        ) : (
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={toggleContextPanel}
+              className="flex items-center justify-center p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-md transition-colors"
+            >
+              <File size={16} className="mr-2" />
+              <span className="text-sm font-medium">Contesto</span>
+              {activeContextIds.length > 0 && (
+                <span className="ml-1 bg-blue-600 text-white dark:bg-blue-500 text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {activeContextIds.length}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+        
         {/* Input descrizione */}
         <div>
           <label htmlFor="cad-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -274,6 +306,22 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
             ))}
           </div>
         </div>
+        
+        {/* Sezione contesto attivo */}
+        {activeContextIds.length > 0 && !isContextPanelExpanded && (
+          <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+            <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center">
+              <File size={14} className="mr-1" />
+              {activeContextIds.length} {activeContextIds.length === 1 ? 'file di contesto attivo' : 'file di contesto attivi'}
+              <button 
+                onClick={toggleContextPanel} 
+                className="ml-2 text-xs underline"
+              >
+                Gestisci
+              </button>
+            </p>
+          </div>
+        )}
         
         {/* Pulsante di generazione */}
         <div className="flex justify-end space-x-3">
@@ -346,7 +394,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
               </p>
               {requestId && (
                 <div className="mt-2">
-                  <AIFeedbackCollector requestId={requestId} compact />
+                  <AIFeedbackCollector requestId={requestId}  />
                 </div>
               )}
             </div>

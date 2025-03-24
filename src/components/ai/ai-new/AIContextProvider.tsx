@@ -1,11 +1,12 @@
 // src/contexts/AIContextProvider.tsx
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { AIState, AIMode, AIHistoryItem, AISettings, AIModelType } from '@/src/types/AITypes';
+import { AIState, AIMode, AIHistoryItem, AISettings, AIModelType, TextToCADRequest } from '@/src/types/AITypes';
 import { unifiedAIService } from '@/src/lib/ai/ai-new/unifiedAIService';
 import { aiAnalytics } from '@/src/lib/ai/ai-new/aiAnalytics';
 import { aiCache } from '@/src/lib/ai/ai-new/aiCache';
 import { AI_MODELS, AI_MODES, aiConfigManager } from '@/src/lib/ai/ai-new/aiConfigManager';
+import { useContextStore } from '@/src/store/contextStore';
 
 // Stato iniziale dell'AI
 const initialState: AIState = {
@@ -127,7 +128,7 @@ interface AIContextType {
   state: AIState;
   dispatch: React.Dispatch<AIAction>;
   // Metodi per operazioni AI core
-  textToCAD: (description: string, constraints?: any) => Promise<any>;
+  textToCAD: (description: string, constraints?: any, context?: string[]) => Promise<any>;
   optimizeGCode: (gcode: string, machineType: string) => Promise<any>;
   analyzeDesign: (elements: any[]) => Promise<any>;
   generateSuggestions: (context: string) => Promise<any[]>;
@@ -148,6 +149,7 @@ const AIContext = createContext<AIContextType | undefined>(undefined);
 export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(aiReducer, initialState);
   const router = useRouter();
+  const { getActiveContexts } = useContextStore();
 
   // Seleziona il modello ottimale in base alla complessità del task
   const selectOptimalModel = (taskComplexity: 'low' | 'medium' | 'high'): AIModelType => {
@@ -194,7 +196,7 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [router.pathname]);
 
   // Conversione da testo a elementi CAD
-  const textToCAD = async (description: string, constraints?: any) => {
+  const textToCAD = async (description: string, constraints?: any, providedContext?: string[]) => {
     if (!state.isEnabled) return { success: false, data: null, error: 'AI is disabled' };
     
     dispatch({ type: 'START_PROCESSING' });
@@ -203,12 +205,25 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const model = selectOptimalModel('medium');
       const startTime = Date.now();
       
-      const result = await unifiedAIService.textToCADElements({
+      // Ottieni il contesto attivo
+      const activeContextFiles = getActiveContexts();
+      
+      // Unisci il contesto fornito con quello attivo dai file
+      const contextTexts = [
+        ...(providedContext || []),
+        ...activeContextFiles.map(file => file.content)
+      ];
+      
+      // Prepara i dati per la richiesta con contesto
+      const requestWithContext = {
         description,
         constraints,
         complexity: 'moderate',
-        style: 'precise'
-      });
+        style: 'precise',
+        context: contextTexts.length > 0 ? contextTexts : undefined
+      };
+      
+      const result = await unifiedAIService.textToCADElements(requestWithContext as TextToCADRequest);
       
       const processingTime = Date.now() - startTime;
       

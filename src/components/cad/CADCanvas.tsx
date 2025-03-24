@@ -30,9 +30,11 @@ import { useSelectionStore } from 'src/store/selectorStore';
 import ElementsListPanel from './new-cad/ElementsListPanel';
 import ComponentCreationModal from './new-cad/ComponentCreationModal';
 import ElementInfo from './new-cad/ElementInfo';
-
+import { debounce } from 'lodash';
 import BoxSelection from './new-cad/BoxSelection';
 import { useCADShortcuts } from 'src/hooks/useCADShortcuts';
+import router from 'next/router';
+import toast from 'react-hot-toast';
 
 interface CADCanvasProps {
   width?: string | number;
@@ -1475,17 +1477,40 @@ const screenToWorld = useCallback((screenX: number, screenY: number) => {
       height: canvasRef.current.clientHeight
     });
 
+    
+
     // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
+    const animateScene = () => {
+      // Store animation frame ID so we can cancel it later
+      const animationId = requestAnimationFrame(animateScene);
+      
+      // Check if TransformControls has a valid object
+      if (transformControlsRef.current?.object) {
+        const object = transformControlsRef.current.object;
+        if (object.parent === null) {
+          transformControlsRef.current.detach();
+          console.warn("TransformControls: Detached object that lost scene connection");
+        } else {
+          object.updateMatrixWorld(true);
+          object.parent.updateMatrixWorld(true);
+        }
+      }
+      
       if (controlsRef.current) {
         controlsRef.current.update();
       }
+      
       if (rendererRef.current && cameraRef.current && sceneRef.current) {
+        sceneRef.current.updateMatrixWorld(true);
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       }
+      
+      return animationId;
     };
-    animate();
+    
+    // Store the returned animation ID
+    const animationId = animateScene();
+    
 
     // Handle resize
     const handleResize = () => {
@@ -1573,7 +1598,24 @@ const screenToWorld = useCallback((screenX: number, screenY: number) => {
     }
   };
 
- 
+  const ensureObjectInScene = useCallback((object: THREE.Object3D<THREE.Event>) => {
+    if (!object || !sceneRef.current) return false;
+    
+    // Check if object is directly in the scene
+    if (sceneRef.current.children.includes(object)) {
+      return true;
+    }
+    
+    // Check if object is a child of any object in the scene
+    let isInScene = false;
+    sceneRef.current.traverse((child) => {
+      if (child === object) {
+        isInScene = true;
+      }
+    });
+    
+    return isInScene;
+  }, []);
   // Handle mouse events to update cursor state
 
 
@@ -4661,28 +4703,88 @@ useEffect(() => {
     });
   };
 
-
+  useEffect(() => {
+    // Controlla se c'è un parametro loadComponent nella query string
+    if (router.query.loadComponent) {
+      const componentId = String(router.query.loadComponent);
+      const storedComponentJSON = localStorage.getItem('componentToLoadInCAD');
+      
+      console.log('Tentativo di caricamento componente ID:', componentId);
+      console.log('Dati in localStorage:', storedComponentJSON?.substring(0, 100) + '...');
+      
+      if (storedComponentJSON) {
+        try {
+          const componentData = JSON.parse(storedComponentJSON);
+          
+          // Verifica che l'ID corrisponda esattamente
+          if (componentData && componentData.id && componentData.id === componentId) {
+            console.log('Componente trovato, preparazione al caricamento');
+            
+            // Crea un nuovo elemento CAD dal componente
+            const newElement = {
+              id: `component-${Date.now()}`, // ID univoco per il nuovo elemento CAD
+              type: 'component',
+              x: 0,
+              y: 0,
+              z: 0,
+              name: componentData.name || 'Componente',
+              componentId: componentData.id,
+              data: componentData.data,
+              layerId: layers.length > 0 ? layers[0].id : 'default'
+            };
+            
+            // Aggiungi l'elemento al canvas
+            addElement(newElement);
+            toast.success(`Componente ${componentData.name} caricato con successo`);
+            
+            // Pulisci localStorage dopo il caricamento
+            localStorage.removeItem('componentToLoadInCAD');
+            localStorage.removeItem('componentToLoadInCAD_timestamp');
+            
+            // Rimuovi i parametri query dall'URL
+            const { loadComponent, ts, ...otherParams } = router.query;
+            router.replace({
+              pathname: router.pathname,
+              query: otherParams
+            }, undefined, { shallow: true });
+          } else {
+            console.error('ID componente non corrisponde:', {
+              idFromURL: componentId, 
+              idFromStorage: componentData?.id
+            });
+            toast.error('ID componente non corrisponde');
+          }
+        } catch (error) {
+          console.error('Errore parsing dati componente:', error);
+          toast.error('Errore formato dati componente');
+        }
+      } else {
+        console.error('Nessun dato componente trovato in localStorage');
+        toast.error('Dati componente non trovati');
+      }
+    }
+  }, [router.query.loadComponent, layers, addElement, router]);
   
   // Aggiorna transform controls quando cambia l'elemento selezionato
   useEffect(() => {
     if (!transformControlsRef.current) return;
     
     if (selectedElement) {
-      // Trova l'oggetto threejs corrispondente all'elemento selezionato
+      // Find the object threejs corresponding to the selected element
       const selectedObject = sceneRef.current?.children.find(
         child => child.userData?.isCADElement && child.userData?.elementId === selectedElement.id
       );
       
       if (selectedObject) {
         try {
-          // Se è un gruppo o un oggetto complesso, trova il primo mesh figlio o usa il gruppo stesso
+          // If it's a group or complex object, find the first mesh child or use the group itself
           let targetObject = selectedObject;
           
-          // Per i componenti, utilizziamo direttamente il gruppo per le trasformazioni
+          // For components, use the group directly for transformations
           if (selectedObject.userData.isComponent) {
             targetObject = selectedObject;
           }
-          // Per altri gruppi, cerca un mesh figlio appropriato se l'oggetto selezionato è un gruppo
+          // For other groups, find an appropriate mesh child if the selected object is a group
           else if (selectedObject instanceof THREE.Group && !selectedObject.userData.isComponent) {
             let foundMesh = false;
             selectedObject.traverse(child => {
@@ -4693,14 +4795,22 @@ useEffect(() => {
             });
           }
           
-          transformControlsRef.current.attach(targetObject);
-          transformControlsRef.current.setMode(transformMode);
-          transformControlsRef.current.visible = true;
-          
-          // Assicurati che i controlli siano in cima alla gerarchia della scena
-          if (sceneRef.current) {
-            sceneRef.current.remove(transformControlsRef.current);
-            sceneRef.current.add(transformControlsRef.current);
+          // Make sure the object is in the scene before attaching
+          if (ensureObjectInScene(targetObject)) {
+            transformControlsRef.current.attach(targetObject);
+            transformControlsRef.current.setMode(transformMode);
+            transformControlsRef.current.visible = true;
+            
+            // Make sure controls are at the top of the scene hierarchy
+            if (sceneRef.current) {
+              sceneRef.current.remove(transformControlsRef.current);
+              sceneRef.current.add(transformControlsRef.current);
+              sceneRef.current.getObjectById(transformControlsRef.current.id)
+            }
+          } else {
+            console.warn("Cannot attach TransformControls: object is not in the scene graph");
+            transformControlsRef.current.detach();
+            transformControlsRef.current.visible = false;
           }
         } catch (error) {
           console.error("Error attaching transform controls:", error);
@@ -4715,57 +4825,67 @@ useEffect(() => {
       transformControlsRef.current.detach();
       transformControlsRef.current.visible = false;
     }
-  }, [selectedElement, transformMode]);
+  }, [selectedElement, transformMode, ensureObjectInScene]);
 
   // Gestisci aggiornamenti quando un elemento viene modificato tramite transform controls
   useEffect(() => {
     if (!transformControlsRef.current) return;
     
-    const handleObjectChange = () => {
-      if (!selectedElement) return;
+    const handleObjectChange = debounce(
+      debounce(() => {
+        if (!selectedElement) return;
+        
+        const object = transformControlsRef.current?.object;
+        if (!object) return;
+        
+        // Extract position, rotation and scale
+        const position = new THREE.Vector3();
+        const rotation = new THREE.Euler();
+        const scale = new THREE.Vector3();
+        
+        object.getWorldPosition(position);
+        rotation.copy(object.rotation);
+        scale.copy(object.scale);
+        
+        // Aggiorna l'elemento nel store
+        const updates: any = {
+          x: position.x - originOffset.x,
+          y: position.y - originOffset.y,
+          z: position.z - originOffset.z
+        };
+        
+        // Aggiungi rotazione in gradi
+        if (transformMode === 'rotate') {
+          updates.rotationX = THREE.MathUtils.radToDeg(rotation.x);
+          updates.rotationY = THREE.MathUtils.radToDeg(rotation.y);
+          updates.rotationZ = THREE.MathUtils.radToDeg(rotation.z);
+        }
+        
+        // Aggiungi scala
+        if (transformMode === 'scale') {
+          updates.scaleX = scale.x;
+          updates.scaleY = scale.y;
+          updates.scaleZ = scale.z;
+        }
+        
+        updateElement(selectedElement.id, updates);
+        
+        // Force matrix updates
+        object.updateMatrix();
+        object.updateMatrixWorld(true);
+        if (object.parent) {
+          object.parent.updateMatrixWorld(true);
+        }
+      }, 16),
       
-      const object = transformControlsRef.current?.object;
-      if (!object) return;
-      
-      // Estrai posizione, rotazione e scala
-      const position = new THREE.Vector3();
-      const rotation = new THREE.Euler();
-      const scale = new THREE.Vector3();
-      
-      object.getWorldPosition(position);
-      rotation.copy(object.rotation);
-      scale.copy(object.scale);
-      
-      // Aggiorna l'elemento nel store
-      const updates: any = {
-        x: position.x - originOffset.x,
-        y: position.y - originOffset.y,
-        z: position.z - originOffset.z
-      };
-      
-      // Aggiungi rotazione in gradi
-      if (transformMode === 'rotate') {
-        updates.rotationX = THREE.MathUtils.radToDeg(rotation.x);
-        updates.rotationY = THREE.MathUtils.radToDeg(rotation.y);
-        updates.rotationZ = THREE.MathUtils.radToDeg(rotation.z);
-      }
-      
-      // Aggiungi scala
-      if (transformMode === 'scale') {
-        updates.scaleX = scale.x;
-        updates.scaleY = scale.y;
-        updates.scaleZ = scale.z;
-      }
-      
-      updateElement(selectedElement.id, updates);
-    };
+    );
     
-    transformControlsRef.current.addEventListener('objectChange', handleObjectChange);
+    transformControlsRef.current?.addEventListener('objectChange', handleObjectChange);
     
     return () => {
       transformControlsRef.current?.removeEventListener('objectChange', handleObjectChange);
     };
-  }, [selectedElement, updateElement, originOffset, transformMode]);
+}, [selectedElement, updateElement, originOffset, transformMode]);
 
   // Aggiungi questa funzione ausiliaria per implementare la conversione da 3D a 2D
   

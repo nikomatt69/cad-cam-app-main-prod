@@ -34,6 +34,8 @@ model User {
   Message                 Message[]
   notifications           Notification[] // Aggiunti per il sistema di notifiche
   pushSubscriptions       PushSubscription[]
+  ComponentVersion        ComponentVersion[]
+  ComponentComment        ComponentComment[]
 }
 
 // Subscription model for Stripe integration
@@ -138,8 +140,8 @@ model Project {
   isPublic       Boolean  @default(false) // Add public flag
 
   // Relationships
-  owner         User          @relation(fields: [ownerId], references: [id])
-  organization  Organization? @relation(fields: [organizationId], references: [id])
+  owner         User           @relation(fields: [ownerId], references: [id])
+  organization  Organization?  @relation(fields: [organizationId], references: [id])
   drawings      Drawing[]
   components    Component[]
   notifications Notification[] // Aggiunto per il sistema di notifiche
@@ -183,8 +185,10 @@ model Component {
   projectId   String
 
   // Relationships
-  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  notifications Notification[] // Aggiunto per il sistema di notifiche
+  project          Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  notifications    Notification[] // Aggiunto per il sistema di notifiche
+  ComponentVersion ComponentVersion[]
+  ComponentComment ComponentComment[]
 }
 
 model Material {
@@ -305,9 +309,9 @@ model FileUpload {
   organizationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  
+
   // Aggiungi questa relazione per i messaggi
-  messages      Message[]
+  messages Message[]
 }
 
 model LibraryItem {
@@ -329,7 +333,6 @@ model LibraryItem {
   // Relationships
   owner        User?         @relation(fields: [ownerId], references: [id])
   organization Organization? @relation(fields: [organizationId], references: [id])
-
 }
 
 model Conversation {
@@ -365,54 +368,55 @@ model Message {
   content        String   @db.Text
   senderId       String
   conversationId String
-  fileId         String?  // Aggiungi questo campo
-  fileUrl        String?  // Aggiungi questo campo
+  fileId         String? // Aggiungi questo campo
+  fileUrl        String? // Aggiungi questo campo
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   // Relationships
-  sender        User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  conversation  Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender        User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  conversation  Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   notifications Notification[] // Aggiunto per il sistema di notifiche
-  fileUpload    FileUpload?   @relation(fields: [fileId], references: [id], onDelete: SetNull) // Aggiungi questa relazione
+  fileUpload    FileUpload?    @relation(fields: [fileId], references: [id], onDelete: SetNull) // Aggiungi questa relazione
+
   @@index([conversationId])
 }
 
 // Modello per le notifiche
 model Notification {
-  id             String           @id @default(cuid())
-  type           NotificationType
-  title          String
-  content        String
-  isRead         Boolean          @default(false)
-  createdAt      DateTime         @default(now())
-  
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  content   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
   // Riferimenti alle entità correlate
-  userId         String
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Riferimenti opzionali
   organizationId String?
-  organization   Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   projectId      String?
-  project        Project?         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   componentId    String?
-  component      Component?       @relation(fields: [componentId], references: [id], onDelete: Cascade)
+  component      Component?    @relation(fields: [componentId], references: [id], onDelete: Cascade)
   messageId      String?
-  message        Message?         @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  
+  message        Message?      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
   // Attributi per il routing
-  linkUrl        String?
+  linkUrl String?
 }
 
 model PushSubscription {
-  id             String   @id @default(cuid())
-  userId         String
-  endpoint       String   @unique
-  p256dh         String
-  auth           String
-  createdAt      DateTime @default(now())
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum NotificationType {
@@ -421,4 +425,28 @@ enum NotificationType {
   COMPONENT_CREATED
   MEMBER_JOINED
   ORGANIZATION_INVITATION
+}
+
+model ComponentVersion {
+  id            String   @id @default(cuid())
+  componentId   String
+  data          Json
+  changeMessage String?
+  userId        String
+  createdAt     DateTime @default(now())
+
+  component Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+}
+
+model ComponentComment {
+  id          String   @id @default(cuid())
+  componentId String
+  content     String   @db.Text
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  component Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
 }

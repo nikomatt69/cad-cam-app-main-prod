@@ -1,7 +1,7 @@
 import { AIModelType, AIServiceConfig } from '../../types/ai';
 
 export const AI_MODELS = {
-  CLAUDE_SONNET: 'claude-3-5-sonnet-20240229',
+  CLAUDE_SONNET: 'claude-3-7-sonnet-20250219',
   CLAUDE_OPUS: 'claude-3-opus-20240229',
   CLAUDE_HAIKU: 'claude-3-haiku-20240229',
 } as const;
@@ -16,7 +16,7 @@ export const AI_MODES = {
 
 export const DEFAULT_CONFIG: AIServiceConfig = {
   defaultModel: AI_MODELS.CLAUDE_SONNET,
-  maxTokens: 4000,
+  maxTokens: 6000,
   temperature: 0.7,
   cacheEnabled: true,
   analyticsEnabled: true,
@@ -30,7 +30,7 @@ export const MODEL_CAPABILITIES = {
     costTier: 'high',
   },
   [AI_MODELS.CLAUDE_SONNET]: {
-    maxTokens: 4000,
+    maxTokens: 6000,
     bestFor: ['general_purpose', 'design_assistance'],
     costTier: 'medium',
   },

@@ -44,6 +44,8 @@ import OriginControls from '../components/cad/OriginControls';
 import Link from 'next/link';
 
 import GenericPostProcessor from '../components/cam/postprocessor/GenericPostProcessor';
+import { isMobile } from 'react-device-detect';
+
 
 // Tipi di post-processor supportati
 type PostProcessorType = 'fanuc' | 'heidenhain' | 'siemens' | 'haas' | 'mazak' | 'okuma' | 'generic';
@@ -167,7 +169,10 @@ export default function CAMPage() {
   
 
   
-
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  }
  
 
   return (
@@ -188,29 +193,34 @@ export default function CAMPage() {
             >
               <Menu size={20} className="text-gray-600" />
             </button>
-            <Link href="/" className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <img
-                  className=" h-14 "
-                  src="/logo.png"
-                  alt="CAD/CAM FUN"
-                />
-                
-              </div>
-            </Link>
+            {isMobile ? (
+  <Link href="/" className="">
+    <div className=""></div>
+  </Link>
+) : (
+  <Link href="/" className="flex items-center">
+    <div className="flex-shrink-0 flex items-center">
+      <img
+        className="h-14 w-auto"
+        src="/logo.png"
+        alt="CAD/CAM FUN"
+      />
+    </div>
+  </Link>
+)}
             <div className="ml-6 flex items-center space-x-2">
               <button
                 onClick={handleSaveGcode}
-                className="btn btn-sm btn-outline-primary flex items-center"
+                className="btn btn-sm btn-outline flex items-center cursor-pointer"
                 title="Salva G-Code"
                 disabled={!(activeTab === 'post-processor' ? processedGcode : gcode)}
               >
                 <Save size={16} className="mr-1" />
-                Salva
+                
               </button>
               <label className="btn btn-sm btn-outline flex items-center cursor-pointer" title="Importa G-Code">
                 <Upload size={16} className="mr-1" />
-                Importa
+                
                 <input 
                   type="file" 
                   className="hidden" 
@@ -224,7 +234,7 @@ export default function CAMPage() {
                 title={isSimulating ? "Arresta Simulazione" : "Avvia Simulazione"}
               >
                 {isSimulating ? <Pause size={16} /> : <Play size={16} />}
-                <span className="ml-1">{isSimulating ? "Arresta" : "Simula"}</span>
+                <span className="ml-1">{isSimulating ? "Stop" : "Play"}</span>
               </button>
               {/* Unified Library button */}
               <button
@@ -233,7 +243,7 @@ export default function CAMPage() {
                 title="Unified Library"
               >
                 <Folder size={16} className="mr-1" />
-                Unified Library
+                Library
               </button>
             </div>
           </div>

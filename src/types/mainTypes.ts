@@ -108,15 +108,77 @@ export interface DrawingVersion {
 }
 
 // Component related types
+export interface ComponentMetadata {
+  createdAt: string;
+  isComposite: boolean;
+  elementCount: number;
+  elementTypes: string[];
+}
+
+export interface ComponentGeometry {
+  type: string;
+  elements: any[];
+}
+
+export interface ComponentElement {
+  id: string;
+  name: string;
+  type: string;
+  x: number;
+  y: number;
+  z: number;
+  width?: number;
+  height?: number;
+  depth?: number;
+  radius?: number;
+  color?: string;
+  wireframe?: boolean;
+  layerId?: string;
+  rotation?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  description?: string;
+  [key: string]: any; // Per proprietà specifiche del tipo
+}
+
+export interface ComponentData {
+  id: string;
+  name: string;
+  type: string;
+  x: number;
+  y: number;
+  z: number;
+  width?: number;
+  height?: number;
+  depth?: number;
+  color?: string;
+  wireframe?: boolean;
+  layerId?: string;
+  version: string;
+  elements: ComponentElement[];
+  geometry: ComponentGeometry;
+  metadata: ComponentMetadata;
+  properties: Record<string, any>;
+}
+
 export interface Component {
   id: string;
   name: string;
   description?: string | null;
-  data: any; // JSON data
+  data: ComponentData;
   thumbnail?: string | null;
+  type: string;
+  isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
   projectId: string;
+  project?: {
+    id: string;
+    name: string;
+    ownerId: string;
+  };
 }
 
 export interface ComponentWithRelations extends Component {

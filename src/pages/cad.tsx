@@ -48,7 +48,7 @@ export default function CADPage() {
   const [isPlacingComponent, setIsPlacingComponent] = useState(false);
   const [description, setDescription] = useState('');
   
-  const { addElements } = useElementsStore();
+  const { addElements , addElement} = useElementsStore();
   
   
  
@@ -75,26 +75,73 @@ export default function CADPage() {
     }
   };
   
-  // Move the hook call to the top level
-  const { loadCadDrawing } = useLocalLibrary();
-  
-  // Check for element ID in the URL query (when returning from components page)
+  const { loadCadDrawing } = useLocalLibrary();  // Move the hook call to the top level
   useEffect(() => {
-    if (router.query.selectElementId) {
-      const elementId = router.query.selectElementId as string;
-      selectElement(elementId);
+    const loadComponentFromStorage = async () => {
+      // Only proceed if we have the loadComponent query parameter
+      if (!router.query.loadComponent) return;
       
-      // Remove the query parameter after selection to keep the URL clean
-      const { selectElementId, ...otherParams } = router.query;
-      router.replace({
-        pathname: router.pathname,
-        query: otherParams
-      }, undefined, { shallow: true });
+      const componentId = router.query.loadComponent as string;
+      console.log('Loading component with ID:', componentId);
       
-      toast.success('Element selected');
-    }
-  }, [router.query, selectedElement, router, selectElement]);
-  
+      try {
+        // Get the stored component data
+        const storedComponent = localStorage.getItem('componentToLoadInCAD');
+        if (!storedComponent) {
+          console.error('No component data found in localStorage');
+          toast.error('Component data not found');
+          return;
+        }
+        
+        console.log('Retrieved component data from localStorage');
+        const componentData = JSON.parse(storedComponent);
+        console.log('Parsed component data:', componentData);
+        
+        // Validate the component data
+        if (!componentData || !componentData.id || componentData.id !== componentId) {
+          console.error('Invalid component data or ID mismatch');
+          toast.error('Invalid component data');
+          return;
+        }
+        
+        // Create a new CAD element from the component
+        const newElement = {
+          id: `component-${Date.now()}`,
+          type: 'component',
+          x: 0,
+          y: 0,
+          z: 0,
+          name: componentData.name || 'Unnamed Component',
+          componentId: componentData.id,
+          data: componentData.data,
+          layerId: layers.length > 0 ? layers[0].id : 'default'
+        };
+        
+        console.log('Adding component as CAD element:', newElement);
+        
+        // Add the element to the canvas
+        addElement(newElement);
+        toast.success(`Component '${componentData.name}' loaded successfully`);
+        
+        // Clear the localStorage data
+        localStorage.removeItem('componentToLoadInCAD');
+        localStorage.removeItem('componentToLoadInCAD_timestamp');
+        
+        // Remove the query parameter
+        const { loadComponent, loadTimestamp, ...otherParams } = router.query;
+        router.replace({
+          pathname: router.pathname,
+          query: otherParams
+        }, undefined, { shallow: true });
+        
+      } catch (error) {
+        console.error('Error loading component from localStorage:', error);
+        toast.error('Failed to load component data. See console for details.');
+      }
+    };
+    
+    loadComponentFromStorage();
+  }, [router.query.loadComponent, router.query.loadTimestamp, addElement, layers, router]);
   // Initialize with a default layer if none exists
   useEffect(() => {
     // This is just to ensure layers are displayed in the UI
@@ -153,6 +200,67 @@ export default function CADPage() {
       addElements(result.data);
     }
   };
+  useEffect(() => {
+    // Controlla se c'è un parametro loadComponent nella query string
+    if (router.query.loadComponent) {
+      const componentId = String(router.query.loadComponent);
+      const storedComponentJSON = localStorage.getItem('componentToLoadInCAD');
+      
+      console.log('Tentativo di caricamento componente ID:', componentId);
+      console.log('Dati in localStorage:', storedComponentJSON?.substring(0, 100) + '...');
+      
+      if (storedComponentJSON) {
+        try {
+          const componentData = JSON.parse(storedComponentJSON);
+          
+          // Verifica che l'ID corrisponda esattamente
+          if (componentData && componentData.id && componentData.id === componentId) {
+            console.log('Componente trovato, preparazione al caricamento');
+            
+            // Crea un nuovo elemento CAD dal componente
+            const newElement = {
+              id: `component-${Date.now()}`, // ID univoco per il nuovo elemento CAD
+              type: 'component',
+              x: 0,
+              y: 0,
+              z: 0,
+              name: componentData.name || 'Componente',
+              componentId: componentData.id,
+              data: componentData.data,
+              layerId: layers.length > 0 ? layers[0].id : 'default'
+            };
+            
+            // Aggiungi l'elemento al canvas
+            addElement(newElement);
+            toast.success(`Componente ${componentData.name} caricato con successo`);
+            
+            // Pulisci localStorage dopo il caricamento
+            localStorage.removeItem('componentToLoadInCAD');
+            localStorage.removeItem('componentToLoadInCAD_timestamp');
+            
+            // Rimuovi i parametri query dall'URL
+            const { loadComponent, ts, ...otherParams } = router.query;
+            router.replace({
+              pathname: router.pathname,
+              query: otherParams
+            }, undefined, { shallow: true });
+          } else {
+            console.error('ID componente non corrisponde:', {
+              idFromURL: componentId, 
+              idFromStorage: componentData?.id
+            });
+            toast.error('ID componente non corrisponde');
+          }
+        } catch (error) {
+          console.error('Errore parsing dati componente:', error);
+          toast.error('Errore formato dati componente');
+        }
+      } else {
+        console.error('Nessun dato componente trovato in localStorage');
+        toast.error('Dati componente non trovati');
+      }
+    }
+  }, [router.query.loadComponent, layers, addElement, router]);
 
   // Reset component selection when closing library
   useEffect(() => {
@@ -171,7 +279,10 @@ export default function CADPage() {
 
  
 
-  
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  }
  
   
   return (
