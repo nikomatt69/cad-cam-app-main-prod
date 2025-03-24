@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useCADStore } from '@/src/store/cadStore';
 import { useLayerStore } from '@/src/store/layerStore';
@@ -47,11 +46,14 @@ const WorkpieceSetup: React.FC = () => {
       try {
         setIsLoading(true);
         const response = await axios.get('/api/machine-configs');
-        if (response.data) {
-          setMachineConfigs(response.data);
+        if (response.data && response.data.data) {
+          setMachineConfigs(Array.isArray(response.data.data) ? response.data.data : []);
+        } else {
+          setMachineConfigs([]);
         }
       } catch (error) {
         console.error('Errore nel caricamento delle configurazioni macchina:', error);
+        setMachineConfigs([]); // Set empty array on error
       } finally {
         setIsLoading(false);
       }

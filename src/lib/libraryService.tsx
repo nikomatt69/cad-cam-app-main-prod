@@ -61,25 +61,62 @@ export class LibraryService {
     }
   }
   
-  // Load user items
-  public async loadUserItems() {
+  // Load user components
+  public async loadUserComponents(): Promise<void> {
     try {
-      const items = await fetch('/api/library').then(res => res.json());
-      
-      // Reset user items
-      Object.keys(this.userItems).forEach(key => {
-        this.userItems[key as keyof typeof this.userItems] = [];
-      });
-      
-      // Sort items by category
-      items.forEach((item: LibraryItem) => {
-        if (this.userItems[item.category]) {
-          this.userItems[item.category].push(item);
-        }
-      });
+      const response = await fetch('/api/library/components');
+      const { data } = await response.json();
+      this.userItems.component = Array.isArray(data) ? data : [];
     } catch (error) {
-      console.error('Error loading user items:', error);
+      console.error('Error loading user components:', error);
+      this.userItems.component = [];
     }
+  }
+
+  // Load user materials
+  public async loadUserMaterials(): Promise<void> {
+    try {
+      const response = await fetch('/api/library/materials');
+      const { data } = await response.json();
+      this.userItems.material = Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error('Error loading user materials:', error);
+      this.userItems.material = [];
+    }
+  }
+
+  // Load user tools
+  public async loadUserTools(): Promise<void> {
+    try {
+      const response = await fetch('/api/library/tools');
+      const { data } = await response.json();
+      this.userItems.tool = Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error('Error loading user tools:', error);
+      this.userItems.tool = [];
+    }
+  }
+
+  // Load user machine configs
+  public async loadUserMachineConfigs(): Promise<void> {
+    try {
+      const response = await fetch('/api/machine-configs');
+      const { data } = await response.json();
+      this.userItems.machine = Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error('Error loading user machine configs:', error);
+      this.userItems.machine = [];
+    }
+  }
+
+  // Initialize all user data
+  public async initialize(): Promise<void> {
+    await Promise.all([
+      this.loadUserComponents(),
+      this.loadUserMaterials(),
+      this.loadUserTools(),
+      this.loadUserMachineConfigs()
+    ]);
   }
   
   // Get all components
@@ -165,6 +202,6 @@ export const libraryService = LibraryService.getInstance();
 // Initialize library service
 export async function initLibraryService() {
   await libraryService.loadPredefinedItems();
-  await libraryService.loadUserItems();
+  await libraryService.initialize();
   return libraryService;
 }

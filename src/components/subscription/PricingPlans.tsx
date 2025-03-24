@@ -70,7 +70,7 @@ export default function PricingPlans() {
           {/* Paid plans */}
           {planKeys.map((planKey) => {
             const planId = SUBSCRIPTION_PLANS[planKey as keyof typeof SUBSCRIPTION_PLANS];
-            const planFeatures = PLAN_FEATURES[planId];
+            const planFeatures = PLAN_FEATURES[planId as string];
             const isCurrentPlan = currentPlan === planId;
             
             return (
@@ -92,7 +92,7 @@ export default function PricingPlans() {
                   </p>
                   
                   <ul className="mt-6 space-y-4">
-                    {planFeatures.features.map((feature) => (
+                    {planFeatures.features.map((feature: string) => (
                       <li key={feature} className="flex">
                         <svg className="flex-shrink-0 h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -104,7 +104,7 @@ export default function PricingPlans() {
                 </div>
                 
                 <button
-                  onClick={() => handleSubscribe(planId)}
+                  onClick={() => handleSubscribe(planId as string)}
                   disabled={isCurrentPlan || isLoading}
                   className={`mt-8 block w-full py-3 px-6 border border-transparent rounded-md shadow text-center text-white 
                     ${planKey === 'BASIC' ? 'bg-blue-600 hover:bg-blue-700' : 

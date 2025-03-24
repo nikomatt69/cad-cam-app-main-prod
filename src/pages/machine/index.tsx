@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { 
@@ -9,7 +9,12 @@ import {
   Settings,
   Search,
   X,
-  Filter
+  Filter,
+  Copy,
+  Share2,
+  Tool,
+  AlertCircle,
+  Clock
 } from 'react-feather';
 import Layout from '@/src/components/layout/Layout';
 import PredefinedLibrary from '@/src/components/library/PredefinedLibrary';
@@ -19,15 +24,36 @@ import {
   createMachineConfig, 
   updateMachineConfig, 
   deleteMachineConfig,
-  MachineConfig
+  cloneMachineConfig,
+  shareMachineConfig,
+  MachineConfig,
+  WorkVolume,
+  MachineConfigDetails
 } from 'src/lib/api/machineConfigApi';
 import ExportImportControls from '@/src/components/components/ExportImportControls';
 import Metatags from '@/src/components/layout/Metatags';
 import toast from 'react-hot-toast';
+import { AnimatePresence, motion } from 'framer-motion';
+import { formatDistance } from 'date-fns';
+import { debounce } from 'lodash';
 
 interface MachineConfigFilterState {
   type: string;
   search: string;
+  showPublic: boolean;
+}
+
+interface MachineConfigFormState {
+  name: string;
+  description: string;
+  type: 'mill' | 'lathe' | 'printer' | 'laser';
+  maxSpindleSpeed: number;
+  maxFeedRate: number;
+  workVolumeX: number;
+  workVolumeY: number;
+  workVolumeZ: number;
+  controller: string;
+  isPublic: boolean;
 }
 
 export default function MachineConfigsPage() {
@@ -37,12 +63,14 @@ export default function MachineConfigsPage() {
   // State for filters
   const [filters, setFilters] = useState<MachineConfigFilterState>({
     type: '',
-    search: ''
+    search: '',
+    showPublic: false
   });
   
-  // State for the modal
+  // State for the modals
   const [showModal, setShowModal] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null);
   const [selectedConfig, setSelectedConfig] = useState<MachineConfig | null>(null);
   
   // State for data and UI
@@ -51,7 +79,7 @@ export default function MachineConfigsPage() {
   const [error, setError] = useState<Error | null>(null);
   
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<MachineConfigFormState>({
     name: '',
     description: '',
     type: 'mill',
@@ -59,29 +87,56 @@ export default function MachineConfigsPage() {
     maxFeedRate: 5000,
     workVolumeX: 300,
     workVolumeY: 300,
-    workVolumeZ: 100
+    workVolumeZ: 100,
+    controller: '',
+    isPublic: false
   });
 
-  // Fetch configs when component mounts or filters change
+  // Fetch configs when component mounts or non-search filters change
   useEffect(() => {
     if (status === 'authenticated') {
       fetchConfigs();
     }
-  }, [filters, status]);
+  }, [filters.type, filters.showPublic, status]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const debouncedFetch = debounce(() => {
+      if (status === 'authenticated') {
+        fetchConfigs();
+      }
+    }, 300);
+    
+    debouncedFetch();
+    
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [filters.search]);
 
   const fetchConfigs = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const data = await getMachineConfigs({
-        type: filters.type || undefined,
-        search: filters.search || undefined
+      const response = await getMachineConfigs({
+        type: filters.type as 'mill' | 'lathe' | 'printer' | 'laser' | undefined,
+        search: filters.search || undefined,
+        public: filters.showPublic
       });
-      setConfigs(data);
+      
+      // Handle paginated response
+      const machineConfigs = Array.isArray(response.data) ? response.data : [];
+      setConfigs(machineConfigs);
     } catch (err) {
       console.error('Error fetching machine configurations:', err);
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
+      setConfigs([]); // Set empty array on error
+      
+      // Session might have expired
+      if (err instanceof Error && err.message.includes('unauthorized')) {
+        router.push('/auth/signin?callbackUrl=/machine');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -93,21 +148,40 @@ export default function MachineConfigsPage() {
     setFilters(prev => ({ ...prev, [name]: value }));
   };
 
+  // Toggle public filter
+  const togglePublicFilter = () => {
+    setFilters(prev => ({ ...prev, showPublic: !prev.showPublic }));
+  };
+
   // Clear filters
   const clearFilters = () => {
     setFilters({
       type: '',
-      search: ''
+      search: '',
+      showPublic: false
     });
   };
 
   // Handle form changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    const { name, value, type } = e.target;
+    
+    if (type === 'checkbox') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: (e.target as HTMLInputElement).checked
+      }));
+    } else if (type === 'number') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: parseInt(value) || 0
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   // Reset form data
@@ -120,7 +194,9 @@ export default function MachineConfigsPage() {
       maxFeedRate: 5000,
       workVolumeX: 300,
       workVolumeY: 300,
-      workVolumeZ: 100
+      workVolumeZ: 100,
+      controller: '',
+      isPublic: false
     });
     setSelectedConfig(null);
   };
@@ -132,20 +208,24 @@ export default function MachineConfigsPage() {
     setIsLoading(true);
     
     try {
+      const configDetails: MachineConfigDetails = {
+        type: formData.type,
+        maxSpindleSpeed: formData.maxSpindleSpeed,
+        maxFeedRate: formData.maxFeedRate,
+        controller: formData.controller,
+        workVolume: {
+          x: formData.workVolumeX,
+          y: formData.workVolumeY,
+          z: formData.workVolumeZ
+        }
+      };
+      
       const configData = {
         name: formData.name,
         description: formData.description,
-        type: formData.type as 'mill' | 'lathe' | 'printer' | 'laser',
-        config: {
-          type: formData.type,
-          maxSpindleSpeed: parseInt(formData.maxSpindleSpeed.toString()),
-          maxFeedRate: parseInt(formData.maxFeedRate.toString()),
-          workVolume: {
-            x: parseInt(formData.workVolumeX.toString()),
-            y: parseInt(formData.workVolumeY.toString()),
-            z: parseInt(formData.workVolumeZ.toString())
-          }
-        }
+        type: formData.type,
+        isPublic: formData.isPublic,
+        config: configDetails
       };
       
       let result;
@@ -211,12 +291,14 @@ export default function MachineConfigsPage() {
     setFormData({
       name: config.name,
       description: config.description || '',
-      type: configData.type || 'mill',
+      type: config.type || 'mill',
       maxSpindleSpeed: configData.maxSpindleSpeed || 10000,
       maxFeedRate: configData.maxFeedRate || 5000,
       workVolumeX: configData.workVolume?.x || 300,
       workVolumeY: configData.workVolume?.y || 300,
-      workVolumeZ: configData.workVolume?.z || 100
+      workVolumeZ: configData.workVolume?.z || 100,
+      controller: configData.controller || '',
+      isPublic: config.isPublic || false
     });
     
     setShowModal(true);
@@ -224,22 +306,62 @@ export default function MachineConfigsPage() {
 
   // Handle config deletion
   const handleDeleteConfig = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this machine configuration?')) return;
-    
     setIsLoading(true);
     
     try {
       await deleteMachineConfig(id);
       toast.success('Machine configuration deleted successfully');
+      setShowConfirmDelete(null);
       
       // Refresh the list
       await fetchConfigs();
     } catch (err) {
       console.error('Failed to delete machine configuration:', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to delete machine configuration');
+      
+      // More specific error message for usage
+      if (err instanceof Error && err.message.includes('being used')) {
+        toast.error('Cannot delete configuration as it is currently in use by one or more toolpaths');
+      } else {
+        toast.error(err instanceof Error ? err.message : 'Failed to delete machine configuration');
+      }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle config cloning
+  const handleCloneConfig = async (config: MachineConfig) => {
+    try {
+      setIsLoading(true);
+      await cloneMachineConfig(config.id, `${config.name} (Copy)`);
+      toast.success('Machine configuration cloned successfully');
+      await fetchConfigs();
+    } catch (err) {
+      console.error('Failed to clone machine configuration:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to clone machine configuration');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle config sharing
+  const handleToggleShare = async (config: MachineConfig) => {
+    try {
+      setIsLoading(true);
+      await shareMachineConfig(config.id, !config.isPublic);
+      toast.success(`Machine configuration ${config.isPublic ? 'private' : 'shared'} successfully`);
+      await fetchConfigs();
+    } catch (err) {
+      console.error('Failed to update sharing settings:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to update sharing settings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle navigation to detail page
+  const handleViewDetail = (id: string) => {
+    router.push(`/machine/${id}`);
   };
 
   if (status === 'loading') {
@@ -320,11 +442,22 @@ export default function MachineConfigsPage() {
               </div>
               
               <button
+                onClick={togglePublicFilter}
+                className={`px-3 py-2 rounded-md border ${filters.showPublic 
+                  ? 'bg-blue-100 border-blue-300 dark:bg-blue-900/40 dark:border-blue-700 text-blue-700 dark:text-blue-300' 
+                  : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400'} 
+                  flex items-center`}
+              >
+                <Share2 size={16} className="mr-2" />
+                {filters.showPublic ? 'Showing Public' : 'Show Public'}
+              </button>
+              
+              <button
                 onClick={clearFilters}
                 className="md:self-end text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center"
               >
                 <X size={16} className="mr-1" />
-                Clear Filters
+                Clear
               </button>
             </div>
           </div>
@@ -345,12 +478,12 @@ export default function MachineConfigsPage() {
               </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No machine configurations yet</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {filters.search || filters.type ? 
+                {filters.search || filters.type || filters.showPublic ? 
                   'No machine configurations match your search criteria.' : 
                   'Add machine configurations to properly generate G-code for your specific CNC machines, or use our standard machine templates.'}
               </p>
               <div className="flex flex-wrap justify-center gap-3">
-                {filters.search || filters.type ? (
+                {filters.search || filters.type || filters.showPublic ? (
                   <button
                     onClick={clearFilters}
                     className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
@@ -378,21 +511,44 @@ export default function MachineConfigsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {configs.map((config) => (
-                <div key={config.id} className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
+                <motion.div 
+                  key={config.id} 
+                  className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  whileHover={{ scale: 1.01 }}
+                >
                   <div className="p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
-                        <span className="text-xl">
-                          {config.type === 'mill' ? '🔄' : 
-                           config.type === 'lathe' ? '⚙️' :
-                           config.type === 'printer' ? '🖨️' : 
-                           config.type === 'laser' ? '✂️' : '🔧'}
-                        </span>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                          <span className="text-xl">
+                            {config.type === 'mill' ? '🔄' : 
+                             config.type === 'lathe' ? '⚙️' :
+                             config.type === 'printer' ? '🖨️' : 
+                             config.type === 'laser' ? '✂️' : '🔧'}
+                          </span>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900 dark:text-white">{config.name}</h3>
+                          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                            <span className="capitalize mr-2">{config.type}</span>
+                            {config.isPublic && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                <Share2 size={12} className="mr-1" />
+                                Public
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">{config.name}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{config.type}</p>
-                      </div>
+                      {config.usageCount !== undefined && config.usageCount > 0 && (
+                        <div className="flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                          <Tool size={12} className="mr-1" />
+                          {config.usageCount} {config.usageCount === 1 ? 'use' : 'uses'}
+                        </div>
+                      )}
                     </div>
                     
                     {config.description && (
@@ -423,26 +579,70 @@ export default function MachineConfigsPage() {
                         </div>
                       )}
                     </div>
+                    
+                    {config.owner && config.owner.id !== session?.user?.id && (
+                      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center text-xs text-gray-500 dark:text-gray-400">
+                        <Clock size={12} className="mr-1" />
+                        <span>
+                          Created {formatDistance(new Date(config.createdAt), new Date(), { addSuffix: true })}
+                          {config.owner?.name && (
+                            <span> by {config.owner.name}</span>
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900 flex justify-end space-x-2">
-                    <button 
-                      onClick={() => handleEditClick(config)}
-                      className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                      title="Edit Configuration"
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteConfig(config.id)}
-                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                      title="Delete Configuration"
-                      disabled={isLoading}
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                  <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900 flex justify-between">
+                    <div>
+                      <button 
+                        onClick={() => handleViewDetail(config.id)}
+                        className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                        title="View Details"
+                      >
+                        View
+                      </button>
+                    </div>
+                    <div className="flex space-x-2">
+                      {/* Only show edit/delete for owner */}
+                      {(config.isOwner || config.ownerId === session?.user?.id) && (
+                        <>
+                          <button 
+                            onClick={() => handleToggleShare(config)}
+                            className={`p-2 ${config.isPublic 
+                              ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20' 
+                              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'} rounded`}
+                            title={config.isPublic ? "Make Private" : "Share Publicly"}
+                          >
+                            <Share2 size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleCloneConfig(config)}
+                            className="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded"
+                            title="Clone Configuration"
+                          >
+                            <Copy size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleEditClick(config)}
+                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                            title="Edit Configuration"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            onClick={() => setShowConfirmDelete(config.id)}
+                            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                            title="Delete Configuration"
+                            disabled={isLoading}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
@@ -450,7 +650,12 @@ export default function MachineConfigsPage() {
           {/* Machine Config Modal */}
           {showModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+              <motion.div 
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+              >
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                     {selectedConfig ? 'Edit Machine Configuration' : 'Create New Machine Configuration'}
@@ -458,7 +663,7 @@ export default function MachineConfigsPage() {
                 </div>
                 
                 <form onSubmit={handleCreateConfig}>
-                  <div className="px-6 py-4">
+                  <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
                     <div className="mb-4">
                       <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Configuration Name
@@ -543,6 +748,21 @@ export default function MachineConfigsPage() {
                       </div>
                     </div>
                     
+                    <div className="mb-4">
+                      <label htmlFor="controller" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Controller (optional)
+                      </label>
+                      <input
+                        type="text"
+                        id="controller"
+                        name="controller"
+                        placeholder="e.g., Mach3, LinuxCNC, Grbl"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        value={formData.controller}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    
                     <div className="mb-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Work Volume (mm)
@@ -598,6 +818,25 @@ export default function MachineConfigsPage() {
                         />
                       </div>
                     </div>
+                    
+                    <div className="mt-4">
+                      <div className="flex items-center">
+                        <input
+                          id="isPublic"
+                          name="isPublic"
+                          type="checkbox"
+                          checked={formData.isPublic}
+                          onChange={handleChange}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="isPublic" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                          Make this configuration public
+                        </label>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Public configurations can be used by all users of the platform
+                      </p>
+                    </div>
                   </div>
                   
                   <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 flex justify-end space-x-3 rounded-b-lg">
@@ -621,7 +860,50 @@ export default function MachineConfigsPage() {
                     </button>
                   </div>
                 </form>
-              </div>
+              </motion.div>
+            </div>
+          )}
+          
+          {/* Confirm Delete Modal */}
+          {showConfirmDelete && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <motion.div 
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mr-4">
+                    <AlertCircle size={24} className="text-red-600 dark:text-red-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Confirm Deletion
+                  </h3>
+                </div>
+                
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  Are you sure you want to delete this machine configuration? This action cannot be undone.
+                </p>
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    onClick={() => setShowConfirmDelete(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-red-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                    onClick={() => handleDeleteConfig(showConfirmDelete)}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              </motion.div>
             </div>
           )}
           

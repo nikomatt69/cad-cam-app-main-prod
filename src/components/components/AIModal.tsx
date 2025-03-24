@@ -38,7 +38,7 @@ const AIModal: FC<Props> = () => {
       </button>
       <Modal
         isOpen={isOpen}
-        placement={'bottom'}
+        placement={'bottom-center'}
         className='pb-9'
         backdrop="blur"
         onOpenChange={onOpenChange}
@@ -66,7 +66,7 @@ const AIModal: FC<Props> = () => {
       >
         <ModalContent
           autoFocus={false}
-          className="h-[flex] max-h-[73vh] bg-gray-100 justify-between rounded-xl flex border  border-gray-500  dark:bg-gray-900 "
+          className="h-[flex] max-h-[80vh] bg-gray-100 justify-between rounded-xl flex border  border-gray-500  dark:bg-gray-900 "
         >
           <ModalHeader autoFocus  className='justify-between g-gray-100 '>
             AI Modal

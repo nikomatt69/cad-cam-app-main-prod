@@ -266,40 +266,8 @@ export function useCADShortcuts() {
         }
         break;
         
-      case 'r': // Rectangle tool
-        setActiveTool('rectangle');
-        showToast('Rectangle tool');
-        break;
-        
-      case 'c': // Circle tool
-        setActiveTool('circle');
-        showToast('Circle tool');
-        break;
-        
-      case 'l': // Line tool
-        setActiveTool('line');
-        showToast('Line tool');
-        break;
-        
-      case 'p': // Polygon tool
-        setActiveTool('polygon');
-        showToast('Polygon tool');
-        break;
-        
-      case 'b': // Box/Cube tool
-        setActiveTool('cube');
-        showToast('Cube tool');
-        break;
-        
-      case 's': // Sphere tool
-        setActiveTool('sphere');
-        showToast('Sphere tool');
-        break;
-        
-      case 't': // Text tool
-        setActiveTool('text');
-        showToast('Text tool');
-        break;
+      
+      
         
       // Number keys 1-9 for layers
       case '1':

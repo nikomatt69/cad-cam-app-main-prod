@@ -7,100 +7,180 @@ import {
   handleApiError, 
   requireAuth 
 } from 'src/lib/api/auth';
+import { Prisma } from '@prisma/client';
+import { 
+  MachineConfig, 
+  MachineType, 
+  CreateMachineConfigDto, 
+  MachineConfigFilters,
+  MachineConfigDetails
+} from 'src/types/machineConfig';
+import { z } from 'zod';
+
+// Validation schemas
+const workVolumeSchema = z.object({
+  x: z.number().positive(),
+  y: z.number().positive(),
+  z: z.number().positive(),
+});
+
+const configSchema = z.object({
+  workVolume: workVolumeSchema,
+  maxSpindleSpeed: z.number().positive(),
+  maxFeedRate: z.number().positive(),
+  controller: z.string().optional(),
+  additionalSettings: z.record(z.any()).optional(),
+});
+
+const createMachineConfigSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(1000).nullable().optional(),
+  type: z.enum(['mill', 'lathe', 'printer', 'laser']),
+  config: configSchema,
+  isPublic: z.boolean().optional(),
+});
+
+// Default pagination values
+const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 100;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const userId = await requireAuth(req, res);
     if (!userId) return;
     
-    // Handle GET request - List machine configs
     if (req.method === 'GET') {
-      // Extract query parameters
-      const { type, search, public: isPublic } = req.query;
+      // Extract and validate query parameters
+      const page = Math.max(1, Number(req.query.page) || 1);
+      const limit = Math.min(
+        MAX_PAGE_SIZE,
+        Math.max(1, Number(req.query.limit) || DEFAULT_PAGE_SIZE)
+      );
+      const offset = (page - 1) * limit;
       
-      // Build the query
-      const query: any = {
-        where: {
-          OR: [
-            // User's own configs
-            { ownerId: userId },
-            // Configs in organizations where user is a member
-            {
-              organization: {
-                users: {
-                  some: { userId }
-                }
-              }
-            },
-            // Public configs if requested
-            ...(isPublic === 'true' ? [{ isPublic: true }] : [])
-          ]
-        },
-        orderBy: { updatedAt: 'desc' }
+      const filters: MachineConfigFilters = {
+        type: req.query.type as MachineType,
+        search: req.query.search as string,
+        public: req.query.public === 'true'
       };
       
-      // Apply additional filters
-      if (type) {
-        query.where.type = type;
+      // Build where clause
+      let whereConditions: Prisma.MachineConfigWhereInput = {
+        OR: [
+          { ownerId: userId },
+          ...(filters.public ? [{ isPublic: true }] : [])
+        ]
+      };
+      
+      if (filters.type) {
+        whereConditions = {
+          AND: [
+            whereConditions,
+            { type: filters.type }
+          ]
+        };
       }
       
-      if (search && typeof search === 'string') {
-        query.where.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } }
-        ];
+      if (filters.search) {
+        whereConditions = {
+          AND: [
+            whereConditions,
+            {
+              OR: [
+                { name: { contains: filters.search, mode: 'insensitive' } },
+                { description: { contains: filters.search, mode: 'insensitive' } }
+              ]
+            }
+          ]
+        };
       }
       
-      const machineConfigs = await prisma.machineConfig.findMany(query);
+      // Get total count for pagination
+      const total = await prisma.machineConfig.count({ where: whereConditions });
       
-      return sendSuccessResponse(res, machineConfigs);
-    } 
-    // Handle POST request - Create machine config
-    else if (req.method === 'POST') {
-      const { name, description, type, config, organizationId, isPublic } = req.body;
-      
-      // Validate required fields
-      if (!name) {
-        return sendErrorResponse(res, 'Machine configuration name is required', 400);
-      }
-      
-      if (!type) {
-        return sendErrorResponse(res, 'Machine type is required', 400);
-      }
-      
-      if (!config) {
-        return sendErrorResponse(res, 'Configuration data is required', 400);
-      }
-      
-      // If organizationId is provided, verify membership
-      if (organizationId) {
-        const organizationMember = await prisma.userOrganization.findFirst({
-          where: {
-            userId,
-            organizationId
+      // Execute main query with pagination
+      const machineConfigs = await prisma.machineConfig.findMany({
+        where: whereConditions,
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true
+            }
+          },
+          _count: {
+            select: { toolPaths: true }
           }
-        });
-        
-        if (!organizationMember) {
-          return sendErrorResponse(res, 'You are not a member of the specified organization', 403);
+        },
+        skip: offset,
+        take: limit,
+      });
+      
+      // Transform results
+      const enrichedConfigs = machineConfigs.map(config => ({
+        ...config,
+        isOwner: config.ownerId === userId,
+        usageCount: config._count.toolPaths,
+        _count: undefined
+      }));
+      
+      return sendSuccessResponse(res, {
+        data: enrichedConfigs,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
         }
+      });
+    } 
+    else if (req.method === 'POST') {
+      // Validate request body
+      const validationResult = createMachineConfigSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        const errorMessage = 'Invalid request data: ' + validationResult.error.message;
+        return sendErrorResponse(res, errorMessage, 400);
       }
+      
+      const data = validationResult.data;
       
       // Create new machine config
       const machineConfig = await prisma.machineConfig.create({
         data: {
-          name,
-          description,
-          type,
-          config,
+          name: data.name,
+          description: data.description,
+          type: data.type,
+          config: data.config as Prisma.JsonObject,
           ownerId: userId,
-          
-          isPublic: isPublic ?? false // Use false if isPublic is undefined (optional field)
+          isPublic: data.isPublic ?? false
+        },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true
+            }
+          }
         }
       });
-      return sendSuccessResponse(res, machineConfig, 'Machine configuration created successfully');
+
+      return sendSuccessResponse(res, 
+        {
+          ...machineConfig,
+          isOwner: true,
+          usageCount: 0
+        }, 
+        'Machine configuration created successfully'
+      );
     } else {
-      return sendErrorResponse(res, 'Method not allowed', 405);
+      res.setHeader('Allow', ['GET', 'POST']);
+      return sendErrorResponse(res, `Method ${req.method} Not Allowed`, 405);
     }
   } catch (error) {
     return handleApiError(error, res);

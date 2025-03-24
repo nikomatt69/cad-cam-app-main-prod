@@ -21,11 +21,12 @@ class LibraryService {
   // Singleton instance
   private static instance: LibraryService;
   
-  // In-memory libraries (these could be loaded from local storage or API)
+  // In-memory libraries
   private cadComponents: LibraryItem[] = [];
   private userComponents: Record<string, LibraryItem[]> = {};
   private userMaterials: Record<string, LibraryItem[]> = {};
   private userTools: Record<string, LibraryItem[]> = {};
+  private userMachineConfigs: Record<string, LibraryItem[]> = {};
 
   private initialized = false;
 
@@ -54,6 +55,7 @@ class LibraryService {
       await this.loadUserComponents(userId);
       await this.loadUserMaterials(userId);
       await this.loadUserTools(userId);
+      await this.loadUserMachineConfigs(userId);
     }
 
     this.initialized = true;
@@ -68,9 +70,9 @@ class LibraryService {
       name: comp.name || '',
       description: comp.description || '',
       category: 'component',
-      type: comp.type|| '',
-      properties: comp.properties|| {},
-      tags: comp.tags|| undefined
+      type: comp.type || '',
+      properties: comp.properties || {},
+      tags: comp.tags || undefined
     }));
   }
 
@@ -88,7 +90,6 @@ class LibraryService {
         }
       });
  
-      // Group components by user
       this.userComponents[userId] = components.map(comp => ({
         id: comp.id,
         name: comp.name,
@@ -172,6 +173,32 @@ class LibraryService {
     }
   }
 
+  private async loadUserMachineConfigs(userId: string): Promise<void> {
+    try {
+      const configs = await prisma.machineConfig.findMany({
+        where: {
+          OR: [
+            { ownerId: userId },
+            { isPublic: true }
+          ]
+        }
+      });
+
+      this.userMachineConfigs[userId] = configs.map(config => ({
+        id: config.id,
+        name: config.name,
+        description: config.description || undefined,
+        category: 'machine',
+        type: config.type,
+        properties: config.config as Record<string, any>,
+        tags: ['user', config.type]
+      }));
+    } catch (error) {
+      console.error('Failed to load user machine configs:', error);
+      this.userMachineConfigs[userId] = [];
+    }
+  }
+
   /**
    * Get all CAD components
    */
@@ -234,6 +261,29 @@ class LibraryService {
       tool.description?.toLowerCase().includes(lowerFilter) ||
       tool.type.toLowerCase().includes(lowerFilter) ||
       tool.tags?.some(tag => tag.toLowerCase().includes(lowerFilter))
+    );
+  }
+
+  /**
+   * Get all user machine configs
+   */
+  public getUserMachineConfigs(userId: string, filter?: string): LibraryItem[] {
+    if (!this.userMachineConfigs[userId]) {
+      return [];
+    }
+    
+    const configs = Array.isArray(this.userMachineConfigs[userId]) 
+      ? this.userMachineConfigs[userId] 
+      : [];
+    
+    if (!filter) return configs;
+    
+    const lowerFilter = filter.toLowerCase();
+    return configs.filter(config => 
+      config.name.toLowerCase().includes(lowerFilter) ||
+      config.description?.toLowerCase().includes(lowerFilter) ||
+      config.type.toLowerCase().includes(lowerFilter) ||
+      config.tags?.some(tag => tag.toLowerCase().includes(lowerFilter))
     );
   }
 
