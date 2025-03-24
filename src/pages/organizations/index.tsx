@@ -5,9 +5,10 @@ import { useOrganizations } from 'src/hooks/useOrganizations';
 import { Organization } from '@prisma/client';
 import { Users, Plus,  Folder, UserPlus, Cloud, ArrowLeft } from 'react-feather';
 import Link from 'next/link';
-import router from 'next/router';
+import router, { useRouter } from 'next/router';
 import Layout from '@/src/components/layout/Layout';
 import Metatags from '@/src/components/layout/Metatags';
+import { useSession } from 'next-auth/react';
 
 
 export default function OrganizationsList() {
@@ -28,7 +29,12 @@ export default function OrganizationsList() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
  
-
+  const { data: session, status } = useSession();
+  const router = useRouter(); 
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  }
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({

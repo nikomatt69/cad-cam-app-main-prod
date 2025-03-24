@@ -12,7 +12,8 @@ import {
   PlusSquare,
   MousePointer,
   ChevronDown,
-  Copy
+  Copy,
+  BookOpen
 } from 'react-feather';
 import { useRouter } from 'next/router';
 import { useElementsStore } from 'src/store/elementsStore';
@@ -22,7 +23,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import AIAssistantButton from '../ai/ai-new/AIAssistantButton';
 import AIModal from '../components/AIModal';
-
+import {isMobile} from 'react-device-detect'
 interface EnhancedToolbarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -133,8 +134,13 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
         >
           <Menu size={20} className="text-gray-600 dark:text-gray-400" />
         </button>
-        <Link href="/" className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
+        {isMobile ?  <Link href="/" className="">
+              <div className="">
+                
+                
+              </div>
+            </Link> :<Link href="/" className="flex  items-center">
+              <div className="flex-shrink-0 flex  items-center">
                 <img
                   className=" h-14 w-auto"
                   src="/logo.png"
@@ -142,31 +148,31 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
                 />
                 
               </div>
-            </Link>
+            </Link> }
         <div className="ml-6 flex items-center space-x-2">
           <button
             onClick={handleSaveProject}
             className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md shadow-sm flex items-center"
             title="Save Project"
           >
-            <Save size={16} className="mr-1.5 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm">Save</span>
+            <Save size={16} className=" text-gray-600 dark:text-gray-400" />
+            
           </button>
           <button
             onClick={() => { setDialogMode('import'); setShowImportExportDialog(true); }}
             className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md shadow-sm flex items-center"
             title="Import Project"
           >
-            <Upload size={16} className="mr-1.5 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm">Import</span>
+            <Upload size={16} className=" text-gray-600 dark:text-gray-400" />
+            
           </button>
           <button
             onClick={() => setShowUnifiedLibrary(true)}
             className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md shadow-sm flex items-center"
             title="Unified Library"
           >
-            <Book size={16} className="mr-1.5 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm">Library</span>
+            <BookOpen size={16} className=" text-gray-600 dark:text-gray-400" />
+            
           </button>
           
           {/* Create Component from Selected Element button - only shows when element is selected */}
@@ -206,11 +212,11 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             }`}
             title={showFloatingToolbar ? "Hide Floating Toolbar" : "Show Floating Toolbar"}
           >
-            <Tool size={16} className="mr-1.5" />
-            <span className="text-sm">Toolbar</span>
+            <Tool size={16} className="" />
+            
           </button>
       
-        
+          <AIModal />
         </div>
       </div>
       <div className="flex items-center space-x-2">

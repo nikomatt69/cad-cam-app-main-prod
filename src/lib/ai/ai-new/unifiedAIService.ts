@@ -1,8 +1,10 @@
-import { AIModelType, AIRequest, AIResponse, TextToCADRequest, AIDesignSuggestion } from '@/src/types/AITypes';
+import { AIModelType, AIRequest, AIResponse, TextToCADRequest, AIDesignSuggestion, MCPRequestParams, MCPResponse } from '@/src/types/AITypes';
 import { aiCache } from './aiCache';
 import { aiAnalytics } from './aiAnalytics';
 import { promptTemplates } from './promptTemplates';
 import { Element } from '@/src/store/elementsStore';
+import { mcpService } from './mcpService';
+import { aiConfigManager } from './aiConfigManager';
 
 /**
  * Servizio AI unificato che gestisce tutte le interazioni con i modelli AI
@@ -11,11 +13,31 @@ import { Element } from '@/src/store/elementsStore';
 export class UnifiedAIService {
   private apiKey: string;
   private allowBrowser: boolean = true;
-  private defaultModel: AIModelType = 'claude-3-5-sonnet-20240229';
-  private defaultMaxTokens: number = 4000;
+  private defaultModel: AIModelType = 'claude-3-7-sonnet-20250219';
+  private defaultMaxTokens: number = 6000;
+  private mcpEnabled: boolean = false;
+  private mcpStrategy: 'aggressive' | 'balanced' | 'conservative' = 'balanced';
+  private mcpCacheLifetime: number = 3600000; // 1 ora in millisecondi
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY || '';
+    this.apiKey = apiKey || '';
+    
+    // Leggi le configurazioni da aiConfigManager se disponibili
+    const config = aiConfigManager.getConfig();
+    if (config) {
+      this.defaultModel = config.defaultModel || this.defaultModel;
+      this.defaultMaxTokens = config.maxTokens || this.defaultMaxTokens;
+      this.allowBrowser = config.allowBrowser ?? this.allowBrowser;
+      this.mcpEnabled = config.mcpEnabled ?? this.mcpEnabled;
+      
+      // Carica le impostazioni MCP se disponibili
+      if (config.mcpStrategy) {
+        this.mcpStrategy = config.mcpStrategy as 'aggressive' | 'balanced' | 'conservative';
+      }
+      if (config.mcpCacheLifetime) {
+        this.mcpCacheLifetime = config.mcpCacheLifetime;
+      }
+    }
   }
 
   /**
@@ -29,8 +51,28 @@ export class UnifiedAIService {
     maxTokens = this.defaultMaxTokens,
     parseResponse,
     onProgress,
-    metadata = {}
+    metadata = {},
+    useMCP,
+    mcpParams
   }: AIRequest): Promise<AIResponse<T>> {
+    // Determina se utilizzare MCP
+    const shouldUseMCP = useMCP ?? this.mcpEnabled;
+    
+    // Se MCP è abilitato, utilizza il servizio MCP
+    if (shouldUseMCP) {
+      return this.processMCPRequest<T>({
+        prompt,
+        model,
+        systemPrompt,
+        temperature,
+        maxTokens,
+        parseResponse,
+        onProgress,
+        metadata,
+        mcpParams
+      });
+    }
+    
     // Genera una chiave di cache basata sui parametri della richiesta
     const cacheKey = aiCache.getKeyForRequest({ 
       prompt, 
@@ -190,14 +232,132 @@ export class UnifiedAIService {
         }
       };
     }
+  }
+
+  /**
+   * Elabora una richiesta tramite il protocollo MCP
+   */
+  private async processMCPRequest<T>(request: AIRequest): Promise<AIResponse<T>> {
+    // Configura parametri MCP basati sulla strategia selezionata
+    const defaultMCPParams: MCPRequestParams = this.getMCPParamsFromStrategy();
+    
+    // Unisci i parametri di default con quelli forniti (se presenti)
+    const mcpParams: MCPRequestParams = {
+      ...defaultMCPParams,
+      ...(request.mcpParams || {})
+    };
+    
+    // Aggiungi parametri MCP alla richiesta
+    const mcpRequest: AIRequest = {
+      ...request,
+      mcpParams
+    };
+    
+    try {
+      // Determina la priorità in base al tipo di richiesta
+      const priority = this.getMCPPriorityFromMetadata(request.metadata);
+      
+      // Invia la richiesta tramite MCP service
+      const mcpResponse = await mcpService.enqueue<T>(mcpRequest, priority);
+      
+      // Registra analisi MCP se è stata utilizzata la cache
+      if (mcpResponse.cacheHit) {
+        aiAnalytics.trackEvent({
+          eventType: 'mcp',
+          eventName: 'cache_hit',
+          success: true,
+          metadata: {
+            similarity: mcpResponse.similarity,
+            savings: mcpResponse.savingsEstimate
+          }
+        });
+      }
+      
+      return mcpResponse.response;
+    } catch (error) {
+      console.error('MCP request failed:', error);
+      
+      // Fallback al processamento standard in caso di errore MCP
+      console.log('Falling back to standard request processing');
+      
+      // Rimuovi i parametri MCP e riprova con il processamento standard
+      const { mcpParams, useMCP, ...standardRequest } = request;
+      return this.processRequest<T>(standardRequest);
+    }
+  }
   
+  /**
+   * Determina i parametri MCP basati sulla strategia configurata
+   */
+  private getMCPParamsFromStrategy(): MCPRequestParams {
+    switch (this.mcpStrategy) {
+      case 'aggressive':
+        return {
+          cacheStrategy: 'hybrid',
+          minSimilarity: 0.65,
+          cacheTTL: this.mcpCacheLifetime,
+          priority: 'speed',
+          storeResult: true
+        };
+      case 'conservative':
+        return {
+          cacheStrategy: 'exact',
+          minSimilarity: 0.9,
+          cacheTTL: this.mcpCacheLifetime,
+          priority: 'quality',
+          storeResult: true
+        };
+      case 'balanced':
+      default:
+        return {
+          cacheStrategy: 'semantic',
+          minSimilarity: 0.8,
+          cacheTTL: this.mcpCacheLifetime,
+          priority: 'quality',
+          storeResult: true
+        };
+    }
+  }
+  
+  /**
+   * Determina la priorità MCP in base ai metadati della richiesta
+   */
+  private getMCPPriorityFromMetadata(metadata: Record<string, any> = {}): 'high' | 'normal' | 'low' {
+    const requestType = metadata?.type || '';
+    
+    // Richieste ad alta priorità
+    if (
+      requestType.includes('message') || 
+      requestType.includes('critical') ||
+      requestType.includes('interactive')
+    ) {
+      return 'high';
+    }
+    
+    // Richieste a bassa priorità
+    if (
+      requestType.includes('background') || 
+      requestType.includes('batch') ||
+      requestType.includes('analysis')
+    ) {
+      return 'low';
+    }
+    
+    // Priorità normale di default
+    return 'normal';
   }
 
   /**
    * Converte descrizione di testo in elementi CAD
    */
   async textToCADElements(request: TextToCADRequest): Promise<AIResponse<Element[]>> {
-    const { description, constraints, style = 'precise', complexity = 'moderate' } = request;
+    const { 
+      description, 
+      constraints, 
+      style = 'precise', 
+      complexity = 'moderate',
+      context = [] 
+    } = request;
     
     // Costruisce il prompt di sistema utilizzando il template
     const systemPrompt = promptTemplates.textToCAD.system
@@ -212,10 +372,32 @@ export class UnifiedAIService {
       prompt += '\n\nConstraints:\n' + JSON.stringify(constraints, null, 2);
     }
     
+    // Aggiunge il contesto se presente
+    if (context && context.length > 0) {
+      prompt += '\n\nReference Context:\n';
+      
+      // Limita la dimensione di ciascun contesto per evitare di superare i limiti di token
+      const maxContextLength = 3000; // Dimensione massima in caratteri per documento
+      
+      context.forEach((contextItem, index) => {
+        // Tronca il contesto se troppo lungo
+        const truncatedContext = contextItem.length > maxContextLength 
+          ? contextItem.substring(0, maxContextLength) + '... [content truncated]' 
+          : contextItem;
+        
+        prompt += `\n--- Context Document ${index + 1} ---\n${truncatedContext}\n`;
+      });
+      
+      // Aggiunge istruzioni specifiche per l'utilizzo del contesto
+      prompt += '\n\nPlease consider the above reference context when generating the CAD model. ' +
+                'Use relevant specifications, measurements, and design principles from the context ' +
+                'to inform your design, while adhering to the provided constraints.';
+    }
+    
     return this.processRequest<Element[]>({
       prompt,
       systemPrompt,
-      model: 'claude-3-opus-20240229', // Usa il modello più potente per generazione CAD
+      model: 'claude-3-7-sonnet-20250219', // Usa il modello più potente per generazione CAD
       temperature: complexity === 'creative' ? 0.8 : 0.5,
       maxTokens: this.defaultMaxTokens,
       parseResponse: this.parseTextToCADResponse,
@@ -223,10 +405,13 @@ export class UnifiedAIService {
         type: 'text_to_cad',
         description: description.substring(0, 100),
         complexity,
-        style
+        style,
+        contextCount: context?.length || 0
       }
     });
   }
+
+
 
   /**
    * Analizza progetti CAD e fornisce suggerimenti
@@ -238,7 +423,7 @@ export class UnifiedAIService {
     return this.processRequest<AIDesignSuggestion[]>({
       prompt,
       systemPrompt: promptTemplates.designAnalysis.system,
-      model: 'claude-3-opus-20240229', // Usa il modello più potente per analisi approfondite
+      model: 'claude-3-7-sonnet-20250219', // Usa il modello più potente per analisi approfondite
       temperature: 0.3, // Temperatura bassa per risposte più analitiche
       maxTokens: this.defaultMaxTokens,
       parseResponse: this.parseDesignResponse,
@@ -401,23 +586,24 @@ export class UnifiedAIService {
   }
 
   /**
-   * Valida l'API key di Anthropic
-   */
-  
-
-  /**
    * Configura i parametri del servizio AI
    */
   setConfig(config: {
     defaultModel?: AIModelType;
     defaultMaxTokens?: number;
     allowBrowser?: boolean;
+    mcpEnabled?: boolean;
+    mcpStrategy?: 'aggressive' | 'balanced' | 'conservative';
+    mcpCacheLifetime?: number;
   }): void {
     if (config.defaultModel) this.defaultModel = config.defaultModel;
     if (config.defaultMaxTokens) this.defaultMaxTokens = config.defaultMaxTokens;
     if (config.allowBrowser !== undefined) this.allowBrowser = config.allowBrowser;
     
-    
+    // Aggiungi configurazioni MCP
+    if (config.mcpEnabled !== undefined) this.mcpEnabled = config.mcpEnabled;
+    if (config.mcpStrategy) this.mcpStrategy = config.mcpStrategy;
+    if (config.mcpCacheLifetime) this.mcpCacheLifetime = config.mcpCacheLifetime;
   }
 
   /**

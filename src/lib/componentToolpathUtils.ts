@@ -15,6 +15,7 @@ import {
   convertToComponent3D,
   validateGeometryToolpath
 } from './integratedToolpathGenerator';
+import { extractElementGeometry } from './elementGeometryUtils';
 
 /**
  * Utility functions to generate toolpaths from component elements
@@ -120,10 +121,10 @@ export function generateComponentToolpath(component: any, settings: any): string
   
   try {
     // Prima validiamo la geometria del componente
-    const validationResult = validateGeometryToolpath(component, settings);
+    const validationResult = validateGeometryToolpath(component);
     
-    if (!validationResult.valid) {
-      console.warn("Avvertimento nella validazione della geometria:", validationResult.errors);
+    if (!validationResult.isValid) {
+      console.warn("Avvertimento nella validazione della geometria:", validationResult);
     }
     
     // Generiamo il G-code utilizzando il nuovo integratore
@@ -345,11 +346,7 @@ function processElementsSeparately(elements: any[], settings: any): string {
   let gcode = `; Processing ${elements.length} elements separately\n`;
   
   // Add header
-  gcode += `G90 ; Absolute positioning\n`;
-  gcode += `G21 ; Metric units\n`;
-  gcode += `M3 S${settings.spindleSpeed || 12000} ; Start spindle\n`;
-  gcode += `M8 ; Coolant on\n`;
-  gcode += `G0 Z${settings.safeHeight || 5} ; Move to safe height\n\n`;
+  
   
   // Process each element independently
   elements.forEach((element, index) => {
@@ -377,12 +374,7 @@ function processElementsSeparately(elements: any[], settings: any): string {
     gcode += '\n';
   });
   
-  // Add closing commands
-  gcode += `; End of program\n`;
-  gcode += `G0 Z${settings.safeHeight || 5} ; Move to safe height\n`;
-  gcode += `M9 ; Coolant off\n`;
-  gcode += `M5 ; Stop spindle\n`;
-  gcode += `M30 ; Program end\n`;
+  
   
   return gcode;
 }
@@ -514,6 +506,58 @@ function generateBasicCylinderToolpath(element: any, settings: any): string {
   }
   
   return gcode;
+}
+
+export function optimizeComponentMachiningOrder(component: any): string[] {
+  if (!component.elements || !Array.isArray(component.elements) || component.elements.length === 0) {
+    return [];
+  }
+  
+  // Extract all elements and their geometries
+  const elements = component.elements.map((el: any) => ({
+    element: el,
+    geometry: extractElementGeometry(el)
+  }));
+  
+  // Group elements by Z level for layer-based machining
+  const zLevels: { [key: string]: any[] } = {};
+  
+  elements.forEach(({ element, geometry }: { element: Element; geometry: { center: { z: number } } }) => {
+    const zLevel = Math.round(geometry.center.z * 100) / 100; // Round to 2 decimal places
+    if (!zLevels[zLevel]) {
+      zLevels[zLevel] = [];
+    }
+    zLevels[zLevel].push(element);
+  });
+  
+  // Sort Z levels from top to bottom
+  const sortedZLevels = Object.keys(zLevels)
+    .map(Number)
+    .sort((a, b) => b - a); // Sort in descending order (top to bottom)
+  
+  // Create the final ordered list
+  const orderedIds: string[] = [];
+  
+  sortedZLevels.forEach(zLevel => {
+    const levelElements = zLevels[zLevel];
+    
+    // At each Z level, process inner elements before outer ones
+    // Simple heuristic: sort by distance from component center
+    levelElements.sort((a: any, b: any) => {
+      const aDistance = Math.sqrt(Math.pow(a.x || 0, 2) + Math.pow(a.y || 0, 2));
+      const bDistance = Math.sqrt(Math.pow(b.x || 0, 2) + Math.pow(b.y || 0, 2));
+      return aDistance - bDistance; // Inner to outer
+    });
+    
+    // Add the sorted elements to the final list
+    levelElements.forEach((el: any) => {
+      if (el.id) {
+        orderedIds.push(el.id);
+      }
+    });
+  });
+  
+  return orderedIds;
 }
 
 function generateBasicCapsuleToolpath(element: any, settings: any): string {

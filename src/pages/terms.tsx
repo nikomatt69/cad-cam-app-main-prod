@@ -4,8 +4,16 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Layout from 'src/components/layout/Layout';
 import MetaTags from '../components/layout/Metatags';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 export default function TermsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter(); 
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  } 
   return (
     <>
        <MetaTags 

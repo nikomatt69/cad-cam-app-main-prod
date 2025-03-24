@@ -10,7 +10,7 @@ const AIResponseSchema = z.object({
   rawResponse: z.string().nullable(),
   metadata: z.record(z.unknown()).optional(),
   timestamp: z.string().datetime(),
-  model: z.enum(['claude-3-opus-20240229']),
+  model: z.enum(['claude-3-7-sonnet-20250219']),
   usage: z.object({
     promptTokens: z.number(),
     completionTokens: z.number(),
@@ -239,7 +239,7 @@ export class AICore {
     
     try {
       await this.client.messages.create({
-        model: 'claude-3-opus-20240229',
+        model: 'claude-3-7-sonnet-20250219',
         max_tokens: 10,
         messages: [{ role: 'user', content: 'API key validation test' }]
       });

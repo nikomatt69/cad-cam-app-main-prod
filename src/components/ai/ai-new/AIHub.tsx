@@ -23,9 +23,11 @@ import AISettingsPanel from './AISettingsPanel';
 import { AIModelType } from '@/src/types/AITypes';
 import AIDesignAssistant from '../AIDesignAssistant';
 import AIToolpathOptimizer from '../AIToolpathOptimizer';
+import MCPInsightsPanel from './MCPSettingsPage';
+
 
 // Tipi di tool AI disponibili
-type AITool = 'textToCad' | 'designAssistant' | 'toolpathOptimizer' | 'settings' | 'analytics';
+type AITool = 'textToCad' | 'designAssistant' | 'toolpathOptimizer' | 'settings' | 'analytics' | 'mpc';
 
 interface AIHubProps {
   initialTool?: AITool;
@@ -61,44 +63,50 @@ const AIHub: React.FC<AIHubProps> = ({
     { 
       id: 'textToCad' as AITool, 
       name: 'Text to CAD', 
-      icon: <PenTool size={18} />,
+      icon: <PenTool size={15} />,
       description: 'Converti descrizioni testuali in elementi 3D'
     },
     { 
       id: 'designAssistant' as AITool, 
       name: 'Assistente Design', 
-      icon: <Cpu size={18} />,
+      icon: <Cpu size={15} />,
       description: 'Ottieni suggerimenti AI per i tuoi design'
     },
     { 
       id: 'toolpathOptimizer' as AITool, 
       name: 'Ottimizzatore Toolpath', 
-      icon: <Tool size={18} />,
+      icon: <Tool size={15} />,
       description: 'Ottimizza parametri di lavorazione'
     },
     { 
       id: 'analytics' as AITool, 
       name: 'Analytics AI', 
-      icon: <BarChart2 size={18} />,
+      icon: <BarChart2 size={15} />,
       description: 'Visualizza statistiche di utilizzo AI'
     },
     { 
       id: 'settings' as AITool, 
       name: 'Impostazioni AI', 
-      icon: <Settings size={18} />,
+      icon: <Settings size={15} />,
       description: 'Configura comportamento AI'
-    }
+    },
+    { 
+      id: 'mpc' as AITool, 
+      name: 'Impostazioni MPC AI', 
+      icon: <Settings size={15} />,
+      description: 'Configura comportamento MPC AI'
+    },
   ];
 
   // Indicatore di performance colorato
   const renderPerformanceIndicator = () => (
-    <div className="absolute top-2 right-2 flex items-center space-x-2">
+    <div className="absolute top-8 left-3 flex p-2 items-center space-x-2">
       <div className={`h-2 w-2 rounded-full ${
         performance.successRate > 98 ? 'bg-green-500' :
         performance.successRate > 95 ? 'bg-yellow-500' : 'bg-red-500'
       }`} />
-      <span className="text-xs text-gray-500 dark:text-gray-400">
-        {Math.round(performance.successRate)}% successo
+      <span className={`text-xs text-gray-500 rounded-xl  dark:text-gray-400 `}>
+        {Math.round(performance.successRate)}% Status
       </span>
     </div>
   );
@@ -133,6 +141,8 @@ const AIHub: React.FC<AIHubProps> = ({
         return <AIDesignAssistant />;
       case 'toolpathOptimizer':
         return <AIToolpathOptimizer />;
+        case 'mpc':
+          return <MCPInsightsPanel />;
       case 'analytics':
         return (
           <div className="p-4 space-y-4">
@@ -195,12 +205,12 @@ const AIHub: React.FC<AIHubProps> = ({
   };
   
   return (
-    <div className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-lg flex h-[600px] ${className || ''}`}>
-      {renderPerformanceIndicator()}
+    <div className={`relative bg-white dark:bg-gray-800 rounded-lg border-0 flex h-[600px] ${className || ''}`}>
+      
       
       {/* Pulsante di collasso/espansione */}
       <button
-        className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white rounded-full p-1 shadow-md z-10"
+        className="absolute -left-1 top-24 transform -translate-y-1/2 bg-blue-600 text-white rounded-full p-1 shadow-md z-10"
         onClick={() => setIsOpen(!isOpen)}
         title={isOpen ? "Nascondi pannello" : "Mostra pannello"}
       >
@@ -212,16 +222,17 @@ const AIHub: React.FC<AIHubProps> = ({
         {isOpen && (
           <motion.div
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 220, opacity: 1 }}
+            animate={{ width: 160, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="bg-gray-100 dark:bg-gray-900 flex-shrink-0 overflow-hidden"
+            className="bg-gray-50 dark:bg-gray-900 flex-shrink-0 overflow-hidden"
           >
-            <div className="p-4 flex flex-col h-full">
+            <div className="p-2 flex flex-col h-full">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
                   <Cpu className="text-blue-600 mr-2" size={20} />
                   <h2 className="text-lg font-medium text-gray-800 dark:text-gray-200">AI Tools</h2>
+                 <span>{renderPerformanceIndicator()}</span>
                 </div>
                 {onClose && (
                   <button
@@ -235,12 +246,11 @@ const AIHub: React.FC<AIHubProps> = ({
               </div>
               
               {renderModelSelector()}
-              
               <nav className="space-y-1 flex-1 overflow-y-auto">
                 {tools.map((tool) => (
                   <button
                     key={tool.id}
-                    className={`w-full flex items-center px-3 py-2 rounded-md transition-colors ${
+                    className={`w-full flex items-center px-2 py-1 rounded-md transition-colors ${
                       activeTool === tool.id
                         ? 'bg-blue-600 text-white'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
@@ -263,12 +273,13 @@ const AIHub: React.FC<AIHubProps> = ({
                 </p>
               </div>
             </div>
+            
           </motion.div>
         )}
       </AnimatePresence>
       
       {/* Area contenuto */}
-      <div className="flex-grow p-4 overflow-auto">
+      <div className="flex-grow p-4 bg-gray-50 rounded-xl  overflow-auto">
         {renderTool()}
       </div>
     </div>

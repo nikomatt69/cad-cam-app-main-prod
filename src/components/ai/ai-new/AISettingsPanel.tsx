@@ -6,6 +6,7 @@ import { AIModelType } from '@/src/types/AITypes';
 import { useAI } from './AIContextProvider';
 import { aiCache } from '@/src/lib/ai/ai-new/aiCache';
 import { AI_MODELS, MODEL_COSTS } from '@/src/lib/ai/ai-new/aiConfigManager';
+import { MCPClient } from '@/src/lib/ai/mcpClient';
 
 
 /**
@@ -52,36 +53,26 @@ const AISettingsPanel: React.FC = () => {
     }, 500);
   };
   
-  // Testa la connessione MCP
+  // Funzione per testare la connessione all'endpoint MCP
   const testMCPConnection = async () => {
     setMcpTestStatus('testing');
-    setMcpTestResult(null);
+    setMcpTestResult('');
     
     try {
-      // Chiamata di test all'endpoint MCP
-      const response = await fetch('/api/ai/mcp/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          apiKey: state.settings.mcpApiKey || 'test-key',
-          endpoint: state.settings.mcpEndpoint || 'default'
-        })
+      const client = new MCPClient({
+        mcpEndpoint: state.settings.mcpEndpoint || '/api/mcp-protocol',
+        mcpApiKey: state.settings.mcpApiKey,
+        mcpStrategy: state.settings.mcpStrategy || 'balanced',
+        mcpCacheLifetime: state.settings.mcpCacheLifetime || 86400000
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setMcpTestStatus('success');
-        setMcpTestResult(`Connessione riuscita. Latenza: ${data.latency}ms`);
-      } else {
-        const error = await response.text();
-        setMcpTestStatus('error');
-        setMcpTestResult(`Errore: ${error}`);
-      }
+      const result = await client.testConnection();
+      
+      setMcpTestStatus(result.success ? 'success' : 'error');
+      setMcpTestResult(result.message);
     } catch (error) {
       setMcpTestStatus('error');
-      setMcpTestResult(`Errore di connessione: ${error instanceof Error ? error.message : String(error)}`);
+      setMcpTestResult(`Errore durante il test della connessione: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
   
@@ -265,14 +256,17 @@ const AISettingsPanel: React.FC = () => {
                     <input
                       type="text"
                       id="mcp-endpoint"
-                      placeholder="https://api.mcp-service.com/v1"
-                      value={state.settings.mcpEndpoint || ''}
+                      placeholder="/api/mcp-protocol"
+                      value={state.settings.mcpEndpoint || '/api/mcp-protocol'}
                       onChange={(e) => dispatch({
                         type: 'UPDATE_SETTINGS',
                         payload: { mcpEndpoint: e.target.value }
                       })}
                       className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm"
                     />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Predefinito: utilizza l&apos;endpoint locale dell&apos;applicazione.
+                    </p>
                   </div>
                   
                   <div>

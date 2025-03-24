@@ -139,11 +139,13 @@ const UnifiedLibrarySelector: React.FC<UnifiedLibrarySelectorProps> = ({
         } else if (libraryType.includes('components')) {
           const serverComponents = await fetchComponents({});
           const formattedComponents = serverComponents.map(component => ({
-            ...component,
+            ...component.data,
+            id: component.data.id,
+            name: component.data.name,
             source: 'server' as SourceType,
-            sourceId: component.id,
-            type: component.type ?? undefined,
-            description: component.description ?? ''
+            sourceId: component.data.id,
+            type: component.data.type ?? undefined,
+            description: component.data.description ?? ''
           }));
           allItems = [...allItems, ...formattedComponents];
         }

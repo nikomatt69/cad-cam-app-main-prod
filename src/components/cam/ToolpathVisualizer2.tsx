@@ -273,7 +273,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
       console.warn('Alta memoria utilizzata: considera di eseguire disposeUnusedResources()');
     }
   }, [memoryWarning]);
-  
+ 
   // Pulizia periodica (opzionale, solo per scene molto complesse)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -2196,6 +2196,15 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const pauseToolpath = useCallback(() => {
     setIsPlaying(false);
   }, []);
+  const toggleSimulation = () => {
+    setIsPlaying(!isSimulating);
+  };
+  const stopSimulation = () => {
+    if (isSimulating) {
+      setIsPlaying(false);
+    }
+    }
+
   
   const stopToolpath = useCallback(() => {
     setIsPlaying(false);
@@ -2393,7 +2402,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
       />
       
       {/* View Cube */}
-      <div className="absolute bottom-4 right-4 z-10">
+      <div className="absolute bottom-10 right-10 z-10">
         <EnhancedViewCube 
           currentView={currentView}
           onViewChange={setCurrentView}
@@ -2664,7 +2673,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
                 
                 <button
                   className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 focus:outline-none"
-                  onClick={isPlaying ? pauseToolpath : playToolpath}
+                  onClick={isPlaying ? stopSimulation : toggleSimulation}
                   title={isPlaying ? "Pause" : "Play"}
                 >
                   {isPlaying ? <Pause size={16} /> : <Play size={16} />}

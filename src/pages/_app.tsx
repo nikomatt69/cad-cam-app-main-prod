@@ -89,16 +89,7 @@ export default function App({ Component, pageProps: { session, ...pageProps }, r
  
           </LanguageProvider>
         </AuthProvider>
-        <Toaster
-        position="bottom-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#333',
-            color: '#fff',
-          },
-        }}
-      />
+       
     </SessionProvider>
     </ErrorBoundary>
   );

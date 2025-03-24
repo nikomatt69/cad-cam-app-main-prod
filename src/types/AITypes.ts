@@ -28,6 +28,8 @@ export interface AIServiceConfig {
   mcpEnabled?: boolean; // Flag per abilitare il protocollo MCP
   mcpEndpoint?: string; // Endpoint per il servizio MCP
   mcpApiKey?: string;   // API key per il servizio MCP
+  mcpStrategy?: 'aggressive' | 'balanced' | 'conservative'; // Strategia MCP
+  mcpCacheLifetime?: number; // Durata cache in millisecondi
   autoModelSelection?: { enabled: boolean; [key: string]: any }; // Auto model selection settings
 }
 
@@ -124,6 +126,7 @@ export interface MCPResponse<T = any> {
 // === RICHIESTE SPECIFICHE ===
 export interface TextToCADRequest {
   description: string;
+  context?: string[];
   constraints?: {
     maxElements?: number;
     maxDimensions?: {

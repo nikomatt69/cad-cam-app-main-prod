@@ -1,6 +1,7 @@
 // src/lib/ai/mcpService.ts
-import { AIRequest, AIResponse, AIModelType } from '@/src/types/AITypes';
+import { AIRequest, AIResponse, AIModelType, MCPRequestParams, MCPResponse } from '@/src/types/AITypes';
 import { aiAnalytics } from './aiAnalytics';
+import { aiCache } from './aiCache';
 
 interface MCPOptions {
   maxRetries: number;
@@ -45,7 +46,7 @@ export class MCPService {
   /**
    * Enqueue a request to be processed with the MCP protocol
    */
-  async enqueue<T>(request: AIRequest, priority: 'high' | 'normal' | 'low' = 'normal'): Promise<AIResponse<T>> {
+  async enqueue<T>(request: AIRequest, priority: 'high' | 'normal' | 'low' = 'normal'): Promise<MCPResponse<T>> {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
     // Track analytics for the request start
@@ -147,14 +148,41 @@ export class MCPService {
   /**
    * Execute a request to the AI API with retries
    */
-  private async executeRequest(request: AIRequest, retryCount = 0): Promise<AIResponse<any>> {
+  private async executeRequest(request: AIRequest, retryCount = 0): Promise<MCPResponse<any>> {
     const startTime = Date.now();
+    const cacheParams = request.mcpParams || {
+      cacheStrategy: 'exact',
+      cacheTTL: 3600000, // 1 hour
+      storeResult: true
+    };
+    
+    // Genera la chiave di cache basata sui parametri della richiesta e la strategia
+    const cacheKey = this.generateCacheKey(request, cacheParams.cacheStrategy);
+    
+    // Controlla se abbiamo un risultato in cache
+    const cachedResult = await this.checkCache(cacheKey, cacheParams);
+    if (cachedResult) {
+      // Calcola i risparmi stimati
+      const savingsEstimate = {
+        tokens: cachedResult.usage?.totalTokens || 500, // Stima predefinita
+        cost: this.estimateCost(cachedResult.usage?.totalTokens || 500, request.model),
+        timeMs: Date.now() - startTime
+      };
+      
+      // Formato di risposta per risultati in cache
+      return {
+        cacheHit: true,
+        similarity: cachedResult.metadata?.similarity || 1.0,
+        response: cachedResult,
+        savingsEstimate
+      };
+    }
     
     try {
-      // Prepare the request body
+      // Prepara il corpo della richiesta
       const { model = 'claude-3-5-sonnet-20240229', systemPrompt, prompt, temperature = 0.3, maxTokens = 4000 } = request;
       
-      // Call our proxy endpoint instead of Anthropic directly
+      // Chiamata al proxy API invece di chiamare direttamente Anthropic
       const response = await fetch('/api/ai/proxy', {
         method: 'POST',
         headers: {
@@ -177,7 +205,7 @@ export class MCPService {
       const data = await response.json();
       const content = data.content[0]?.type === 'text' ? data.content[0].text : '';
       
-      // Process the response with the parser if provided
+      // Elabora la risposta con il parser se fornito
       let parsedData = null;
       let parsingError = null;
       
@@ -197,13 +225,11 @@ export class MCPService {
         }
       }
       
-      // Calculate processing time
+      // Calcola il tempo di elaborazione
       const processingTime = Date.now() - startTime;
       
-      // Track completion
-      
-      
-      return {
+      // Prepara la risposta
+      const aiResponse: AIResponse<any> = {
         rawResponse: content,
         data: parsedData,
         error: parsingError?.message,
@@ -215,19 +241,35 @@ export class MCPService {
           totalTokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0)
         }
       };
+      
+      // Se storeResult è true, salva in cache
+      if (cacheParams.storeResult) {
+        await this.storeInCache(cacheKey, aiResponse, cacheParams.cacheTTL || 3600000);
+      }
+      
+      // Formato di risposta MCP
+      return {
+        cacheHit: false,
+        response: aiResponse,
+        savingsEstimate: {
+          tokens: 0,
+          cost: 0,
+          timeMs: 0
+        }
+      };
     } catch (error) {
-      // Handle retry logic
+      // Gestione dei tentativi
       if (retryCount < this.options.maxRetries) {
         console.log(`Retrying request (${retryCount + 1}/${this.options.maxRetries})...`);
         
-        // Exponential backoff
+        // Backoff esponenziale
         const delay = this.options.retryDelay * Math.pow(2, retryCount);
         await new Promise(resolve => setTimeout(resolve, delay));
         
         return this.executeRequest(request, retryCount + 1);
       }
       
-      // Track the error
+      // Traccia l'errore
       aiAnalytics.trackEvent({
         eventType: 'error',
         eventName: 'request_failed',
@@ -239,14 +281,77 @@ export class MCPService {
         }
       });
       
-      // Return error response
-      return {
+      // Risposta di errore
+      const errorResponse: AIResponse<any> = {
         rawResponse: null,
         data: null,
         error: error instanceof Error ? error.message : 'Unknown error',
         success: false
       };
+      
+      return {
+        cacheHit: false,
+        response: errorResponse,
+        savingsEstimate: {
+          tokens: 0,
+          cost: 0,
+          timeMs: 0
+        }
+      };
     }
+  }
+  /**
+   * Genera una chiave di cache basata sulla richiesta e la strategia
+   */
+  private generateCacheKey(request: AIRequest, strategy: string): string {
+    const { prompt, model, systemPrompt, temperature } = request;
+    
+    if (strategy === 'exact') {
+      // Per cache esatta, includi tutti i parametri
+      return `mcp:${model}:${temperature}:${systemPrompt}:${prompt}`;
+    } else {
+      // Per cache semantica, includi solo il modello e l'hash della richiesta
+      const requestHash = this.hashString(`${prompt}:${systemPrompt || ''}`);
+      return `mcp:semantic:${model}:${requestHash}`;
+    }
+  }
+  
+  /**
+   * Verifica se esiste un risultato in cache
+   */
+  private async checkCache(cacheKey: string, params: MCPRequestParams): Promise<AIResponse<any> | null> {
+    // Implementazione di base, in produzione usare una soluzione più sofisticata
+    return aiCache.get(cacheKey) as AIResponse<any> | null;
+  }
+  
+  /**
+   * Salva un risultato in cache
+   */
+  private async storeInCache(cacheKey: string, response: AIResponse<any>, ttl: number): Promise<void> {
+    await aiCache.set(cacheKey, response, ttl);
+  }
+  
+  /**
+   * Stima il costo in base ai token usati e al modello
+   */
+  private estimateCost(tokens: number, model?: string): number {
+    // Stima basica dei costi per token
+    // In una implementazione reale, usare tariffe aggiornate dei provider
+    const ratePerToken = model?.includes('sonnet') ? 0.000015 : 0.00001;
+    return tokens * ratePerToken;
+  }
+  
+  /**
+   * Funzione hash semplice per generare identificatori di stringhe
+   */
+  private hashString(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Converti in int a 32 bit
+    }
+    return hash.toString(16);
   }
 }
 

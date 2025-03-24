@@ -10,7 +10,7 @@ import {
   updateComponent, 
   deleteComponent,
   CreateComponentInput,
-  UpdateComponentInput
+  ComponentData,
 } from 'src/lib/api/components';
 import { useState } from 'react';
 import { Component } from '../types/mainTypes';
@@ -45,7 +45,7 @@ export function useComponents(filters?: {
   );
   
   // Create a new component
-  const addComponent = async (componentData: CreateComponentInput) => {
+  const addComponent = async (componentData: ComponentData) => {
     setIsCreating(true);
     setCreateError(null);
     try {
