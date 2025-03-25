@@ -137,6 +137,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({ isOpen, setIsOpen }) 
         icon: <Users size={20} />, 
         current: router.pathname.startsWith('/organizations')
       },
+      
       { 
         name: 'AI', 
         href: '/ai', 
@@ -162,6 +163,12 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({ isOpen, setIsOpen }) 
             current: router.pathname === '/analytics/history' 
           }
         ]
+      },
+      { 
+        name: 'Docs', 
+        href: 'https://docs.cadcamfun.xyz', 
+        icon: <BookOpen size={20} />, 
+        current: router.pathname.startsWith('https://docs.cadcamfun.xyz') 
       },
       {
         name: 'Settings',

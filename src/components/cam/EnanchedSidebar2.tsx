@@ -261,6 +261,12 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
         href: '/privacy', 
         icon: <BookOpen size={20} />, 
         current: router.pathname.startsWith('/privacy') 
+      },
+      { 
+        name: 'Docs', 
+        href: 'https://docs.cadcamfun.xyz', 
+        icon: <BookOpen size={20} />, 
+        current: router.pathname.startsWith('https://docs.cadcamfun.xyz') 
       }
     ];
   };
