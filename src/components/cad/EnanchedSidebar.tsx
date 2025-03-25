@@ -309,7 +309,6 @@ const renderSidebarContent = () => {
         {activeSidebarTab === 'machine' && (
           
            <>
-    <CAMWorkpieceSetup />
     <ToolBrowser/>
     <MaterialBrowser/>
     
