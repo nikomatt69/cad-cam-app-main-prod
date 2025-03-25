@@ -34,18 +34,16 @@ export default function PricingPlans() {
           </p>
         </div>
         
-        <div className="mt-12 space-y-12 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-x-8">
+        <div className="mt-12 space-y-12 lg:space-y-0 lg:grid lg:grid-cols-4 lg:gap-x-8">
           {/* Free plan */}
           <div className="relative p-8 bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col">
             <div className="flex-1">
-              <h3 className="text-xl font-semibold text-gray-900">Free</h3>
+              <h3 className="text-xl font-semibold text-gray-900">{PLAN_FEATURES[SUBSCRIPTION_PLANS.FREE].name}</h3>
               <p className="mt-4 flex items-baseline text-gray-900">
-                <span className="text-5xl font-extrabold tracking-tight">$0</span>
+                <span className="text-5xl font-extrabold tracking-tight">{PLAN_FEATURES[SUBSCRIPTION_PLANS.FREE].price}</span>
                 <span className="ml-1 text-xl font-semibold">/month</span>
               </p>
-              <p className="mt-6 text-gray-500">
-                Get started with basic CAD functionality for free
-              </p>
+              <p className="mt-6 text-gray-500">Get started with basic CAD functionality for free</p>
               
               <ul className="mt-6 space-y-4">
                 {PLAN_FEATURES[SUBSCRIPTION_PLANS.FREE].features.map((feature) => (
@@ -63,18 +61,25 @@ export default function PricingPlans() {
               disabled={currentPlan === SUBSCRIPTION_PLANS.FREE || isLoading}
               className={`mt-8 block w-full py-3 px-6 border border-transparent rounded-md shadow text-center text-white bg-gray-800 hover:bg-gray-900 ${(currentPlan === SUBSCRIPTION_PLANS.FREE || isLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {currentPlan === SUBSCRIPTION_PLANS.FREE ? 'Current Plan' : 'Downgrade'}
+              {currentPlan === SUBSCRIPTION_PLANS.FREE ? 'Current Plan' : 'Free Plan'}
             </button>
           </div>
           
           {/* Paid plans */}
           {planKeys.map((planKey) => {
             const planId = SUBSCRIPTION_PLANS[planKey as keyof typeof SUBSCRIPTION_PLANS];
-            const planFeatures = PLAN_FEATURES[planId as string];
+            const planFeatures = PLAN_FEATURES[planId];
             const isCurrentPlan = currentPlan === planId;
             
+            if (!planFeatures) return null;
+            
             return (
-              <div key={planKey} className={`relative p-8 bg-white border rounded-2xl shadow-sm flex flex-col ${isCurrentPlan ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-200'}`}>
+              <div 
+                key={planKey} 
+                className={`relative p-8 bg-white border rounded-2xl shadow-sm flex flex-col ${
+                  isCurrentPlan ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-200'
+                }`}
+              >
                 {isCurrentPlan && (
                   <div className="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 rounded-bl-2xl rounded-tr-2xl text-sm font-medium">
                     Current Plan
@@ -104,7 +109,7 @@ export default function PricingPlans() {
                 </div>
                 
                 <button
-                  onClick={() => handleSubscribe(planId as string)}
+                  onClick={() => handleSubscribe(planId)}
                   disabled={isCurrentPlan || isLoading}
                   className={`mt-8 block w-full py-3 px-6 border border-transparent rounded-md shadow text-center text-white 
                     ${planKey === 'BASIC' ? 'bg-blue-600 hover:bg-blue-700' : 

@@ -24,7 +24,207 @@
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
       Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
-
+  .fixed-cycle-editor {
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .fixed-cycle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+  }
+  
+  .fixed-cycle-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .fixed-cycle-gcode {
+    font-family: monospace;
+    background-color: #1e1e1e;
+    color: #dcdcdc;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .fixed-cycle-params {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  
+  .param-field {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .param-field label {
+    font-weight: 500;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .param-field .required {
+    color: #e53935;
+    margin-left: 4px;
+  }
+  
+  .param-input-group {
+    display: flex;
+    align-items: center;
+  }
+  
+  .param-input-group input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .param-input-group .unit {
+    margin-left: 8px;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .param-description {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+  }
+  
+  .fixed-cycle-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .apply-button {
+    background-color: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .apply-button:hover {
+    background-color: #1976d2;
+  }
+  
+  .apply-button:active {
+    background-color: #0d47a1;
+  }
+  
+  /* Stili per il pannello informativo dei cicli fissi */
+  .fixed-cycles-info-panel {
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .fixed-cycles-info-panel h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .cycles-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  
+  .cycle-item {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+  
+  .cycle-item:hover {
+    background-color: #f0f7ff;
+    border-color: #bbdefb;
+  }
+  
+  .cycle-position {
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  
+  .cycle-depth, .cycle-increment {
+    font-size: 13px;
+    color: #666;
+  }
+  
+  /* Stili per l'integrazione nel generatore di percorsi */
+  .toolpath-generator-integration {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  .fixed-cycles-actions {
+    margin-bottom: 16px;
+  }
+  
+  .fixed-cycles-actions h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .cycle-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .cycle-buttons button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .cycle-buttons button:hover {
+    background-color: #388e3c;
+  }
+  
+  .cycle-buttons button:disabled {
+    background-color: #a5d6a7;
+    cursor: not-allowed;
+  }
+  
+  .cycle-editor {
+    margin-top: 20px;
+  }
   body.cursor-default { cursor: default !important; }
 body.cursor-pointer { cursor: pointer !important; }
 body.cursor-move { cursor: move !important; }

@@ -13,7 +13,9 @@ import { materialProperties } from '@/src/lib/materialProperties';
 import { string } from 'zod';
 // Add the import at the top of the file
 import { generateComponentToolpath, generateElementToolpath } from 'src/lib/componentToolpathUtils';
-
+import { FixedCyclesUIRenderer, isFixedCycle } from 'src/components/cam/FixedCyclesUIRenderer';
+import ToolpathGeneratorIntegration from 'src/components/cam/ToolpathGeneratorIntegration';
+import { FixedCycleType } from './toolpathUtils/fixedCycles/fixedCyclesParser';
 interface ToolpathGeneratorProps {
   onGCodeGenerated: (gcode: string) => void;
   onToolSelected?: (tool: any) => void; // Added for tool selection
@@ -109,7 +111,8 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
     ai: false,
     printer: false,
     lathe: false,
-    origin: true  // Add this li
+    origin: true ,
+    fixedCycles: false,  // Nuova sezione
   });
   
   const [settings, setSettings] = useState<ToolpathSettings>({
@@ -172,14 +175,17 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
   const [polygonSides, setPolygonSides] = useState(6);
   const [polygonRadius, setPolygonRadius] = useState(30);
   const [customPath, setCustomPath] = useState('');
-  
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
-  
+  // Aggiungere tra gli altri stati nel componente ToolpathGenerator
+  const [currentGCode, setCurrentGCode] = useState<string>('');
+  const [detectedCycles, setDetectedCycles] = useState<any[]>([]);
+  const [selectedCycle, setSelectedCycle] = useState<any>(null);
   // References to selected CAD elements
   const { elements, selectedElement } = useElementsStore();
   const { workpiece } = useCADStore();
@@ -583,6 +589,21 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
       if (settings.useArcFitting) {
         gcode = convertLinesToArcs(gcode, settings.tolerance);
       }
+
+      // Impostare il G-code corrente per l'analisi dei cicli fissi
+      setCurrentGCode(gcode);
+    
+      // Analizzare il G-code per individuare cicli fissi
+      const lines = gcode.split('\n');
+      const cycles = lines
+        .filter(line => isFixedCycle(line))
+        .map(line => ({
+          gcode: line,
+          
+          // Altre proprietà recuperate dal parser...
+        }));
+      
+      setDetectedCycles(cycles);
       
       // Show success message
       setSuccess('G-code generated successfully!');
@@ -601,7 +622,25 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
       setIsGenerating(false); 
     } 
   };
-
+  const handleFixedCycleGCode = (newGCode: string) => {
+    // Aggiorna il G-code
+    setCurrentGCode(prevGCode => {
+      // Se il G-code precedente conteneva cicli fissi, sostituiscili
+      if (prevGCode.includes('G8')) {
+        const lines = prevGCode.split('\n');
+        const newLines = lines.filter(line => !isFixedCycle(line) && !line.includes('G80'));
+        return [...newLines, newGCode, 'G80 ; Cancel fixed cycle'].join('\n');
+      } else {
+        // Altrimenti, aggiungi i nuovi cicli fissi
+        return [prevGCode, newGCode, 'G80 ; Cancel fixed cycle'].join('\n');
+      }
+    });
+    
+    // Genera nuovamente il G-code completo e invialo al componente padre
+    if (onGCodeGenerated) {
+      onGCodeGenerated(currentGCode);
+    }
+  };
   const applyOriginOffset = (x: number, y: number, z: number = 0): { x: number, y: number, z: number } => {
     switch (settings.originType) {
       case 'workpiece-center':
@@ -5268,6 +5307,109 @@ function generateText3DToolpath(element: any, settings: any): string {
     );
   };
 
+
+  const renderFixedCyclesSection = () => {
+    return (
+      <div className="mb-6">
+        <div
+          className="flex items-center justify-between cursor-pointer"
+          onClick={() => toggleSection('fixedCycles')}
+        >
+          <h3 className="text-lg font-medium text-gray-900">Cicli Fissi</h3>
+          {expanded.fixedCycles ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </div>
+        
+        {expanded.fixedCycles && (
+          <div className="mt-3 space-y-4">
+            <ToolpathGeneratorIntegration
+              currentGCode={currentGCode}
+              onGCodeGenerated={handleFixedCycleGCode}
+              options={{
+                defaultCycleType: FixedCycleType.DRILLING,
+                includeFixedCycles: true,
+                showFixedCyclesPanel: true
+              }}
+            />
+            
+            {detectedCycles.length > 0 && (
+  <div className="mt-4 p-3 bg-blue-50 rounded-md">
+    <h4 className="text-sm font-medium text-blue-800 mb-2">
+      Cicli Fissi Rilevati ({detectedCycles.length})
+    </h4>
+    <div className="space-y-2">
+      {detectedCycles.map((cycle, index) => (
+        <div 
+          key={`cycle-${index}`}
+          className="p-2 bg-white rounded border border-blue-200 cursor-pointer hover:bg-blue-50"
+          onClick={() => setSelectedCycle(cycle)}
+        >
+          <div className="text-xs font-mono">{cycle.gcode}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+{selectedCycle && (
+  <div className="mt-4">
+    <h4 className="text-sm font-medium text-gray-800 mb-2">Modifica Ciclo Fisso</h4>
+    <FixedCyclesUIRenderer
+      gCodeLine={selectedCycle.gcode}
+      onParametersChange={(params) => {
+        console.log('Parametri aggiornati:', params);
+      }}
+      onApply={handleFixedCycleGCode}
+    />
+  </div>
+)}
+<div className="mb-4 flex justify-between">
+  <button
+    type="button"
+    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    onClick={() => {
+      // Crea un ciclo fisso di esempio basato sull'elemento selezionato
+      if (selectedElement) {
+        const x = selectedElement.x || 0;
+        const y = selectedElement.y || 0;
+        const z = -settings.depth;
+        const r = 2; // Piano di riferimento predefinito
+        
+        const newCycle = `G81 X${x.toFixed(3)} Y${y.toFixed(3)} Z${z.toFixed(3)} R${r.toFixed(3)} F${settings.feedrate} ; Drilling cycle`;
+        handleFixedCycleGCode(newCycle);
+      } else {
+        setError('Seleziona un elemento prima di creare un ciclo fisso');
+        setTimeout(() => setError(null), 3000);
+      }
+    }}
+  >
+    Crea Ciclo Fisso
+  </button>
+  
+  {detectedCycles.length > 0 && (
+    <button
+      type="button"
+      className="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+      onClick={() => {
+        // Rimuovi tutti i cicli fissi dal G-code
+        const lines = currentGCode.split('\n');
+        const newLines = lines.filter(line => !isFixedCycle(line) && !line.includes('G80'));
+        setCurrentGCode(newLines.join('\n'));
+        setDetectedCycles([]);
+        if (onGCodeGenerated) {
+          onGCodeGenerated(newLines.join('\n'));
+        }
+      }}
+    >
+      Rimuovi Tutti i Cicli
+    </button>
+  )}
+</div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Render cutting parameters section
   const renderCuttingSection = () => {
     // Calcola le statistiche di taglio e suggerimenti
@@ -5873,6 +6015,7 @@ function generateText3DToolpath(element: any, settings: any): string {
       {renderOriginSection()}
       {renderMachineSection()}
       {renderOperationSection()}
+      {renderFixedCyclesSection()}
       {renderMaterialSection()}
       {renderToolSection()}
       {renderLatheSection()}

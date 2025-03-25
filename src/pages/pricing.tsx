@@ -5,16 +5,22 @@ import { SubscriptionProvider } from 'src/contexts/SubscriptionContext';
 import PricingPlans from 'src/components/subscription/PricingPlans';
 import Navbar from 'src/components/layout/Navbar';
 import Footer from 'src/components/ui/Footer';
+import { useRouter } from 'next/router';
 
 export default function PricingPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter(); 
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  }
   
   return (
     <SubscriptionProvider>
       <div className="min-h-screen flex flex-col">
         <Head>
           <title>Pricing Plans | CAD/CAM FUN</title>
-          <meta name="description" content="Choose the right subscription plan for your CAD/CAM needs" />
+         
         </Head>
         
         <Navbar />

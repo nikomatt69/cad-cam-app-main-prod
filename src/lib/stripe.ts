@@ -1,19 +1,24 @@
 import Stripe from 'stripe';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { requireAuth } from './api/auth';
 
 export const config = {
   stripe: {
-    secretKey: process.env.STRIPE_SECRET_KEY,
-    basicPlanId: process.env.STRIPE_BASIC_PRICE_ID,
-    proPlanId: process.env.STRIPE_PRO_PRICE_ID,
-    enterprisePlanId: process.env.STRIPE_ENTERPRISE_PRICE_ID,
+    secretKey: requireEnvVar('STRIPE_SECRET_KEY'),
+    basicPlanId: requireEnvVar('STRIPE_BASIC_PRICE_ID'),
+    proPlanId: requireEnvVar('STRIPE_PRO_PRICE_ID'),
+    enterprisePlanId: requireEnvVar('STRIPE_ENTERPRISE_PRICE_ID'),
   }
 } as const;
 
+function requireEnvVar(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Required environment variable "${name}" is missing`);
+  }
+  return value;
+}
 
-
-const stripe = new Stripe(config.stripe.secretKey as string, {
+const stripe = new Stripe(config.stripe.secretKey, {
   apiVersion: '2025-02-24.acacia', // Use the latest API version
 });
 
@@ -44,7 +49,7 @@ export const PLAN_FEATURES = {
       maxStorage: 100, // MB
     }
   },
-  [SUBSCRIPTION_PLANS.BASIC as string]: {
+  [SUBSCRIPTION_PLANS.BASIC]: {
     name: 'Basic',
     price: '$0.00',
     features: [
@@ -60,7 +65,7 @@ export const PLAN_FEATURES = {
       maxStorage: 1024, // MB
     }
   },
-  [SUBSCRIPTION_PLANS.PRO as string]: {
+  [SUBSCRIPTION_PLANS.PRO]: {
     name: 'Professional',
     price: '$4.99',
     features: [

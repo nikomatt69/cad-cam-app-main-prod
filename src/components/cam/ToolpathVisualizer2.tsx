@@ -18,7 +18,9 @@ import {
 } from '@/src/components/cam/toolpathUtils/toolpathUtils';
 import { ViewCube as EnhancedViewCube } from '@/src/components/cam/toolpath-viewer/ViewCube';
 import { createToolFromLibrary, animateToolRotation, addCuttingGlow, applyRealisticMaterial } from '@/src/lib/toolVisualization';
-
+import { useFixedCyclesProcessor } from 'src/hooks/useFixedCyclesProcessor';
+import { FixedCycleType, FixedCycleParams } from 'src/components/cam/toolpathUtils/fixedCycles/fixedCyclesParser';
+import { FixedCycleInfoPanel } from 'src/components/cam/FixedCyclesUIRenderer';
 export interface ToolpathVisualizerProps {
   width: string;
   height: string;
@@ -208,7 +210,9 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const toolpathPointsRef = useRef<ToolpathPoint[]>([]);
   const animateToolRef = useRef<(() => void) | null>(null);
   const [internalSelectedTool, setInternalSelectedTool] = useState<string | null>(selectedTool);
-  
+  const [currentGCode, setCurrentGCode] = useState<string[]>([]);
+  const [showFixedCyclesInfo, setShowFixedCyclesInfo] = useState<boolean>(true);
+  const [selectedCycleIndex, setSelectedCycleIndex] = useState<number>(-1);
   // State for UI and visualization
   const [currentView, setCurrentView] = useState<string>('isometric');
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
@@ -227,7 +231,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<'info' | 'settings' | 'tools'>('info');
   const [highlightMode, setHighlightMode] = useState<'none' | 'rapid' | 'cut' | 'depth'>('none');
-
+  const [showCycleDetails, setShowCycleDetails] = useState<boolean>(false);
   const [currentLine, setCurrentLine] = useState(0);
   const [statistics, setStatistics] = useState<Statistics>({
     triangleCount: 0,
@@ -249,7 +253,173 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   // Use optimization hooks
   const sceneRefForHooks = sceneRef as React.RefObject<THREE.Scene>;
   const cameraRefForHooks = cameraRef as React.RefObject<THREE.Camera>;
+  const { 
+    processedToolpath, 
+    detectedCycles, 
+    isProcessing: isProcessingCycles 
+  } = useFixedCyclesProcessor({
+    gcode: currentGCode,
+    enabled: true, // Abilita sempre il riconoscimento dei cicli fissi
+    onToolpathUpdate: (toolpath) => {
+      // Opzionale: esegui azioni quando il toolpath viene aggiornato
+      console.log('Toolpath aggiornato con cicli fissi:', toolpath.length, 'punti');
+    }
+  });
+
+  useEffect(() => {
+  // Pulizia di oggetti esistenti
+  if (toolpathRef.current) {
+    while (toolpathRef.current.children.length > 0) {
+      toolpathRef.current.remove(toolpathRef.current.children[0]);
+    }
+  }
   
+  // Utilizza processedToolpath se disponibile, altrimenti utilizza il percorso originale
+  const pointsToRender = processedToolpath.length > 0 ? processedToolpath : toolpathPointsRef.current;
+  
+  if (pointsToRender.length > 0) {
+    let lastPoint = null;
+    
+    // Renderizza il percorso
+    for (let i = 0; i < pointsToRender.length; i++) {
+      const point = pointsToRender[i];
+      
+      if (lastPoint) {
+        // Scegli il colore in base al tipo di movimento
+        const color = point.type === 'rapid' ? 0xff0000 : 
+                     point.type === 'dwell' ? 0x0000ff :
+                     0x00ff00;
+        
+        // Crea una linea tra i punti
+        const material = new THREE.LineBasicMaterial({ color, linewidth: 2 });
+        const geometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(lastPoint.x, lastPoint.y, lastPoint.z),
+          new THREE.Vector3(point.x, point.y, point.z)
+        ]);
+        
+        const line = new THREE.Line(geometry, material);
+        toolpathRef.current?.add(line);
+        
+        // Per i punti di sosta (dwell), aggiungi un indicatore visivo
+        if (point.type === 'dwell') {
+          const sphereGeom = new THREE.SphereGeometry(0.5);
+          const sphereMat = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+          const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+          sphere.position.set(point.x, point.y, point.z);
+          toolpathRef.current?.add(sphere);
+        }
+      }
+      
+      lastPoint = point;
+    }
+  }
+  
+  // Aggiorna la scena
+  if (rendererRef.current && sceneRef.current && cameraRef.current) {
+    rendererRef.current.render(sceneRef.current, cameraRef .current);
+  }
+}, [processedToolpath]);
+
+
+const renderFixedCycleVisualization = (cycle: any) => {
+  if (!sceneRef.current || !cycle || !cycle.params) return;
+  
+  // Crea un nuovo gruppo per la visualizzazione
+  const cycleGroup = new THREE.Group();
+  cycleGroup.name = 'fixedCycleVisualization';
+  
+  // Ottieni i parametri del ciclo
+  const { x = 0, y = 0, z = 0, r = 0 } = cycle.params;
+  
+  // Aggiungi cerchio per indicare l'area del ciclo
+  const circleGeom = new THREE.CircleGeometry(5, 32);
+  const circleMat = new THREE.MeshBasicMaterial({ 
+    color: 0x4287f5,
+    opacity: 0.3,
+    transparent: true,
+    side: THREE.DoubleSide
+  });
+  const circle = new THREE.Mesh(circleGeom, circleMat);
+  circle.position.set(x, y, r);
+  circle.rotation.x = -Math.PI / 2; // Ruota per renderlo orizzontale
+  cycleGroup.add(circle);
+  
+  // Aggiungi linea verticale per indicare la profondità
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x4287f5 });
+  const lineGeom = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(x, y, r),
+    new THREE.Vector3(x, y, z)
+  ]);
+  const line = new THREE.Line(lineGeom, lineMat);
+  cycleGroup.add(line);
+  
+  // Aggiungi sfera alla profondità finale
+  const sphereGeom = new THREE.SphereGeometry(1);
+  const sphereMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+  sphere.position.set(x, y, z);
+  cycleGroup.add(sphere);
+  
+  // Aggiungi testo per il tipo di ciclo
+  // Nota: In Three.js, il testo richiede risorse aggiuntive, per semplicità
+  // qui usiamo solo geometrie primitive
+  
+  // Rimuovi visualizzazioni precedenti
+  const previousVis = sceneRef.current.getObjectByName('fixedCycleVisualization');
+  if (previousVis) sceneRef.current.remove(previousVis);
+  
+  // Aggiungi il nuovo gruppo alla scena
+  sceneRef.current.add(cycleGroup);
+  
+  // Aggiorna la visualizzazione
+  if (rendererRef.current && cameraRef.current) {
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+  }
+};
+
+useEffect(() => {
+  if (selectedCycleIndex >= 0 && detectedCycles[selectedCycleIndex]) {
+    renderFixedCycleVisualization(detectedCycles[selectedCycleIndex]);
+  } else {
+    // Rimuovi la visualizzazione se nessun ciclo è selezionato
+    if (sceneRef.current) {
+      const previousVis = sceneRef.current.getObjectByName('fixedCycleVisualization');
+      if (previousVis) sceneRef.current.remove(previousVis);
+      
+      if (rendererRef.current && cameraRef.current) {
+        rendererRef.current.render(sceneRef.current, cameraRef.current);
+      }
+    }
+  }
+}, [selectedCycleIndex, detectedCycles]);
+
+
+const focusCameraOnPosition = (position: {x: number, y: number, z: number}) => {
+  if (!cameraRef.current || !controlsRef.current) return;
+  
+  // In caso di OrbitControls o simili
+  if (controlsRef.current.target) {
+    // Imposta il target dei controlli
+    controlsRef.current.target.set(position.x, position.y, position.z);
+    
+    // Posiziona la camera a una distanza fissa dal punto
+    const cameraDistance = 50;
+    const cameraPosition = new THREE.Vector3(
+      position.x + cameraDistance,
+      position.y + cameraDistance,
+      position.z + cameraDistance
+    );
+    cameraRef.current.position.copy(cameraPosition);
+    
+    // Aggiorna i controlli
+    controlsRef.current.update();
+    
+    // Renderizza la scena aggiornata
+    if (rendererRef.current && sceneRef.current) {
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
+    }
+  }
+};
   const { optimizeScene, 
    
     memoryWarning,
@@ -268,6 +438,15 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
           // Libera memoria automaticamente
            // Più ampio del frustum normale per evitare popping
     });
+
+    useEffect(() => {
+      if (gcode) {
+        // Dividi il G-code in righe
+        const lines = gcode.split('\n').map(line => line.trim());
+        setCurrentGCode(lines);
+      }
+    }, [gcode]);
+    
   useEffect(() => {
     if (memoryWarning) {
       console.warn('Alta memoria utilizzata: considera di eseguire disposeUnusedResources()');
@@ -2590,6 +2769,40 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
               <Layers size={18} />
             </button>
             
+  <button 
+    className={`px-3 py-1 rounded text-sm ${
+      showFixedCyclesInfo ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'
+    }`}
+    onClick={() => setShowFixedCyclesInfo(!showFixedCyclesInfo)}
+    title={showFixedCyclesInfo ? 'Nascondi pannello cicli fissi' : 'Mostra pannello cicli fissi'}
+  >
+    Cicli Fissi
+  </button>
+  
+  <button 
+    className="px-3 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300"
+    onClick={() => {
+      // Resetta la selezione e la vista
+      setSelectedCycleIndex(-1);
+      
+      // Ripristina la vista della camera
+      if (controlsRef.current) {
+        controlsRef.current.reset();
+      }
+    }}
+    title="Reimposta vista"
+  >
+    Reset Vista
+  </button>
+  <button 
+  className="ml-2 px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
+  onClick={() => {
+    setSelectedCycleIndex(0);
+    setShowCycleDetails(true);
+  }}
+>
+  Dettagli
+</button>
             <div className="h-5 border-l border-gray-600 mx-1" />
             
             {/* Utility buttons */}
@@ -3102,7 +3315,66 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
               </div>
             </div>
           )}
-          
+          {showCycleDetails && selectedCycleIndex >= 0 && detectedCycles[selectedCycleIndex] && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-150">
+    <div className="bg-white rounded-lg p-6 max-w-md w-full">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-medium">Dettagli Ciclo Fisso</h3>
+        <button 
+          className="text-gray-500 hover:text-gray-800"
+          onClick={() => setShowCycleDetails(false)}
+        >
+          &times;
+        </button>
+      </div>
+      
+      <div className="space-y-3">
+        <div>
+          <span className="font-medium">Tipo:</span> {detectedCycles[selectedCycleIndex].type}
+        </div>
+        <div>
+          <span className="font-medium">G-code:</span> 
+          <pre className="mt-1 bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+            {detectedCycles[selectedCycleIndex].gCode}
+          </pre>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <span className="font-medium">Posizione X:</span> {detectedCycles[selectedCycleIndex].params.x}
+          </div>
+          <div>
+            <span className="font-medium">Posizione Y:</span> {detectedCycles[selectedCycleIndex].params.y}
+          </div>
+          <div>
+            <span className="font-medium">Profondità Z:</span> {detectedCycles[selectedCycleIndex].params.z}
+          </div>
+          <div>
+            <span className="font-medium">Piano R:</span> {detectedCycles[selectedCycleIndex].params.r}
+          </div>
+          {detectedCycles[selectedCycleIndex].params.q && (
+            <div>
+              <span className="font-medium">Incremento Q:</span> {detectedCycles[selectedCycleIndex].params.q}
+            </div>
+          )}
+          {detectedCycles[selectedCycleIndex].params.p && (
+            <div>
+              <span className="font-medium">Tempo P:</span> {detectedCycles[selectedCycleIndex].params.p}s
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="mt-6 flex justify-end">
+        <button 
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={() => setShowCycleDetails(false)}
+        >
+          Chiudi
+        </button>
+      </div>
+    </div>
+  </div>
+)}
           {/* Tools panel */}
           {activePanel === 'tools' && (
             <div className="space-y-3">
