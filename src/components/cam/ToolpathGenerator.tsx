@@ -5232,7 +5232,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                       }
                     })
                     .map((tool, idx) => (
-                      <option key={`predefined-${tool.name || `tool-${idx}`}`} value={tool.name}>
+                      <option key={`predefined-tool-${tool.name}-${idx}`} value={tool.name}>
                         {tool.name} - {tool.type} {tool.diameter}mm
                       </option>
                     ))}
@@ -5252,8 +5252,8 @@ function generateText3DToolpath(element: any, settings: any): string {
                           return true; // Show all for 3D printer
                         }
                       })
-                      .map((tool) => (
-                        <option key={`user-${tool.id}`} value={tool.id}>
+                      .map((tool, idx) => (
+                        <option key={`user-tool-${tool.id}-${idx}`} value={tool.id}>
                           {tool.name} - {tool.type} {tool.properties.diameter}mm
                         </option>
                       ))}
