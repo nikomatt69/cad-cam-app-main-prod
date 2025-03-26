@@ -263,7 +263,7 @@ const GCodeEditor: React.FC<GCodeEditorProps> = ({ height, value, onChange }) =>
         {/* Input Area */}
         <div className="lg:col-span-2">
           <div className="bg-gray-100 shadow-md rounded-md p-4 h-full flex flex-col">
-            <h2 className="text-lg font-medium text-gray-900 mb-3">Editor G-Code</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-3">G-Code Editor</h2>
             
             {/* Editor avanzato invece di textarea */}
             <div 
@@ -283,7 +283,7 @@ const GCodeEditor: React.FC<GCodeEditorProps> = ({ height, value, onChange }) =>
         {/* Visualization Area */}
         <div className="lg:col-span-1">
           <div className="bg-white shadow-md rounded-md p-4 h-full flex flex-col">
-            <h2 className="text-lg font-medium text-gray-900 mb-3">Anteprima Esecuzione</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-3">Execution Preview</h2>
             
             {lines.length > 0 ? (
               <>
@@ -352,7 +352,7 @@ const GCodeEditor: React.FC<GCodeEditorProps> = ({ height, value, onChange }) =>
                     </div>
                     
                     <div className="flex items-center">
-                      <span className="text-sm text-gray-700 mr-2">Velocità: {playSpeed}x</span>
+                      <span className="text-sm text-gray-700 mr-2">Speed: {playSpeed}x</span>
                       <button
                         onClick={decreaseSpeed}
                         className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 focus:outline-none"
@@ -380,8 +380,8 @@ const GCodeEditor: React.FC<GCodeEditorProps> = ({ height, value, onChange }) =>
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-full border border-gray-200 rounded-md">
-                <p className="text-gray-500 mb-4">Nessun G-Code caricato</p>
-                <p className="text-sm text-gray-400">Incolla il codice nell&apos;editor o importa un file</p>
+                <p className="text-gray-500 mb-4">No G-Code loaded</p>
+                <p className="text-sm text-gray-400">Paste the code in the editor or import a file</p>
               </div>
             )}
           </div>
@@ -411,46 +411,46 @@ const GCodeEditor: React.FC<GCodeEditorProps> = ({ height, value, onChange }) =>
       
       {/* Analisi del codice */}
       <div className="bg-white shadow-md rounded-md p-4 mt-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-3">Analisi G-Code</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-3">G-Code Analysis</h2>
         
         {lines.length > 0 ? (
           <>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="p-3 bg-gray-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">Totale Linee</p>
+                <p className="text-sm font-medium text-gray-700">Total Lines</p>
                 <p className="text-2xl font-bold text-blue-600">{lines.length}</p>
               </div>
               
               <div className="p-3 bg-blue-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">Movimenti Rapidi</p>
+                <p className="text-sm font-medium text-gray-700">Rapid Moves</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {rapidMoves}
                 </p>
               </div>
               
               <div className="p-3 bg-green-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">Movimenti Lineari</p>
+                <p className="text-sm font-medium text-gray-700">Linear Moves</p>
                 <p className="text-2xl font-bold text-green-600">
                   {linearMoves}
                 </p>
               </div>
               
               <div className="p-3 bg-purple-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">Movimenti Circolari</p>
+                <p className="text-sm font-medium text-gray-700">Circular Moves</p>
                 <p className="text-2xl font-bold text-purple-600">
                   {circularMoves}
                 </p>
               </div>
               
               <div className="p-3 bg-yellow-50 rounded-md lg:col-span-2">
-                <p className="text-sm font-medium text-gray-700">Funzioni Macchina</p>
+                <p className="text-sm font-medium text-gray-700">Machine Functions</p>
                 <p className="text-2xl font-bold text-yellow-600">
                   {machineFunctions}
                 </p>
               </div>
               
               <div className="p-3 bg-gray-50 rounded-md lg:col-span-2">
-                <p className="text-sm font-medium text-gray-700">Tempo Stimato</p>
+                <p className="text-sm font-medium text-gray-700">Estimated Time</p>
                 <p className="text-2xl font-bold text-green-600">
                   {(lines.length / playSpeed / 60).toFixed(2)} min
                 </p>
@@ -458,23 +458,23 @@ const GCodeEditor: React.FC<GCodeEditorProps> = ({ height, value, onChange }) =>
             </div>
             
             <div className="mt-4 p-3 bg-gray-50 rounded-md">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Legenda Comandi</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Command Legend</h3>
               <div className="flex flex-wrap gap-4">
                 <div className="flex items-center">
                   <div className="w-4 h-4 bg-blue-100 mr-1 border border-blue-200"></div>
-                  <span className="text-xs">G0/G00 - Movimento Rapido</span>
+                  <span className="text-xs">G0/G00 - Rapid Move</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-4 h-4 bg-green-100 mr-1 border border-green-200"></div>
-                  <span className="text-xs">G1/G01 - Movimento Lineare</span>
+                  <span className="text-xs">G1/G01 - Linear Move</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-4 h-4 bg-purple-100 mr-1 border border-purple-200"></div>
-                  <span className="text-xs">G2/G3 - Movimento Circolare</span>
+                  <span className="text-xs">G2/G3 - Circular Move</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-4 h-4 bg-yellow-100 mr-1 border border-yellow-200"></div>
-                  <span className="text-xs">Comandi M - Funzioni Macchina</span>
+                  <span className="text-xs">M Commands - Machine Functions</span>
                 </div>
               </div>
             </div>
@@ -483,39 +483,39 @@ const GCodeEditor: React.FC<GCodeEditorProps> = ({ height, value, onChange }) =>
               <div className="flex flex-wrap gap-2">
                 {value.includes('T') && (
                   <div className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">
-                    Cambio Utensile
+                    Tool Change
                   </div>
                 )}
                 {value.includes('S') && (
                   <div className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs">
-                    Controllo Velocità
+                    Speed Control
                   </div>
                 )}
                 {value.includes('F') && (
                   <div className="px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs">
-                    Controllo Avanzamento
+                    Feed Control
                   </div>
                 )}
                 {(value.includes('M3') || value.includes('M03')) && (
                   <div className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-md text-xs">
-                    Rotazione Mandrino
+                    Spindle Rotation
                   </div>
                 )}
                 {(value.includes('M8') || value.includes('M08')) && (
                   <div className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">
-                    Refrigerante
+                    Coolant
                   </div>
                 )}
                 {isFanucGCode && (
                   <div className="px-2 py-1 bg-orange-100 text-orange-800 rounded-md text-xs">
-                    Codice Fanuc
+                    Fanuc Code
                   </div>
                 )}
               </div>
             </div>
           </>
         ) : (
-          <p className="text-gray-500 text-center py-4">Carica G-Code per vedere l&apos;analisi</p>
+            <p className="text-gray-500 text-center py-4">Load G-Code to see the analysis</p>
         )}
       </div>
       

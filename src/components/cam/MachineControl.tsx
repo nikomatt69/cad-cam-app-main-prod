@@ -1,4 +1,4 @@
-// src/components/cam/MachineControl.tsx
+// Src/Components/Cam/Machine Control.tsx
 import React, { useState } from 'react';
 import { 
   Power, Home, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, 
@@ -30,14 +30,14 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
     setIsConnected(true);
     setMachineStatus('idle');
     
-    // Simulate initial machine data
+    // Simulated initial machine date
     setPosition({ x: 0, y: 0, z: 10 });
     setSpindleSpeed(0);
     
     if (gcode) {
-      // Stima il tempo approssimativo basato sul numero di linee
+      // Estimates the approximate time based on the number of lines
       const lineCount = gcode.split('\n').filter(line => line.trim()).length;
-      setEstimatedTime(Math.round(lineCount * 0.5)); // Stima rozza: 0.5 secondi per linea
+      setEstimatedTime(Math.round(lineCount * 0.5)); // Rozza estimate: 0.5 seconds per line
     }
   };
   
@@ -63,7 +63,7 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
     }
   };
   
-  // Simulated jog movement
+  // Simulated jog moovement
   const jogAxis = (axis: 'x' | 'y' | 'z', direction: 1 | -1, distance: number = 1) => {
     if (!isConnected || machineStatus !== 'idle') return;
     
@@ -99,7 +99,7 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
     }, 1000);
   };
   
-  // Simulated program pause
+  // Simulated program pauses
   const pauseProgram = () => {
     if (!isConnected || machineStatus !== 'running') return;
     
@@ -160,18 +160,18 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
   // Get status text
   const getStatusText = () => {
     switch (machineStatus) {
-      case 'disconnected': return 'Disconnesso';
-      case 'idle': return 'Pronto';
-      case 'running': return 'In Esecuzione';
-      case 'paused': return 'In Pausa';
-      case 'error': return 'Errore';
+      case 'disconnected': return 'Disconnected';
+      case 'idle': return 'Ready';
+      case 'running': return 'Running';
+      case 'paused': return 'Paused';
+      case 'error': return 'Error';
       default: return 'Sconosciuto';
     }
   };
   
   return (
     <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white p-4 rounded-md shadow-md">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Controllo Macchina</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">Machine control </h2>
       
       {/* Connection status and controls */}
       <div className="mb-6">
@@ -203,7 +203,7 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
         {!isConnected && (
           <div className="p-3 bg-blue-50 rounded-md">
             <p className="text-sm text-blue-800">
-              Connetti la macchina per iniziare ad inviare comandi e monitorare lo stato.
+              Connect the machine to start sending controls and monitor the state.
             </p>
           </div>
         )}
@@ -213,7 +213,7 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
         <>
           {/* Position display */}
           <div className="mb-6">
-            <h3 className="text-md font-medium text-gray-800 mb-2">Posizione Attuale</h3>
+            <h3 className="text-md font-medium text-gray-800 mb-2">Current Position</h3>
             <div className="grid grid-cols-3 gap-2 mb-4">
               <div className="p-2 bg-gray-100 rounded-md text-center">
                 <span className="text-sm text-gray-600">X</span>
@@ -249,7 +249,7 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
             
             {/* Jog controls */}
             <div className="mb-2">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Movimento Manuale</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Manual Movement</h4>
               <div className="grid grid-cols-3 gap-2">
                 <div></div>
                 <button
@@ -333,9 +333,9 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
             </div>
           </div>
           
-          {/* Program execution controls */}
+          {/* Program Execution Controls */}
           <div className="mb-6">
-            <h3 className="text-md font-medium text-gray-800 mb-2">Controllo Programma</h3>
+            <h3 className="text-md font-medium text-gray-800 mb-2">Program Control</h3>
             
             <div className="flex space-x-2 mb-4">
               {machineStatus === 'idle' && (
@@ -383,7 +383,7 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
             {!gcode && machineStatus === 'idle' && (
               <div className="p-3 bg-yellow-50 rounded-md mb-4">
                 <p className="text-sm text-yellow-800">
-                  Nessun G-Code disponibile. Genera un percorso utensile o carica un file.
+                  No G-Code available. Generate a toolpath or load a file.
                 </p>
               </div>
             )}
@@ -392,7 +392,7 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
               <>
                 <div className="mb-2">
                   <div className="flex justify-between text-sm text-gray-600 mb-1">
-                    <span>Progresso:</span>
+                    <span>Progress:</span>
                     <span>{progress}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -405,11 +405,11 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
                 
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="p-2 bg-gray-100 rounded-md">
-                    <span className="text-gray-600">Tempo Trascorso:</span>
+                    <span className="text-gray-600">Elapsed Time:</span>
                     <div className="font-medium">{formatTime(elapsedTime)}</div>
                   </div>
                   <div className="p-2 bg-gray-100 rounded-md">
-                    <span className="text-gray-600">Tempo Stimato:</span>
+                    <span className="text-gray-600">Estimated Time:</span>
                     <div className="font-medium">{formatTime(estimatedTime)}</div>
                   </div>
                 </div>
@@ -419,12 +419,12 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
           
           {/* Feed rate and spindle control */}
           <div className="mb-6">
-            <h3 className="text-md font-medium text-gray-800 mb-2">Controllo Parametri</h3>
+            <h3 className="text-md font-medium text-gray-800 mb-2">Parameters Control</h3>
             
             <div className="space-y-4">
               <div>
                 <label htmlFor="feedRate" className="block text-sm font-medium text-gray-700 mb-1">
-                  Velocità di Avanzamento: {feedRate}%
+                  Feed Rate: {feedRate}%
                 </label>
                 <input
                   type="range"
@@ -445,11 +445,11 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label htmlFor="spindleSpeed" className="block text-sm font-medium text-gray-700">
-                    Velocità Mandrino: {spindleSpeed} RPM
+                    Spindle Speed: {spindleSpeed} RPM
                   </label>
                   <div className="flex items-center">
                     <div className={`h-3 w-3 rounded-full mr-1 ${spindleSpeed > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <span className="text-xs text-gray-500">{spindleSpeed > 0 ? 'Attivo' : 'Fermo'}</span>
+                    <span className="text-xs text-gray-500">{spindleSpeed > 0 ? 'Active' : 'Inactive'}</span>
                   </div>
                 </div>
                 <input
@@ -471,7 +471,7 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
             </div>
           </div>
           
-          {/* Advanced settings toggle */}
+          {/* Advanced Settings Toggle */}
           <div>
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
@@ -496,34 +496,34 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
                   <div className="p-2 bg-gray-100 rounded-md">
                     <div className="flex items-center">
                       <Thermometer size={16} className="mr-1 text-gray-600" />
-                      <span className="text-xs text-gray-600">Temperatura:</span>
+                      <span className="text-xs text-gray-600">Temperature:</span>
                     </div>
                     <div className="font-medium text-sm">35°C</div>
                   </div>
                   <div className="p-2 bg-gray-100 rounded-md">
                     <div className="flex items-center">
                       <CheckCircle size={16} className="mr-1 text-green-600" />
-                      <span className="text-xs text-gray-600">Stato Limite:</span>
+                      <span className="text-xs text-gray-600">Limit State:</span>
                     </div>
-                    <div className="font-medium text-sm">Tutti OK</div>
+                    <div className="font-medium text-sm">All OK</div>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-3 gap-2">
                   <button className="p-2 bg-gray-100 rounded-md text-sm text-gray-800 hover:bg-gray-200">
-                    Sblocca Allarmi
+                    Unlock Alerts
                   </button>
                   <button className="p-2 bg-gray-100 rounded-md text-sm text-gray-800 hover:bg-gray-200">
-                    Verifica Posizione
+                    Check Position
                   </button>
                   <button className="p-2 bg-gray-100 rounded-md text-sm text-gray-800 hover:bg-gray-200">
-                    Salva Stato
+                    Save State
                   </button>
                 </div>
                 
                 <div className="p-3 bg-gray-50 rounded-md">
                   <p className="text-xs text-gray-600">
-                    Buffer di comunicazione: <span className="font-mono">32/128</span>
+                    Communication Buffer: <span className="font-mono">32/128</span>
                   </p>
                 </div>
               </div>

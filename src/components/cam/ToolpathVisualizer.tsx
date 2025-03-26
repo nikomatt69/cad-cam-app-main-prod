@@ -934,7 +934,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
             <div className="text-center p-6 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-lg shadow-md">
               <h3 className="text-lg font-medium text-gray-900 mb-2">Nessun G-Code caricato</h3>
               <p className="text-gray-600">
-                Importa un file G-Code o generane uno con il generatore di percorsi per visualizzare qui.
+                Importa un file G-Code o generane uno con il generatore di percorsi per visualizzare qui. 
               </p>
             </div>
           </div>

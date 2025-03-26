@@ -54,13 +54,13 @@ const SettingsPanel: React.FC = () => {
       <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-sm rounded-md overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 flex items-center">
           <Settings size={18} className="text-blue-600 mr-2" />
-          <span className="font-medium text-gray-700">Impostazioni Generali</span>
+          <span className="font-medium text-gray-700">General Settings</span>
         </div>
         
         <div className="p-4 space-y-4">
           {/* Modalità di visualizzazione */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Modalità Visualizzazione</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">View Mode</label>
             <div className="flex space-x-2">
               <button
                 onClick={() => setViewMode('2d')}
@@ -87,15 +87,15 @@ const SettingsPanel: React.FC = () => {
           
           {/* Unità di misura */}
           <div>
-            <label htmlFor="units" className="block text-sm font-medium text-gray-700 mb-1">Unità di Misura</label>
+            <label htmlFor="units" className="block text-sm font-medium text-gray-700 mb-1">Units</label>
             <select
               id="units"
               value={units}
               onChange={handleUnitChange}
               className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             >
-              <option value="mm">Millimetri (mm)</option>
-              <option value="inch">Pollici (inch)</option>
+              <option value="mm">Millimeters (mm)</option>
+              <option value="inch">Inches (inch)</option>
             </select>
           </div>
           
@@ -107,13 +107,13 @@ const SettingsPanel: React.FC = () => {
       <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-sm rounded-md overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 flex items-center">
           <Grid size={18} className="text-blue-600 mr-2" />
-          <span className="font-medium text-gray-700">Impostazioni Griglia</span>
+          <span className="font-medium text-gray-700">Grid Settings</span>
         </div>
         
         <div className="p-4 space-y-4">
           {/* Visibilità griglia */}
           <div className="flex items-center justify-between">
-            <label htmlFor="gridVisible" className="text-sm font-medium text-gray-700">Mostra Griglia</label>
+            <label htmlFor="gridVisible" className="text-sm font-medium text-gray-700">Show Grid</label>
             <div className="relative inline-block w-10 mr-2 align-middle select-none">
               <input
                 type="checkbox"
@@ -136,7 +136,7 @@ const SettingsPanel: React.FC = () => {
           
           {/* Snap to grid */}
           <div className="flex items-center justify-between">
-            <label htmlFor="snapToGrid" className="text-sm font-medium text-gray-700">Snap alla Griglia</label>
+            <label htmlFor="snapToGrid" className="text-sm font-medium text-gray-700">Snap to Grid</label>
             <div className="relative inline-block w-10 mr-2 align-middle select-none">
               <input
                 type="checkbox"
@@ -156,7 +156,7 @@ const SettingsPanel: React.FC = () => {
           
           {/* Snap to objects */}
           <div className="flex items-center justify-between">
-            <label htmlFor="snapToObjects" className="text-sm font-medium text-gray-700">Snap agli Oggetti</label>
+            <label htmlFor="snapToObjects" className="text-sm font-medium text-gray-700">Snap to Objects</label>
             <div className="relative inline-block w-10 mr-2 align-middle select-none">
               <input
                 type="checkbox"
@@ -180,13 +180,13 @@ const SettingsPanel: React.FC = () => {
       <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-sm rounded-md overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 flex items-center">
           <Compass size={18} className="text-blue-600 mr-2" />
-          <span className="font-medium text-gray-700">Impostazioni Assi</span>
+          <span className="font-medium text-gray-700">Axis Settings</span>
         </div>
         
         <div className="p-4 space-y-4">
           {/* Visibilità assi */}
           <div className="flex items-center justify-between">
-            <label htmlFor="axisVisible" className="text-sm font-medium text-gray-700">Mostra Assi</label>
+            <label htmlFor="axisVisible" className="text-sm font-medium text-gray-700">Show Axes</label>
             <div className="relative inline-block w-10 mr-2 align-middle select-none">
               <input
                 type="checkbox"
@@ -210,13 +210,13 @@ const SettingsPanel: React.FC = () => {
       <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-sm rounded-md overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 flex items-center">
           <Info size={18} className="text-blue-600 mr-2" />
-          <span className="font-medium text-gray-700">Altre Impostazioni</span>
+          <span className="font-medium text-gray-700">Other Settings</span>
         </div>
         
         <div className="p-4 space-y-4">
           {/* Autosalvataggio */}
           <div className="flex items-center justify-between">
-            <label htmlFor="autoSave" className="text-sm font-medium text-gray-700">Autosalvataggio</label>
+            <label htmlFor="autoSave" className="text-sm font-medium text-gray-700">Auto Save</label>
             <div className="relative inline-block w-10 mr-2 align-middle select-none">
               <input
                 type="checkbox"
@@ -238,7 +238,7 @@ const SettingsPanel: React.FC = () => {
           {autoSave && (
             <div>
               <label htmlFor="autoSaveInterval" className="block text-sm font-medium text-gray-700 mb-1">
-                Intervallo Autosalvataggio (minuti)
+                Auto Save Interval (minutes)
               </label>
               <input
                 type="number"

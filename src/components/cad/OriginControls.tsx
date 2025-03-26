@@ -5,11 +5,11 @@ const OriginControls: React.FC = () => {
     
     return (
       <div className="mt-4 p-4 bg-gray-50 rounded-md">
-        <h3 className="text-sm font-medium text-gray-700 mb-2">Posizione Origine</h3>
+        <h3 className="text-sm font-medium text-gray-700 mb-2">Origin Position</h3>
         
         <div className="grid grid-cols-3 gap-2 mb-3">
           <div>
-            <label className="block text-xs text-gray-500">X</label>
+              <label className="block text-xs text-gray-500">X</label>
             <input
               type="number"
               value={originOffset.x}
@@ -47,31 +47,31 @@ const OriginControls: React.FC = () => {
         </div>
         
         <div className="mb-2">
-          <h4 className="text-xs font-medium text-gray-700 mb-1">Preset Origine</h4>
+          <h4 className="text-xs font-medium text-gray-700 mb-1">Origin Preset</h4>
           <div className="grid grid-cols-3 gap-1">
             <button
               onClick={() => setOriginPreset('center')}
               className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
             >
-              Centro
+              Center
             </button>
             <button
               onClick={() => setOriginPreset('bottomLeft')}
               className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
             >
-              In Basso Sx
+              Bottom Left
             </button>
             <button
               onClick={() => setOriginPreset('topRight')}
               className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
             >
-              In Alto Dx
+              Top Right
             </button>
             <button
               onClick={() => setOriginPreset('topLeft')}
               className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
             >
-              In Alto Sx
+              Top Left
             </button>
           </div>
         </div>
@@ -81,7 +81,7 @@ const OriginControls: React.FC = () => {
           onClick={resetOrigin}
           className="w-full px-3 py-1 mt-2 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
         >
-          Reimposta Origine (0,0,0)
+          Reset Origin (0,0,0)
         </button>
       </div>
     );

@@ -819,7 +819,7 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
     } else {
       // Usa il toolpath normalmente
       gcode += toolpathGcode;
-    }
+    } 
     
     // Finishing pass if enabled
     if (settings.finishingPass) {
@@ -3758,7 +3758,7 @@ function generateText3DToolpath(element: any, settings: any): string {
           className="flex items-center justify-between cursor-pointer"
           onClick={() => toggleSection('operation')}
         >
-          <h3 className="text-lg font-medium text-gray-900">Opertion</h3>
+          <h3 className="text-lg font-medium text-gray-900">Operation</h3>
           {expanded.operation ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
         
@@ -3774,13 +3774,13 @@ function generateText3DToolpath(element: any, settings: any): string {
                   value={settings.operationType}
                   onChange={(e) => updateSettings('operationType', e.target.value)}
                 >
-                  <option value="contour">Contornatura</option>
-                  <option value="pocket">Svuotamento Tasca</option>
-                  <option value="drill">Foratura</option>
-                  <option value="engrave">Incisione</option>
-                  <option value="profile">Profilo 3D</option>
-                  <option value="threading">Filettatura</option>
-                  <option value="3d_surface">Superficie 3D</option>
+                  <option value="contour">Contouring</option>
+                  <option value="pocket">Pocket Clearing</option>
+                  <option value="drill">Drilling</option>
+                  <option value="engrave">Engraving</option>
+                  <option value="profile">3D Profile</option>
+                  <option value="threading">Threading</option>
+                  <option value="3d_surface">3D Surface</option>
                 </select>
               )}
               
@@ -3790,13 +3790,13 @@ function generateText3DToolpath(element: any, settings: any): string {
                   value={settings.operationType}
                   onChange={(e) => updateSettings('operationType', e.target.value)}
                 >
-                  <option value="turning">Tornitura</option>
-                  <option value="facing">Sfacciatura</option>
-                  <option value="boring">Alesatura</option>
-                  <option value="threading">Filettatura</option>
-                  <option value="grooving">Scanalatura</option>
-                  <option value="parting">Troncatura</option>
-                  <option value="knurling">Zigrinatura</option>
+                  <option value="turning">Turning</option>
+                  <option value="facing">Facing</option>
+                  <option value="boring">Boring</option>
+                  <option value="threading">Threading</option>
+                  <option value="grooving">Grooving</option>
+                  <option value="parting">Parting</option>
+                  <option value="knurling">Knurling</option>
                 </select>
               )}
               
@@ -3806,12 +3806,12 @@ function generateText3DToolpath(element: any, settings: any): string {
                   value={settings.operationType}
                   onChange={(e) => updateSettings('operationType', e.target.value)}
                 >
-                  <option value="standard">Stampa Standard</option>
-                  <option value="vase">Vaso (Spirale)</option>
-                  <option value="support">Strutture di Supporto</option>
-                  <option value="infill">Riempimento</option>
-                  <option value="raft">Base Raft</option>
-                  <option value="brim">Bordo (Brim)</option>
+                  <option value="standard">Standard Print</option>
+                  <option value="vase">Vase Mode (Spiral)</option>
+                  <option value="support">Support Structures</option>
+                  <option value="infill">Infill</option>
+                  <option value="raft">Raft Base</option>
+                  <option value="brim">Brim</option>
                 </select>
               )}
             </div>
@@ -3828,7 +3828,7 @@ function generateText3DToolpath(element: any, settings: any): string {
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo di Geometria
+                    Geometry Type
                   </label>
                   <select
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -3881,10 +3881,10 @@ function generateText3DToolpath(element: any, settings: any): string {
                       }
                     }}
                   >
-                    <option value="rectangle">Rettangolo</option>
-                    <option value="circle">Cerchio</option>
-                    <option value="polygon">Poligono</option>
-                    <option value="selected">Da elemento selezionato</option>
+                    <option value="rectangle">Rectangle</option>
+                    <option value="circle">Circle</option>
+                    <option value="polygon">Polygon</option>
+                    <option value="selected">From Selected Element</option>
                     <option value="custom">Custom</option>
                   </select>
                 </div>
@@ -3895,40 +3895,40 @@ function generateText3DToolpath(element: any, settings: any): string {
                     {selectedElement ? (
                       <div>
                         <p className="text-sm text-green-700 font-medium mb-2">
-                          Elemento selezionato: {selectedElement.type} (ID: {selectedElement.id.substring(0, 6)}...)
+                          Selected Element: {selectedElement.type} (ID: {selectedElement.id.substring(0, 6)}...)
                         </p>
                         
                         {/* Display element dimensions based on type */}
                         <div className="mt-2 border-t border-green-200 pt-2">
-                          <p className="text-sm font-medium text-gray-700 mb-1">Quote dell elemento:</p>
+                          <p className="text-sm font-medium text-gray-700 mb-1">Element Dimensions:</p>
                           
                           {selectedElement.type === 'rectangle' && (
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Larghezza:</span>
+                                <span className="text-gray-600">Width:</span>
                                 <span className="font-medium">{selectedElement.width} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Altezza:</span>
+                                <span className="text-gray-600">Height:</span>
                                 <span className="font-medium">{selectedElement.height} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Posizione X:</span>
+                                <span className="text-gray-600">Position X:</span>
                                 <span className="font-medium">{selectedElement.x} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Posizione Y:</span>
+                                <span className="text-gray-600">Position Y:</span>
                                 <span className="font-medium">{selectedElement.y} mm</span>
                               </div>
                               {selectedElement.z !== undefined && (
                                 <div className="flex justify-between">
-                                  <span className="text-gray-600">Posizione Z:</span>
+                                  <span className="text-gray-600">Position Z:</span>
                                   <span className="font-medium">{selectedElement.z} mm</span>
                                 </div>
                               )}
                               {/* Aggiungiamo il campo per lo spessore di lavorazione */}
                               <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
-                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="text-gray-600 font-medium">Machining Depth:</span>
                                 <span className="font-medium text-blue-600">{settings.depth} mm</span>
                               </div>
                             </div>
@@ -3937,30 +3937,30 @@ function generateText3DToolpath(element: any, settings: any): string {
                           {selectedElement.type === 'circle' && (
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Raggio:</span>
+                                <span className="text-gray-600">Radius:</span>
                                 <span className="font-medium">{selectedElement.radius} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Diametro:</span>
+                                <span className="text-gray-600">Diameter:</span>
                                 <span className="font-medium">{selectedElement.radius * 2} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro X:</span>
+                                <span className="text-gray-600">Center X:</span>
                                 <span className="font-medium">{selectedElement.x} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro Y:</span>
+                                <span className="text-gray-600">Center Y:</span>
                                 <span className="font-medium">{selectedElement.y} mm</span>
                               </div>
                               {selectedElement.z !== undefined && (
                                 <div className="flex justify-between">
-                                  <span className="text-gray-600">Centro Z:</span>
+                                  <span className="text-gray-600">Center Z:</span>
                                   <span className="font-medium">{selectedElement.z} mm</span>
                                 </div>
                               )}
                               {/* Aggiungiamo il campo per lo spessore di lavorazione */}
                               <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
-                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="text-gray-600 font-medium">Machining Depth:</span>
                                 <span className="font-medium text-blue-600">{settings.depth} mm</span>
                               </div>
                             </div>
@@ -3969,23 +3969,23 @@ function generateText3DToolpath(element: any, settings: any): string {
                           {selectedElement.type === 'line' && (
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Punto 1 X:</span>
+                                <span className="text-gray-600">Point 1 X:</span>
                                 <span className="font-medium">{selectedElement.x1} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Punto 1 Y:</span>
+                                <span className="text-gray-600">Point 1 Y:</span>
                                 <span className="font-medium">{selectedElement.y1} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Punto 2 X:</span>
+                                <span className="text-gray-600">Point 2 X:</span>
                                 <span className="font-medium">{selectedElement.x2} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Punto 2 Y:</span>
+                                <span className="text-gray-600">Point 2 Y:</span>
                                 <span className="font-medium">{selectedElement.y2} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Lunghezza:</span>
+                                <span className="text-gray-600">Length:</span>
                                 <span className="font-medium">
                                   {Math.sqrt(
                                     Math.pow(selectedElement.x2 - selectedElement.x1, 2) + 
@@ -3995,7 +3995,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                               </div>
                               {/* Aggiungiamo il campo per lo spessore di lavorazione */}
                               <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
-                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="text-gray-600 font-medium">Machining Depth:</span>
                                 <span className="font-medium text-blue-600">{settings.depth} mm</span>
                               </div>
                             </div>
@@ -4004,24 +4004,24 @@ function generateText3DToolpath(element: any, settings: any): string {
                           {selectedElement.type === 'polygon' && (
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Lati:</span>
+                                <span className="text-gray-600">Sides:</span>
                                 <span className="font-medium">{selectedElement.sides || 'N/A'}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Raggio:</span>
+                                <span className="text-gray-600">Radius:</span>
                                 <span className="font-medium">{selectedElement.radius || 'N/A'} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro X:</span>
+                                <span className="text-gray-600">Center X:</span>
                                 <span className="font-medium">{selectedElement.x} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro Y:</span>
+                                <span className="text-gray-600">Center Y:</span>
                                 <span className="font-medium">{selectedElement.y} mm</span>
                               </div>
                               {/* Aggiungiamo il campo per lo spessore di lavorazione */}
                               <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
-                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="text-gray-600 font-medium">Machining Depth:</span>
                                 <span className="font-medium text-blue-600">{settings.depth} mm</span>
                               </div>
                             </div>
@@ -4030,32 +4030,32 @@ function generateText3DToolpath(element: any, settings: any): string {
                           {selectedElement.type === 'cube' && (
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Larghezza:</span>
+                                <span className="text-gray-600">Width:</span>
                                 <span className="font-medium">{selectedElement.width} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Altezza:</span>
+                                <span className="text-gray-600">Height:</span>
                                 <span className="font-medium">{selectedElement.height} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Profondità:</span>
+                                <span className="text-gray-600">Depth:</span>
                                 <span className="font-medium">{selectedElement.depth} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro X:</span>
+                                <span className="text-gray-600">Center X:</span>
                                 <span className="font-medium">{selectedElement.x} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro Y:</span>
+                                <span className="text-gray-600">Center Y:</span>
                                 <span className="font-medium">{selectedElement.y} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro Z:</span>
+                                <span className="text-gray-600">Center Z:</span>
                                 <span className="font-medium">{selectedElement.z} mm</span>
                               </div>
                               {/* Aggiungiamo il campo per lo spessore di lavorazione evidenziando che corrisponde alla profondità */}
                               <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
-                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="text-gray-600 font-medium">Machining Depth:</span>
                                 <span className="font-medium text-blue-600">{settings.depth} mm</span>
                               </div>
                             </div>
@@ -4064,28 +4064,28 @@ function generateText3DToolpath(element: any, settings: any): string {
                           {selectedElement.type === 'sphere' && (
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Raggio:</span>
+                                <span className="text-gray-600">Radius:</span>
                                 <span className="font-medium">{selectedElement.radius} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Diametro:</span>
+                                <span className="text-gray-600">Diameter:</span>
                                 <span className="font-medium">{selectedElement.radius * 2} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro X:</span>
+                                <span className="text-gray-600">Center X:</span>
                                 <span className="font-medium">{selectedElement.x} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro Y:</span>
+                                <span className="text-gray-600">Center Y:</span>
                                 <span className="font-medium">{selectedElement.y} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro Z:</span>
+                                <span className="text-gray-600">Center Z:</span>
                                 <span className="font-medium">{selectedElement.z} mm</span>
                               </div>
                               {/* Aggiungiamo il campo per lo spessore di lavorazione evidenziando che corrisponde al diametro */}
                               <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
-                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="text-gray-600 font-medium">Machining Depth:</span>
                                 <span className="font-medium text-blue-600">{settings.depth} mm</span>
                               </div>
                             </div>
@@ -4094,32 +4094,32 @@ function generateText3DToolpath(element: any, settings: any): string {
                           {selectedElement.type === 'cylinder' && (
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Raggio:</span>
+                                <span className="text-gray-600">Radius:</span>
                                 <span className="font-medium">{selectedElement.radius} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Diametro:</span>
+                                <span className="text-gray-600">Diameter:</span>
                                 <span className="font-medium">{selectedElement.radius * 2} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Altezza:</span>
+                                <span className="text-gray-600">Height:</span>
                                 <span className="font-medium">{selectedElement.height} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro X:</span>
+                                <span className="text-gray-600">Center X:</span>
                                 <span className="font-medium">{selectedElement.x} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro Y:</span>
+                                <span className="text-gray-600">Center Y:</span>
                                 <span className="font-medium">{selectedElement.y} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro Z:</span>
+                                <span className="text-gray-600">Center Z:</span>
                                 <span className="font-medium">{selectedElement.z} mm</span>
                               </div>
                               {/* Aggiungiamo il campo per lo spessore di lavorazione evidenziando che corrisponde all'altezza */}
                               <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
-                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="text-gray-600 font-medium">Machining Depth:</span>
                                 <span className="font-medium text-blue-600">{settings.depth} mm</span>
                               </div>
                             </div>
@@ -4128,28 +4128,28 @@ function generateText3DToolpath(element: any, settings: any): string {
                           {selectedElement.type === 'cone' && (
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Raggio Base:</span>
+                                <span className="text-gray-600">Base Radius:</span>
                                 <span className="font-medium">{selectedElement.radius} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Altezza:</span>
+                                <span className="text-gray-600">Height:</span>
                                 <span className="font-medium">{selectedElement.height} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro X:</span>
+                                <span className="text-gray-600">Center X:</span>
                                 <span className="font-medium">{selectedElement.x} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro Y:</span>
+                                <span className="text-gray-600">Center Y:</span>
                                 <span className="font-medium">{selectedElement.y} mm</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Centro Z:</span>
+                                <span className="text-gray-600">Center Z:</span>
                                 <span className="font-medium">{selectedElement.z} mm</span>
                               </div>
                               {/* Aggiungiamo il campo per lo spessore di lavorazione evidenziando che corrisponde all'altezza */}
                               <div className="flex justify-between col-span-2 mt-2 border-t border-green-200 pt-2">
-                                <span className="text-gray-600 font-medium">Spessore di lavorazione:</span>
+                                <span className="text-gray-600 font-medium">Machining Depth:</span>
                                 <span className="font-medium text-blue-600">{settings.depth} mm</span>
                               </div>
                             </div>
@@ -4164,7 +4164,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                             selectedElement.type !== 'cylinder' &&
                             selectedElement.type !== 'cone') && (
                             <div className="text-sm text-gray-600">
-                              Dettagli disponibili per questo elemento nel CAD Editor.
+                              Details available for this element in the CAD Editor.
                             </div>
                           )}
                         </div>
@@ -4172,7 +4172,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                         {/* Aggiungiamo un input per modificare lo spessore direttamente */}
                         <div className="mt-3 p-2 bg-blue-50 rounded-md">
                           <label className="block text-sm font-medium text-blue-700 mb-1">
-                            Spessore di lavorazione (mm)
+                            Machining Depth (mm)
                           </label>
                           <input
                             type="number"
@@ -4207,7 +4207,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                               }
                               
                               // Show success message
-                              setSuccess('Dimensioni applicate dal CAD');
+                              setSuccess('Dimensions applied from CAD');
                               if (successTimerRef.current) {
                                 clearTimeout(successTimerRef.current);
                               }
@@ -4216,7 +4216,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                               }, 3000);
                             }}
                           >
-                            Usa dimensioni XY
+                            Use XY Dimensions
                           </button>
                           
                           {/* Aggiungiamo un pulsante specifico per usare lo spessore dalla geometria 3D */}
@@ -4240,7 +4240,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                                 }
                                 
                                 // Show success message
-                                setSuccess('Spessore aggiornato dalla geometria 3D');
+                                setSuccess('Depth updated from 3D geometry');
                                 if (successTimerRef.current) {
                                   clearTimeout(successTimerRef.current);
                                 }
@@ -4249,14 +4249,14 @@ function generateText3DToolpath(element: any, settings: any): string {
                                 }, 3000);
                               }}
                             >
-                              Usa spessore 3D
+                              Use 3D Depth
                             </button>
                           )}
                         </div>
                       </div>
                     ) : (
                       <p className="text-sm text-yellow-700">
-                        Nessun elemento selezionato. Seleziona un elemento nel CAD Editor.
+                        No element selected. Select an element in the CAD Editor.
                       </p>
                     )}
                   </div>
@@ -4268,7 +4268,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Larghezza (mm)(X)
+                          Width (mm)(X)
                         </label>
                         <input
                           type="number"
@@ -4280,7 +4280,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Altezza (mm)(Y)
+                          Height (mm)(Y)
                         </label>
                         <input
                           type="number"
@@ -4366,7 +4366,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                           fill="#4F83ED"
                           textAnchor="middle"
                         >
-                          Spessore: {settings.depth}mm
+                          Depth: {settings.depth}mm
                         </text>
                         
                         {/* Origin al centro */}
@@ -4383,7 +4383,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Raggio (mm)
+                        Radius (mm)
                       </label>
                       <input
                         type="number"
@@ -4468,7 +4468,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                           fill="#4F83ED"
                           textAnchor="middle"
                         >
-                          Spessore: {settings.depth}mm
+                          Depth: {settings.depth}mm
                         </text>
                         
                         {/* Origin al centro */}
@@ -4708,7 +4708,7 @@ function generateText3DToolpath(element: any, settings: any): string {
           className="flex items-center justify-between cursor-pointer"
           onClick={() => toggleSection('material')}
         >
-          <h3 className="text-lg font-medium text-gray-900">Materiale</h3>
+          <h3 className="text-lg font-medium text-gray-900">Material</h3>
           {expanded.material ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
         
@@ -4716,83 +4716,83 @@ function generateText3DToolpath(element: any, settings: any): string {
           <div className="mt-3 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo di Materiale
+                Material Type
               </label>
               <select
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 value={settings.material}
                 onChange={(e) => updateSettings('material', e.target.value)}
               >
-                <option value="aluminum">Alluminio</option>
-                <option value="steel">Acciaio</option>
-                <option value="wood">Legno</option>
-                <option value="plastic">Plastica</option>
-                <option value="brass">Ottone</option>
-                <option value="titanium">Titanio</option>
-                <option value="composite">Composito</option>
-                <option value="other">Altro</option>
+                <option value="aluminum">Aluminum</option>
+                <option value="steel">Steel</option>
+                <option value="wood">Wood</option>
+                <option value="plastic">Plastic</option>
+                <option value="brass">Brass</option>
+                <option value="titanium">Titanium</option>
+                <option value="composite">Composite</option>
+                <option value="other">Other</option>
               </select>
             </div>
             
-            {/* Anteprima proprietà del materiale selezionato */}
+            {/* Material property preview */}
             {settings.material && materialProperties[settings.material] && (
               <div className="p-3 bg-blue-50 rounded-md">
                 <h4 className="text-xs font-medium text-blue-800 mb-2">
-                  Proprietà {settings.material === 'aluminum' 
-                    ? 'Alluminio' 
+                  {settings.material === 'aluminum' 
+                    ? 'Aluminum' 
                     : settings.material === 'steel' 
-                    ? 'Acciaio' 
+                    ? 'Steel' 
                     : settings.material === 'wood' 
-                    ? 'Legno' 
+                    ? 'Wood' 
                     : settings.material === 'plastic' 
-                    ? 'Plastica' 
+                    ? 'Plastic' 
                     : settings.material === 'brass' 
-                    ? 'Ottone' 
+                    ? 'Brass' 
                     : settings.material === 'titanium' 
-                    ? 'Titanio' 
+                    ? 'Titanium' 
                     : settings.material === 'composite' 
-                    ? 'Composito' 
-                    : 'Altro'}
+                    ? 'Composite' 
+                    : 'Other'} Properties
                 </h4>
                 <div className="grid gap-x-4 gap-y-2 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Densità:</span>
+                    <span className="text-gray-600">Density:</span>
                     <span className="font-medium text-blue-700">{materialProperties[settings.material].density}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Durezza:</span>
+                    <span className="text-gray-600">Hardness:</span>
                     <span className="font-medium text-blue-700">{materialProperties[settings.material].hardness}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Comportamento termico:</span>
+                    <span className="text-gray-600">Thermal Behavior:</span>
                     <span className="font-medium text-blue-700">{materialProperties[settings.material].thermalBehavior}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Tipo di truciolo:</span>
+                    <span className="text-gray-600">Chip Type:</span>
                     <span className="font-medium text-blue-700">{materialProperties[settings.material].chipType}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Refrigerante:</span>
+                    <span className="text-gray-600">Coolant:</span>
                     <span className="font-medium text-blue-700">{materialProperties[settings.material].coolant}</span>
                   </div>
                   {materialProperties[settings.material].recommendedToolCoating && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Rivestimento utensile:</span>
+                      <span className="text-gray-600">Tool Coating:</span>
                       <span className="font-medium text-blue-700">{materialProperties[settings.material].recommendedToolCoating}</span>
                     </div>
                   )}
                 </div>
                 
-                {/* Pulsante per applicare parametri consigliati */}
+                {/* Apply recommended parameters button */}
                 <button
                   type="button"
                   className="mt-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
                   onClick={() => {
-                    // Applica i parametri consigliati in base al materiale
+                    // Apply recommended parameters based on material
                     if (materialProperties[settings.material].feedrateModifier && 
                         materialProperties[settings.material].speedModifier) {
-                      const baseFeedrate = 1000;  // Valore base
-                      const baseRPM = 10000;      // Valore base
+                      const baseFeedrate = 1000;  // Base value
+                      const baseRPM = 10000;      // Base value
                       
                       setSettings(prev => ({
                         ...prev,
@@ -4804,29 +4804,29 @@ function generateText3DToolpath(element: any, settings: any): string {
                                 materialProperties[settings.material].coolant === 'Necessario ad alta pressione'
                       }));
                       
-                      setSuccess(`Parametri ottimizzati per ${settings.material}`);
+                      setSuccess(`Parameters optimized for ${settings.material}`);
                       successTimerRef.current = setTimeout(() => {
                         setSuccess(null);
                       }, 3000);
                     }
                   }}
                 >
-                  Applica parametri consigliati
+                  Apply recommended parameters
                 </button>
               </div>
             )}
             
-            {/* Mostro le informazioni sul pezzo grezzo ma senza sovrascrivere automaticamente lo spessore */}
+            {/* Show workpiece info but don't override depth */}
             {workpiece && (
               <div className="mt-2 p-3 bg-blue-50 rounded-md">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-blue-800">Informazioni pezzo grezzo</span>
+                  <span className="text-sm font-medium text-blue-800">Workpiece Information</span>
                   <button
                     type="button"
                     className="text-xs text-blue-600 hover:text-blue-800"
                     onClick={() => {
-                      // Mostro solo un messaggio che informa l'utente che lo spessore va impostato nella sezione operazioni
-                      setSuccess('Lo spessore di lavorazione è determinato dalla geometria selezionata nella sezione Operazioni');
+                      // Show only a message that informs the user to set the depth in the Operations section
+                      setSuccess('Workpiece thickness is determined by the geometry selected in the Operations section');
                       successTimerRef.current = setTimeout(() => {
                         setSuccess(null);
                       }, 4000);
@@ -4839,7 +4839,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                   {workpiece.width} x {workpiece.height} x {workpiece.depth} mm ({workpiece.material})
                 </div>
                 <div className="mt-1 text-xs text-gray-500 italic">
-                  Nota: Lo spessore di lavorazione viene determinato dalla geometria selezionata
+                  Note: Workpiece thickness is determined by the geometry selected
                 </div>
               </div>
             )}
@@ -4909,7 +4909,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                 <option value="">Select a material</option>
                 
                 {/* Predefined Materials Section */}
-                <optgroup label="Materiali Predefiniti">
+                <optgroup label="Predefined Materials">
                   {predefinedMaterials.map((material, idx) => (
                     <option key={`predefined-${material.name || `material-${idx}`}`} value={material.name}>
                       {material.name}
@@ -4919,7 +4919,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                 
                 {/* User/Local Materials Section */}
                 {userMaterials.length > 0 && (
-                  <optgroup label="Materiali Locali">
+                  <optgroup label="Local Materials">
                     {userMaterials.map((material) => (
                       <option key={`user-${material.id}`} value={material.id}>
                         {material.name}
@@ -4943,7 +4943,7 @@ function generateText3DToolpath(element: any, settings: any): string {
           className="flex items-center justify-between cursor-pointer"
           onClick={() => toggleSection('tool')}
         >
-          <h3 className="text-lg font-medium text-gray-900">Utensile</h3>
+          <h3 className="text-lg font-medium text-gray-900">Tool</h3>
           {expanded.tool ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
         
@@ -4951,7 +4951,7 @@ function generateText3DToolpath(element: any, settings: any): string {
           <div className="mt-3 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo di Utensile
+                Tool Type
               </label>
               
               {settings.machineType === 'mill' && (
@@ -4960,13 +4960,13 @@ function generateText3DToolpath(element: any, settings: any): string {
                   value={settings.toolType}
                   onChange={(e) => updateSettings('toolType', e.target.value)}
                 >
-                  <option value="endmill">Fresa a candela</option>
-                  <option value="ballnose">Fresa a sfera</option>
-                  <option value="drill">Punta da trapano</option>
-                  <option value="vbit">Fresa a V</option>
-                  <option value="chamfer">Fresa per smussi</option>
-                  <option value="threadmill">Fresa per filetti</option>
-                  <option value="reamer">Alesatore</option>
+                  <option value="endmill">Endmill</option>
+                  <option value="ballnose">Ballnose</option>
+                  <option value="drill">Drill</option>
+                  <option value="vbit">V-bit</option>
+                  <option value="chamfer">Chamfer</option>
+                  <option value="threadmill">Threadmill</option>
+                  <option value="reamer">Reamer</option>
                 </select>
               )}
               
@@ -4976,12 +4976,12 @@ function generateText3DToolpath(element: any, settings: any): string {
                   value={settings.toolType}
                   onChange={(e) => updateSettings('toolType', e.target.value)}
                 >
-                  <option value="turning">Utensile per tornitura</option>
-                  <option value="facing">Utensile per sfacciatura</option>
-                  <option value="boring">Utensile per alesatura</option>
-                  <option value="threading">Utensile per filettatura</option>
-                  <option value="grooving">Utensile per scanalatura</option>
-                  <option value="parting">Utensile per troncatura</option>
+                  <option value="turning">Turning</option>
+                  <option value="facing">Facing</option>
+                  <option value="boring">Boring</option>
+                  <option value="threading">Threading</option>
+                  <option value="grooving">Grooving</option>
+                  <option value="parting">Parting</option>
                 </select>
               )}
               
@@ -4991,10 +4991,10 @@ function generateText3DToolpath(element: any, settings: any): string {
                   value={settings.toolType}
                   onChange={(e) => updateSettings('toolType', e.target.value)}
                 >
-                  <option value="standard">Ugello standard</option>
-                  <option value="brass">Ugello in ottone</option>
-                  <option value="hardened">Ugello rinforzato</option>
-                  <option value="ruby">Ugello con rubino</option>
+                  <option value="standard">Standard</option>
+                  <option value="brass">Brass</option>
+                  <option value="hardened">Hardened</option>
+                  <option value="ruby">Ruby</option>
                 </select>
               )}
             </div>
@@ -5002,24 +5002,24 @@ function generateText3DToolpath(element: any, settings: any): string {
             <div className="flex justify-between items-start">
               <h4 className="text-sm font-medium text-gray-700 mb-2">
                 {settings.machineType === 'mill' ? 
-                  (settings.toolType === 'endmill' ? 'Fresa a candela' : 
-                   settings.toolType === 'ballnose' ? 'Fresa a sfera' : 
+                  (settings.toolType === 'endmill' ? 'Endmill' : 
+                   settings.toolType === 'ballnose' ? 'Ballnose' : 
                   
-                   settings.toolType === 'drill' ? 'Punta da trapano' : 
-                   settings.toolType === 'vbit' ? 'Fresa a V' : 
-                   'Utensile speciale') : 
+                   settings.toolType === 'drill' ? 'Drill' : 
+                   settings.toolType === 'vbit' ? 'V-bit' : 
+                    'Special tool') : 
                   settings.machineType === 'lathe' ? 
-                  (settings.toolType === 'turning' ? 'Utensile per tornitura' : 
-                   settings.toolType === 'facing' ? 'Utensile per sfacciatura' : 
-                   settings.toolType === 'boring' ? 'Utensile per alesatura' : 
-                   'Utensile per tornio') : 
-                  'Ugello per stampa 3D'
+                  (settings.toolType === 'turning' ? 'Turning' : 
+                   settings.toolType === 'facing' ? 'Facing' : 
+                   settings.toolType === 'boring' ? 'Boring' : 
+                   'Threadmill') : 
+                  '3D printer tool'
                 }
               </h4>
               <div className="text-xs text-gray-500">
                 {selectedLibraryTool ? 
-                  `${selectedLibraryTool.name || 'Utensile personalizzato'}` : 
-                  'Utensile generico'
+                  `${selectedLibraryTool.name || 'Custom tool'}` : 
+                  'Generic tool'
                 }
               </div>
             </div>
@@ -5076,11 +5076,11 @@ function generateText3DToolpath(element: any, settings: any): string {
                     {settings.machineType !== '3dprinter' && (
                       <>
                         <tr>
-                          <td className="py-1 text-gray-500">Diametro:</td>
+                          <td className="py-1 text-gray-500">Diameter:</td>
                           <td className="py-1 text-gray-800">{settings.toolDiameter} mm</td>
                         </tr>
                         <tr>
-                          <td className="py-1 text-gray-500">Taglienti:</td>
+                          <td className="py-1 text-gray-500">Flutes:</td>
                           <td className="py-1 text-gray-800">{settings.flutes}</td>
                         </tr>
                       </>
@@ -5088,22 +5088,22 @@ function generateText3DToolpath(element: any, settings: any): string {
                     {settings.machineType === '3dprinter' && (
                       <>
                         <tr>
-                          <td className="py-1 text-gray-500">Diametro ugello:</td>
+                          <td className="py-1 text-gray-500">Nozzle Diameter:</td>
                           <td className="py-1 text-gray-800">{settings.nozzleDiameter} mm</td>
                         </tr>
                         <tr>
-                          <td className="py-1 text-gray-500">Filamento:</td>
+                          <td className="py-1 text-gray-500">Filament Diameter:</td>
                           <td className="py-1 text-gray-800">{settings.filamentDiameter} mm</td>
                         </tr>
                       </>
                     )}
                     <tr>
-                      <td className="py-1 text-gray-500">Velocità max:</td>
+                      <td className="py-1 text-gray-500">Max Speed:</td>
                       <td className="py-1 text-gray-800">{settings.rpm} RPM</td>
                     </tr>
                     {selectedLibraryTool && selectedLibraryTool.material && (
                       <tr>
-                        <td className="py-1 text-gray-500">Materiale:</td>
+                        <td className="py-1 text-gray-500">Material:</td>
                         <td className="py-1 text-gray-800">{selectedLibraryTool.material}</td>
                       </tr>
                     )}
@@ -5118,7 +5118,7 @@ function generateText3DToolpath(element: any, settings: any): string {
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Diametro Utensile (mm)
+                    Tool Diameter (mm)
                   </label>
                   <input
                     type="number"
