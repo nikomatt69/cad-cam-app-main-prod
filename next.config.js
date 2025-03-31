@@ -1,4 +1,3 @@
-
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
@@ -63,6 +62,68 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
         source: '/(.*)'
+      },
+      {
+        source: '/api/materials/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' }
+        ]
+      },
+      {
+        source: '/api/tools/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' }
+        ]
+      },
+      {
+        source: '/api/components/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' }
+        ]
+      },
+      {
+        source: '/api/machine-configs/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' }
+        ]
+      },
+      {
+        source: '/api/library/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' }
+        ]
+      },
+      {
+        source: '/api/analytics/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'private, max-age=0, must-revalidate' }
+        ]
+      },
+      {
+        source: '/api/auth/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'private, no-cache, no-store, must-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' }
+        ]
+      },
+      {
+        source: '/api/websocket',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store' }
+        ]
+      },
+      {
+        source: '/api/mcp',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store' }
+        ]
+      },
+      {
+        source: '/api/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'private, no-cache, no-store, must-revalidate' }
+        ]
       }
     ];
   }

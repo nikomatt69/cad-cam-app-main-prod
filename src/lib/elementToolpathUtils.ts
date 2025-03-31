@@ -39,7 +39,7 @@ export function generatePyramidToolpath(element: any, settings: any): string {
     const sliceDepth = baseDepth * ratio;
     
     // Calculate the corners of this slice
-    const halfSliceWidth = sliceWidth / 2;
+    const halfSliceWidth2 = sliceWidth / 2;
     const halfSliceDepth = sliceDepth / 2;
     
     // Apply offset to the slice dimensions

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Layout from 'src/components/layout/Layout';
+import { DynamicLayout } from 'src/components/dynamic-imports';
 import { 
   Grid, File, Plus, Clock, Users, 
   Edit, Trash2, Download, Share, Copy, ChevronRight,
@@ -295,7 +295,7 @@ export default function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <Layout>
+      <DynamicLayout>
         <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
           <motion.div
             animate={{ rotate: 360 }}
@@ -310,13 +310,13 @@ export default function ProjectDetailPage() {
             Loading project...
           </motion.p>
         </div>
-      </Layout>
+      </DynamicLayout>
     );
   }
 
   if (!project) {
     return (
-      <Layout>
+      <DynamicLayout>
         <motion.div 
           className="flex flex-col items-center justify-center p-6 text-center h-full min-h-[60vh]"
           initial="hidden"
@@ -341,7 +341,7 @@ export default function ProjectDetailPage() {
             Back to Projects
           </motion.button>
         </motion.div>
-      </Layout>
+      </DynamicLayout>
     );
   }
 
@@ -350,7 +350,7 @@ export default function ProjectDetailPage() {
       <Metatags title={project.name}
       description={project.description || ''}
       ogImage={`/api/og-image/project/${project.id}?title=${encodeURIComponent(project.name)}`} />
-      <Layout>
+      <DynamicLayout>
         <div className="p-4 md:p-6 max-w-7xl mx-auto">
           {/* Project header */}
           <motion.div 
@@ -1160,7 +1160,7 @@ export default function ProjectDetailPage() {
             </div>
           </form>
         </Modal>
-      </Layout>
+      </DynamicLayout>
     </MotionConfig>
   );
 }

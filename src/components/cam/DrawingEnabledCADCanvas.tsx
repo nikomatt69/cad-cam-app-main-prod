@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import CADCanvas from 'src/components/cad/CADCanvas';
+import { DynamicCADCanvas } from '@/src/components/dynamic-imports';
 import DrawingToolbar from './DrawingToolbar';
 import { useDrawingTools } from '../../hooks/useDrawingTools';
 import { 
@@ -446,7 +446,7 @@ const DrawingEnabledCADCanvas: React.FC<DrawingEnabledCADCanvasProps> = (props) 
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp} // Treat mouse leave as mouse up to end drawing
       >
-        <CADCanvas {...props} />
+        <DynamicCADCanvas {...props} />
         
         {/* Text input overlay */}
         {showTextInput && (

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Layout from 'src/components/layout/Layout';
+import { DynamicLayout } from 'src/components/dynamic-imports';
 import { Edit, Trash2, Plus, Settings, Grid, Box, Circle, Square, Move, RotateCcw } from 'react-feather';
 import Loading from '@/src/components/ui/Loading';
 import MetaTags from '@/src/components/layout/Metatags';
@@ -227,7 +227,7 @@ export default function DrawingInstrumentsPage() {
         title="CAM/CAM FUN DRAWING INSTRUMENTS" 
      
       />
-      <Layout>
+      <DynamicLayout>
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Drawing Instruments</h1>
@@ -484,7 +484,7 @@ export default function DrawingInstrumentsPage() {
             </div>
           </div>
         )}
-      </Layout>
+      </DynamicLayout>
     </>
   );
 }

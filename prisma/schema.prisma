@@ -39,6 +39,7 @@ model User {
   Toolpath                Toolpath[]
   ToolpathVersion         ToolpathVersion[]
   ToolpathComment         ToolpathComment[]
+
 }
 
 // Subscription model for Stripe integration
@@ -484,4 +485,18 @@ model ComponentComment {
 
   component Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id])
+}
+
+model Token {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  type      String    // 'email', 'password', 'invitation', etc.
+  expiresAt DateTime
+  userId    String
+  metadata  Json?     // For storing additional data like newEmail, newPassword, etc.
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([token])
 }

@@ -28,7 +28,7 @@ import { useAI } from '../components/ai/ai-new/AIContextProvider';
 import CADCanvas from '../components/cad/CADCanvas';
 import DrawingEnabledCADCanvas from '../components/cam/DrawingEnabledCADCanvas';
 import { AIHub, AIProcessingIndicator, TextToCADPanel } from '../components/ai/ai-new';
-
+import { DynamicCADCanvas } from 'src/components/dynamic-imports';
 export default function CADPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -277,10 +277,7 @@ export default function CADPage() {
     );
   }
 
-  if (status === 'unauthenticated') {
-    router.push('/auth/signin');
-    return null;
-  }
+  
 
   
  
@@ -357,8 +354,8 @@ export default function CADPage() {
               </div>
              
                <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Strumenti AI</h1>
-      <TextToCADPanel />
+     
+      <AIDesignAssistant />
     </div>
                </div>
               

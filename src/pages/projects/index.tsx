@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Layout from 'src/components/layout/Layout';
+import { DynamicLayout } from 'src/components/dynamic-imports';
 import { Plus, Folder, Clock, Users } from 'react-feather';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -59,7 +59,7 @@ export default function ProjectsPage() {
   return (
     <ErrorBoundary>
      <Metatags title={'Projects'} />
-      <Layout>
+      <DynamicLayout>
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
@@ -149,7 +149,7 @@ export default function ProjectsPage() {
             </div>
           )}
         </div>
-      </Layout>
+      </DynamicLayout>
     </ErrorBoundary>
   );
 }

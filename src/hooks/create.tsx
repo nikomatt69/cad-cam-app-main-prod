@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Layout from 'src/components/layout/Layout';
+import { DynamicLayout } from 'src/components/dynamic-imports';
 import { Save, ArrowLeft, Upload, Code, Info } from 'react-feather';
 import Loading from '@/src/components/ui/Loading';
 import MetaTags from '../components/layout/Metatags';
@@ -88,7 +88,7 @@ export default function CreateComponentPage() {
         title="COMPONENTS" 
      
       />
-      <Layout>
+      <DynamicLayout>
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-b px-6 py-4">
@@ -329,7 +329,7 @@ export default function CreateComponentPage() {
             </form>
           </div>
         </div>
-      </Layout>
+      </DynamicLayout>
     </>
   );
 }

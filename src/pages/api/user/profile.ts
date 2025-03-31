@@ -1,17 +1,12 @@
+import { requireAuth } from '@/src/lib/api/auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from 'next-auth/react';
 import { prisma } from 'src/lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const userId = await requireAuth(req, res);
+  if (!userId) return;
   const session = await getSession({ req });
-  
-  // Verifica che l'utente sia autenticato
-  if (!session || !session) {
-    return res.status(401).json({ message: 'Non autorizzato' });
-  }
-  
-  const userId = session.user.id;
-  
   // GET - Ottieni il profilo dell'utente
   if (req.method === 'GET') {
     try {
@@ -64,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const { name, email } = req.body;
       
       // Verifica che l'email non sia già utilizzata da un altro utente
-      if (email !== session.user.email) {
+      if (email !== session?.user?.email) {
         const existingUser = await prisma.user.findUnique({
           where: { email }
         });

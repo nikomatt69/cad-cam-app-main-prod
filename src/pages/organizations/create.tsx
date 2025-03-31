@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Layout from 'src/components/layout/Layout';
+import { DynamicLayout } from 'src/components/dynamic-imports';
 import { ArrowLeft, Users } from 'react-feather';
 import Loading from '@/src/components/ui/Loading';
 import Metatags from '@/src/components/layout/Metatags';
@@ -77,7 +77,7 @@ export default function CreateOrganizationPage() {
   return (
     <>
       <Metatags title={'Create Organization'} />
-      <Layout>
+      <DynamicLayout>
         <div className="p-6">
           <div className="mb-6 flex items-center">
             <button
@@ -169,7 +169,7 @@ export default function CreateOrganizationPage() {
             </div>
           </div>
         </div>
-      </Layout>
+      </DynamicLayout>
     </>
   );
 }

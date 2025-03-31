@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Layout from 'src/components/layout/Layout';
+import { DynamicLayout } from 'src/components/dynamic-imports';
 import { 
   Users, Settings, Plus, UserPlus, Edit, Trash2, 
   Mail, Shield, CheckCircle, XCircle 
@@ -182,7 +182,7 @@ export default function OrganizationDetailPage() {
 
   if (!organization) {
     return (
-      <Layout>
+      <DynamicLayout>
         <div className="p-6 text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Organizzazione non trovata</h1>
           <p className="text-gray-600 mb-6">L&apos;organizzazione che stai cercando non esiste o non hai accesso a essa.</p>
@@ -193,7 +193,7 @@ export default function OrganizationDetailPage() {
             Back to Profile
           </button>
         </div>
-      </Layout>
+      </DynamicLayout>
     );
   }
 
@@ -202,7 +202,7 @@ export default function OrganizationDetailPage() {
       <Metatags title={organization.name}
       description={organization.description|| ''}
       ogImage={`/api/og-image/organization/${organization.id}?title=${encodeURIComponent(organization.name)}`} />
-      <Layout>
+      <DynamicLayout>
         <div className="p-6">
           {/* Organization header */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-6 mb-6">
@@ -665,7 +665,7 @@ export default function OrganizationDetailPage() {
             </div>
           </div>
         )}
-      </Layout>
+      </DynamicLayout>
     </>
   );
 }

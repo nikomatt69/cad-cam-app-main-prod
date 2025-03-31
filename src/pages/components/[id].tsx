@@ -1,8 +1,8 @@
+/* eslint-disable jsx-a11y/alt-text */
 // src/pages/components/[id].tsx
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Layout from '@/src/components/layout/Layout';
 import { 
   Save, 
   ArrowLeft, 
@@ -60,7 +60,10 @@ import { useProjectDrawings } from '@/src/hooks/useDrawings';
 import { useCADStore } from '@/src/store/cadStore';
 import { ComponentCadBridge } from '@/src/lib/componentCadBridge';
 
-
+const Layout = dynamic(
+  () => import('@/src/components/layout/Layout').then(mod => mod.default),
+  { ssr: false }
+);
 // Dynamically import Monaco Editor to reduce initial bundle size
 const MonacoEditor = dynamic(
   () => import('@monaco-editor/react').then(mod => mod.default),

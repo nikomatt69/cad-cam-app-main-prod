@@ -4,20 +4,84 @@ import { Resend } from 'resend';
 // Initialize Resend with your API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Template per l'email di verifica del cambio email
+const getEmailChangeTemplate = (name: string, verificationLink: string) => `
+  <h1>Verifica il cambio email</h1>
+  <p>Ciao ${name},</p>
+  <p>Hai richiesto di cambiare il tuo indirizzo email. Per completare la modifica, clicca sul link seguente:</p>
+  <a href="${verificationLink}">Verifica cambio email</a>
+  <p>Il link scadrà tra 24 ore.</p>
+  <p>Se non hai richiesto questa modifica, ignora questa email.</p>
+`;
+
+// Template per l'email di verifica del cambio password
+const getPasswordChangeTemplate = (name: string, verificationLink: string) => `
+  <h1>Verifica il cambio password</h1>
+  <p>Ciao ${name},</p>
+  <p>Hai richiesto di cambiare la tua password. Per completare la modifica, clicca sul link seguente:</p>
+  <a href="${verificationLink}">Verifica cambio password</a>
+  <p>Il link scadrà tra 24 ore.</p>
+  <p>Se non hai richiesto questa modifica, contatta immediatamente il supporto.</p>
+`;
+
 interface EmailOptions {
-  to: string;
+  to: string[];
   subject: string;
   html: string;
+  from?: string;
 }
 
-export async function sendEmail({ to, subject, html }: EmailOptions): Promise<void> {
-  await resend.emails.send({
-    from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
-    to,
-    subject,
-    html,
-  });
+// Funzione per inviare email
+export async function sendEmail({ to, subject, html, from }: EmailOptions) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: from || process.env.EMAIL_FROM || 'onboarding@resend.dev',
+      to,
+      subject,
+      html,
+    });
+
+    if (error) {
+      console.error('Error sending email:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return false;
+  }
 }
+
+// Funzione per inviare email di verifica cambio email
+export const sendEmailChangeVerification = async (
+  name: string,
+  email: string,
+  token: string
+) => {
+  const verificationLink = `${process.env.NEXTAUTH_URL}/api/user/verify-change?token=${token}&type=email`;
+  
+  return sendEmail({
+    to: [email],
+    subject: 'Verifica cambio email - CAD/CAM FUN',
+    html: getEmailChangeTemplate(name, verificationLink),
+  });
+};
+
+// Funzione per inviare email di verifica cambio password
+export const sendPasswordChangeVerification = async (
+  name: string,
+  email: string,
+  token: string
+) => {
+  const verificationLink = `${process.env.NEXTAUTH_URL}/api/user/verify-change?token=${token}&type=password`;
+  
+  return sendEmail({
+    to: [email],
+    subject: 'Verifica cambio password - CAD/CAM FUN',
+    html: getPasswordChangeTemplate(name, verificationLink),
+  });
+};
 
 interface InvitationEmailProps {
   to: string;
@@ -43,7 +107,7 @@ export async function sendInvitationEmail({
   });
 
   await sendEmail({
-    to,
+    to: [to],
     subject: `Invitation to join ${organizationName}`,
     html: `
       <!DOCTYPE html>

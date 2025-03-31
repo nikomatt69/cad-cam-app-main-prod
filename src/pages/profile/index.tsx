@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import Layout from 'src/components/layout/Layout';
-import { User, Mail, MapPin, Calendar, Edit, GitHub, Globe, Settings } from 'react-feather';
+import { DynamicLayout } from 'src/components/dynamic-imports';
+import { User, Mail, MapPin, Calendar, Edit, GitHub, Globe, Settings, Layout } from 'react-feather';
 import Loading from '@/src/components/ui/Loading';
 import MetaTags from '@/src/components/layout/Metatags';
 import ImageService from '@/src/lib/imageService';
@@ -203,7 +203,7 @@ export default function ProfilePage() {
         title={`${profile.name || 'User'} | Profile`}
         description={`View ${profile.name || 'User'}'s profile, projects and components.`}
       />
-      <Layout>
+      <DynamicLayout>
         {/* Profile Header */}
         <div className="bg-[#F8FBFF] border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -519,7 +519,7 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-      </Layout>
+      </DynamicLayout>
     </>
   );
 }

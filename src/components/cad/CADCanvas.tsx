@@ -189,7 +189,7 @@ const screenToWorld = useCallback((screenX: number, screenY: number) => {
         window.cadCanvasCamera = undefined;
       };
     }
-  }, [sceneRef.current, cameraRef.current, window.exposeCADCanvasAPI]);
+  }, []);
 
   const [showSelectionModal, setShowSelectionModal] = useState(false);
   const selectionData = selection.createSelectionData();
@@ -1560,7 +1560,7 @@ const screenToWorld = useCallback((screenX: number, screenY: number) => {
         rendererRef.current.dispose();
       }
     };
-  }, [axisVisible, gridVisible]);
+  }, [axisVisible, gridVisible, isModifying]);
 
   // Handle fullscreen change
   const handleFullscreenChange = () => {
@@ -4468,7 +4468,7 @@ useEffect(() => {
     } catch (error) {
       console.error("Error during drag over:", error);
     }
-  }, [allowDragDrop, snapSettings.enabled, snapToPoint, originOffset]);
+  }, [allowDragDrop, snapSettings.enabled, originOffset.x, originOffset.y, originOffset.z, worldToScreen, snapToPoint]);
 
   const handleComponentDrop = useCallback((event: React.DragEvent) => {
     if (!allowDragDrop) return;
@@ -4778,7 +4778,7 @@ useEffect(() => {
         toast.error('Dati componente non trovati');
       }
     }
-  }, [router.query.loadComponent, layers, addElement, router]);
+  }, [layers, addElement]);
   
   // Aggiorna transform controls quando cambia l'elemento selezionato
   useEffect(() => {
