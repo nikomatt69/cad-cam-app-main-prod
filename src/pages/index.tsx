@@ -5,7 +5,7 @@ import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import Layout from '../components/layout/Layout';
+
 import { 
   Grid, 
   Tool, 
@@ -16,12 +16,15 @@ import {
   Users, 
   Clock, 
   AlertTriangle,
-  ChevronUp
+  ChevronUp,
+  BarChart2
 } from 'react-feather';
 import Loading from '../components/ui/Loading';
 import MetaTags from '../components/layout/Metatags';
 import { UserHistory } from '@/src/components/analytics/UserHistory';
 import { AnalyticsOverview } from '../components/analytics/AnalyticsOverview';
+import ActivityChart from '../components/analytics/ActivityChart';
+import dynamic from 'next/dynamic';
 
 interface DashboardStats {
   totalProjects: number;
@@ -41,6 +44,11 @@ interface Activity {
   userName: string;
 }
 
+const Layout = dynamic(
+  () => import('@/src/components/layout/Layout'),
+  { ssr: false }
+);
+
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -48,6 +56,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   
   // Handle scroll to show/hide "back to top" button
   useEffect(() => {
@@ -184,7 +193,10 @@ export default function Home() {
       router.push('/auth/signin');
     }
   }, [status, router]);
-
+  const toggleChartType = () => {
+    setChartType(prev => prev === 'line' ? 'bar' : 'line');
+  };
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -435,11 +447,23 @@ export default function Home() {
                   This page shows all your activity across the platform. 
                 </p>
                 
-                <AnalyticsOverview 
-                  startDate={dateRange.startDate} 
-                  endDate={dateRange.endDate}
-                  isAdmin={isAdmin}
-                />
+                <div className="mt-6">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">Activity Trends</h2>
+              <button
+                onClick={toggleChartType}
+                className="flex items-center text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              >
+                <BarChart2 className="h-4 w-4 mr-1" />
+                {chartType === 'line' ? 'Show Bar Chart' : 'Show Line Chart'}
+              </button>
+            </div>
+            <ActivityChart 
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              chartType={chartType}
+            />
+          </div>
               </div>
             </div>
           </div>

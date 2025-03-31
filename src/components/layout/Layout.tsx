@@ -3,17 +3,46 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { ChevronUp, AlertTriangle } from 'react-feather';
 import { Toaster } from 'react-hot-toast';
-import EnhancedSidebar from './Sidebar';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import Navbar from './Navbar';
-import Footer from '../ui/Footer';
 import useRefreshToken from '@/src/hooks/useRefreshToken';
-import BottomNavigation from '../components/BottomNavigation';
-import CookieConsentBanner from '../components/CookieConsentBanner';
 import { disconnectWebSocket, initializeWebSocket } from '@/src/lib/websocket';
-import { AIAssistant, AIAssistantButton } from '../ai/ai-new';
 import ToastContainer from '../ui/ToastContainer';
 
+// Dynamic imports for components that don't need to be loaded immediately
+const EnhancedSidebar = dynamic(() => import('./Sidebar'), {
+  ssr: true,
+  loading: () => <div className="w-64 bg-gray-100 dark:bg-gray-800 animate-pulse" />
+});
+
+const Navbar = dynamic(() => import('./Navbar'), {
+  ssr: true,
+  loading: () => <div className="h-16 bg-gray-100 dark:bg-gray-800 animate-pulse" />
+});
+
+const Footer = dynamic(() => import('../ui/Footer'), {
+  ssr: true
+});
+
+const BottomNavigation = dynamic(() => import('../components/BottomNavigation'), {
+  ssr: true
+});
+
+const CookieConsentBanner = dynamic(() => import('../components/CookieConsentBanner'), {
+  ssr: false // Client-side only as it depends on localStorage
+});
+
+const AIAssistant = dynamic(() => import('../ai/ai-new').then(mod => mod.AIAssistant), {
+  ssr: false
+});
+
+const AIAssistantButton = dynamic(() => import('../ai/ai-new').then(mod => mod.AIAssistantButton), {
+  ssr: false
+});
+
+const NotificationPermissionPrompt = dynamic(() => import('../notifications/NotificationPermissionPrompt'), {
+  ssr: false // Client-side only as it depends on browser APIs
+});
 
 type EnhancedLayoutProps = {
   children: ReactNode;
@@ -37,6 +66,7 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   
   // Handle sidebar toggle based on screen size
   useEffect(() => {
@@ -136,6 +166,26 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
   
   // Determine main content width class
   const contentWidthClass = fullWidth ? 'max-w-full' : 'max-w-7xl';
+
+  useEffect(() => {
+    // Mostra il prompt solo se:
+    // 1. L'utente è loggato
+    // 2. Non ha già accettato/rifiutato le notifiche
+    // 3. Il browser supporta le notifiche
+    if (
+      session?.user &&
+      'Notification' in window &&
+      !localStorage.getItem('notificationsEnabled') &&
+      !localStorage.getItem('notificationsPromptDismissed')
+    ) {
+      // Aspetta 3 secondi prima di mostrare il prompt
+      const timer = setTimeout(() => {
+        setShowNotificationPrompt(true);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [session]);
 
   return (
     <div className="h-screen rounded-xl bg-gray dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col">
@@ -257,6 +307,12 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
       
       {/* Cookie Consent Banner - at the very bottom with bottom padding for mobile */}
       <CookieConsentBanner />
+      
+      {showNotificationPrompt && (
+        <NotificationPermissionPrompt
+          onClose={() => setShowNotificationPrompt(false)}
+        />
+      )}
     </div>
   );
 };

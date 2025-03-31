@@ -10,6 +10,7 @@ import {
   Mail, Shield, CheckCircle, XCircle 
 } from 'react-feather';
 import Metatags from '@/src/components/layout/Metatags';
+import Loading from '@/src/components/ui/Loading';
 
 interface Organization {
   id: string;
@@ -171,7 +172,12 @@ export default function OrganizationDetailPage() {
   const canManageSettings = userRole === 'ADMIN';
 
   if (status === 'loading' || isLoading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return <Loading/>;
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
   }
 
   if (!organization) {

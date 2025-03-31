@@ -106,6 +106,12 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({ isOpen, setIsOpen }) 
             current: router.pathname.startsWith('/library') 
           },
           { 
+            name: 'Toolpaths', 
+            href: '/toolpaths', 
+            icon: <Tool size={16} />, 
+            current: router.pathname.startsWith('/toolpaths') 
+          },
+          { 
             name: 'Components', 
             href: '/components', 
             icon: <Package size={16} />, 

@@ -6,11 +6,12 @@ import { useRouter } from 'next/router';
 import Layout from 'src/components/layout/Layout';
 import { 
   Grid, File, Plus, Clock, Users, 
-  Edit, Trash2, Download, Share, Copy, ChevronRight
+  Edit, Trash2, Download, Share, Copy, ChevronRight,
+  Tool
 } from 'react-feather';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import Modal from 'src/components/ui/Modal';
-import { Component, Drawing, Project } from '@prisma/client';
+import { Component, Drawing, Project, Toolpath } from '@prisma/client';
 import Metatags from '@/src/components/layout/Metatags';
 import { cn } from '@/src/lib/utils';
 
@@ -52,16 +53,20 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [drawings, setDrawings] = useState<Drawing[]>([]);
   const [components, setComponents] = useState<Component[]>([]);
+  const [toolpaths, setToolpaths] = useState<Toolpath[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showNewDrawingModal, setShowNewDrawingModal] = useState(false);
   const [showNewComponentModal, setShowNewComponentModal] = useState(false);
+  const [showNewToolpathModal, setShowNewToolpathModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    description: ''
+    description: '',
+    type: 'mill',
+    operationType: 'contour'
   });
-  const [activeTab, setActiveTab] = useState<'drawings' | 'components'>('drawings');
+  const [activeTab, setActiveTab] = useState<'drawings' | 'components' | 'toolpaths'>('drawings');
 
   useEffect(() => {
     if (id && typeof id === 'string') {
@@ -86,7 +91,9 @@ export default function ProjectDetailPage() {
       setProject(data);
       setFormData({
         name: data.name,
-        description: data.description || ''
+        description: data.description || '',
+        type: 'mill',
+        operationType: 'contour'
       });
       
       // Fetch project drawings
@@ -101,6 +108,13 @@ export default function ProjectDetailPage() {
       if (componentsResponse.ok) {
         const componentsData = await componentsResponse.json();
         setComponents(componentsData);
+      }
+
+      // Fetch project toolpaths
+      const toolpathsResponse = await fetch(`/api/projects/${projectId}/toolpaths`);
+      if (toolpathsResponse.ok) {
+        const toolpathsData = await toolpathsResponse.json();
+        setToolpaths(toolpathsData);
       }
     } catch (error) {
       console.error('Error fetching project data:', error);
@@ -221,7 +235,44 @@ export default function ProjectDetailPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleCreateToolpath = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!project) return;
+    
+    try {
+      const response = await fetch(`/api/projects/${project.id}/toolpaths`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          type: formData.type,
+          operationType: formData.operationType,
+          data: {},
+          gcode: '',
+          isPublic: false
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create toolpath');
+      }
+      
+      const newToolpath = await response.json();
+      setToolpaths(prev => [newToolpath, ...prev]);
+      setShowNewToolpathModal(false);
+      
+      // Navigate to the CAM editor
+      router.push(`/cam?toolpathId=${newToolpath.id}`);
+    } catch (error) {
+      console.error('Error creating toolpath:', error);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -234,7 +285,7 @@ export default function ProjectDetailPage() {
   };
 
   const openModal = (modalType: 'drawing' | 'component') => {
-    setFormData({ name: '', description: '' });
+    setFormData({ name: '', description: '', type: 'mill', operationType: 'contour' });
     if (modalType === 'drawing') {
       setShowNewDrawingModal(true);
     } else {
@@ -393,6 +444,25 @@ export default function ProjectDetailPage() {
                 >
                   Components
                   {activeTab === 'components' && (
+                    <motion.div 
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" 
+                      layoutId="activeTabIndicator"
+                    />
+                  )}
+                </motion.button>
+                <motion.button
+                  className={cn(
+                    "ml-8 px-4 py-2 font-medium text-sm focus:outline-none relative",
+                    activeTab === 'toolpaths'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  )}
+                  onClick={() => setActiveTab('toolpaths')}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ y: 1 }}
+                >
+                  Toolpaths
+                  {activeTab === 'toolpaths' && (
                     <motion.div 
                       className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" 
                       layoutId="activeTabIndicator"
@@ -580,7 +650,7 @@ export default function ProjectDetailPage() {
                         className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4"
                         whileHover={{ scale: 1.05, rotate: 5 }}
                       >
-                        <Box size={30} className="text-gray-400 dark:text-gray-500" />
+                        <File size={30} className="text-gray-400 dark:text-gray-500" />
                       </motion.div>
                       <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No components yet</h3>
                       <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
@@ -626,7 +696,7 @@ export default function ProjectDetailPage() {
                                 whileHover={{ rotate: 10, scale: 1.1 }}
                                 className="p-5 bg-gray-200 dark:bg-gray-900 rounded-full"
                               >
-                                <Box size={32} className="text-gray-400 dark:text-gray-500" />
+                                <File size={32} className="text-gray-400 dark:text-gray-500" />
                               </motion.div>
                             )}
                           </div>
@@ -635,6 +705,133 @@ export default function ProjectDetailPage() {
                             {component.description && (
                               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">{component.description}</p>
                             )}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'toolpaths' && (
+                <motion.div
+                  key="toolpaths-tab"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3">
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Project Toolpaths</h2>
+                    <motion.button
+                      onClick={() => setShowNewToolpathModal(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center shadow-sm"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Plus size={16} className="mr-1.5" />
+                      New Toolpath
+                    </motion.button>
+                  </div>
+                  
+                  {toolpaths.length === 0 ? (
+                    <motion.div 
+                      className="bg-white dark:bg-gray-900 shadow-md rounded-xl p-6 text-center"
+                      variants={fadeIn}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      <motion.div 
+                        className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4"
+                        whileHover={{ scale: 1.05, rotate: 5 }}
+                      >
+                        <Tool size={30} className="text-gray-400 dark:text-gray-500" />
+                      </motion.div>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No toolpaths yet</h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+                        Create your first toolpath to start machining your designs.
+                      </p>
+                      <motion.button
+                        onClick={() => setShowNewToolpathModal(true)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Create Toolpath
+                      </motion.button>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {toolpaths.map((toolpath, index) => (
+                        <motion.div
+                          key={toolpath.id}
+                          variants={itemVariants}
+                          custom={index}
+                          className="bg-white dark:bg-gray-900 shadow-md rounded-xl overflow-hidden cursor-pointer border border-gray-100 dark:border-gray-800 group"
+                          whileHover={{ y: -4, boxShadow: "0 12px 24px -10px rgba(0, 0, 0, 0.15)" }}
+                          onClick={() => router.push(`/cam?toolpathId=${toolpath.id}`)}
+                        >
+                          <div className="h-32 sm:h-40 bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                            <motion.div
+                              whileHover={{ rotate: 10, scale: 1.1 }}
+                              className="p-5 bg-gray-200 dark:bg-gray-900 rounded-full"
+                            >
+                              <Tool size={32} className="text-gray-400 dark:text-gray-500" />
+                            </motion.div>
+                          </div>
+                          <div className="p-4">
+                            <h3 className="text-md font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{toolpath.name}</h3>
+                            {toolpath.description && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">{toolpath.description}</p>
+                            )}
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 rounded-full">
+                                {toolpath.type || 'mill'}
+                              </span>
+                              <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 rounded-full">
+                                {toolpath.operationType || 'contour'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-gray-800/50 px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex justify-end space-x-2">
+                            <motion.button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Handle edit toolpath
+                              }}
+                              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md"
+                              whileHover={{ scale: 1.15 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <Edit size={16} />
+                            </motion.button>
+                            <motion.button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Handle download gcode
+                              }}
+                              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md"
+                              whileHover={{ scale: 1.15 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <Download size={16} />
+                            </motion.button>
+                            <motion.button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Handle delete toolpath
+                              }}
+                              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md"
+                              whileHover={{ scale: 1.15 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <Trash2 size={16} />
+                            </motion.button>
                           </div>
                         </motion.div>
                       ))}
@@ -850,6 +1047,103 @@ export default function ProjectDetailPage() {
                 type="button"
                 className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 onClick={() => setShowNewComponentModal(false)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Create & Open
+              </motion.button>
+            </div>
+          </form>
+        </Modal>
+
+        {/* New Toolpath Modal */}
+        <Modal
+          isOpen={showNewToolpathModal}
+          onClose={() => setShowNewToolpathModal(false)}
+          title="Create New Toolpath"
+          size="md"
+          preventBackdropClose
+        >
+          <form onSubmit={handleCreateToolpath}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Toolpath Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Description (optional)
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  value={formData.description}
+                  onChange={handleChange}
+                ></textarea>
+              </div>
+
+              <div>
+                <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Machine Type
+                </label>
+                <select
+                  id="type"
+                  name="type"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  value={formData.type}
+                  onChange={handleChange}
+                >
+                  <option value="mill">Mill</option>
+                  <option value="lathe">Lathe</option>
+                  <option value="3dprinter">3D Printer</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="operationType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Operation Type
+                </label>
+                <select
+                  id="operationType"
+                  name="operationType"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  value={formData.operationType}
+                  onChange={handleChange}
+                >
+                  <option value="contour">Contour</option>
+                  <option value="pocket">Pocket</option>
+                  <option value="drill">Drill</option>
+                  <option value="profile">3D Profile</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-end space-x-3">
+              <motion.button
+                type="button"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => setShowNewToolpathModal(false)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >

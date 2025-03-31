@@ -2316,7 +2316,7 @@ const graphConfig = {
 };
 
 if (isLoading) {
-  return <div className="flex items-center justify-center h-64">Loading...</div>;
+  return <Loading/>;
 }
 
 return (
@@ -2664,7 +2664,7 @@ return (
       </form>
       
       {isLoading ? (
-        <div className="flex items-center justify-center h-32">Loading...</div>
+        <div className="flex items-center justify-center h-32"><Loading/></div>
       ) : comments.length === 0 ? (
         <div className="text-center py-12">
           <MessageCircle size={48} className="mx-auto mb-4 text-gray-300" />

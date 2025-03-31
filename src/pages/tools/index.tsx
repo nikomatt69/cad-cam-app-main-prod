@@ -16,7 +16,7 @@ import {
   List
 } from 'react-feather';
 import Link from 'next/link';
-import Layout from '@/src/components/layout/Layout';
+
 import PredefinedLibrary from '@/src/components/library/PredefinedLibrary';
 import LocalToolsLibraryView from '@/src/components/library/LocalToolsLibraryView';
 import Loading from '@/src/components/ui/Loading';
@@ -26,6 +26,7 @@ import Metatags from '@/src/components/layout/Metatags';
 import ExportImportControls from '@/src/components/components/ExportImportControls';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import dynamic from 'next/dynamic';
 
 interface ToolFilterState {
   type: string;
@@ -33,7 +34,10 @@ interface ToolFilterState {
   search: string;
   diameter: string;
 }
-
+const Layout = dynamic(
+  () => import('@/src/components/layout/Layout'),
+  { ssr: false }
+);  
 export default function ToolsList() {
   const { data: session, status } = useSession();
   const router = useRouter();

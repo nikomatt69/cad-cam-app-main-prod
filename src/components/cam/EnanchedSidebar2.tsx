@@ -168,6 +168,12 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
             current: router.pathname.startsWith('/tools') 
           },
           { 
+            name: 'Toolpaths', 
+            href: '/toolpaths', 
+            icon: <Tool size={16} />, 
+            current: router.pathname.startsWith('/toolpaths') 
+          },
+          { 
             name: 'DrawingTools', 
             href: '/drawing-instruments', 
             icon: <Server size={16} />, 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useProjectDrawings } from 'src/hooks/useDrawings';
-import { File, Grid, Edit, Trash2, Copy, Download, Plus, AlertCircle } from 'react-feather';
+import { File, Grid, Edit, Trash2, Copy, Download, Plus, AlertCircle, Tool, List } from 'react-feather';
 import Link from 'next/link';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { Drawing } from '@/src/types/mainTypes';
@@ -305,6 +305,29 @@ export default function ProjectDrawingsList({ projectId }: ProjectDrawingsListPr
                   >
                     <Copy size={16} />
                   </motion.button>
+                  <div className="flex space-x-4">
+  {/* Altri bottoni */}
+  <motion.button
+    onClick={() => router.push(`/cam?drawingId=${drawing.id}`)}
+    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center shadow-sm"
+    whileHover={{ scale: 1.02, y: -2 }}
+    whileTap={{ scale: 0.98 }}
+  >
+    <Tool size={18} className="mr-2" />
+    Genera Toolpath
+  </motion.button>
+  
+  {/* Bottone per visualizzare i toolpath esistenti */}
+  <motion.button
+    onClick={() => router.push(`/toolpaths?drawingId=${drawing.id}`)}
+    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center shadow-sm"
+    whileHover={{ scale: 1.02, y: -2 }}
+    whileTap={{ scale: 0.98 }}
+  >
+    <List size={18} className="mr-2" />
+    Visualizza Toolpath
+  </motion.button>
+</div>
                   <motion.button 
                     onClick={(e) => {
                       e.stopPropagation();

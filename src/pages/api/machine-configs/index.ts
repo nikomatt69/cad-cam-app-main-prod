@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           },
           _count: {
-            select: { toolPaths: true }
+            select: { toolpaths: true }
           }
         },
         skip: offset,
@@ -123,7 +123,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const enrichedConfigs = machineConfigs.map(config => ({
         ...config,
         isOwner: config.ownerId === userId,
-        usageCount: config._count.toolPaths,
+        usageCount: config._count.toolpaths,
         _count: undefined
       }));
       

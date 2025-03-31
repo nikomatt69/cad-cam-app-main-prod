@@ -11,11 +11,16 @@ import { calculateCuttingStatistics, calculateOptimalChipLoad, calculateRecommen
 import { getOperationDescription } from '@/src/lib/operationDescriptions';
 import { materialProperties } from '@/src/lib/materialProperties';
 import { string } from 'zod';
+import { Drawing } from '@prisma/client';
+import SaveToolpathModal from './ToolpathModal';
+import toast from 'react-hot-toast';
 // Add the import at the top of the file
 import { generateComponentToolpath, generateElementToolpath } from 'src/lib/componentToolpathUtils';
 import { FixedCyclesUIRenderer, isFixedCycle } from 'src/components/cam/FixedCyclesUIRenderer';
 import ToolpathGeneratorIntegration from 'src/components/cam/ToolpathGeneratorIntegration';
 import { FixedCycleType } from './toolpathUtils/fixedCycles/fixedCyclesParser';
+import router from 'next/router';
+import { c } from 'framer-motion/dist/types.d-6pKw1mTI';
 interface ToolpathGeneratorProps {
   onGCodeGenerated: (gcode: string) => void;
   onToolSelected?: (tool: any) => void; // Added for tool selection
@@ -175,7 +180,10 @@ const ToolpathGenerator: React.FC<ToolpathGeneratorProps> = ({ onGCodeGenerated,
   const [polygonSides, setPolygonSides] = useState(6);
   const [polygonRadius, setPolygonRadius] = useState(30);
   const [customPath, setCustomPath] = useState('');
-
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -3278,6 +3286,81 @@ function generateText3DToolpath(element: any, settings: any): string {
     return gcode;
   };
 
+
+  const handleSaveToolpath = async (metadata: { name: any; description: any; drawingId: any; materialId: any; toolId: any; }) => {
+    setIsSaving(true);
+    setError(null);
+    
+    try {
+      if (!metadata.drawingId) {
+        throw new Error('Drawing ID is required');
+      }
+      const toolpathData = {
+        name: metadata.name,
+        description: metadata.description,
+        drawingId: metadata.drawingId, // Current drawing ID
+        materialId: metadata.materialId || settings.material,
+        toolId: metadata.toolId || selectedLibraryTool?.id,
+        data: {
+          settings: { ...settings },
+          gcode: currentGCode,
+          elements: elements, // Include selected elements
+          workpiece: workpiece // Include workpiece data
+        }
+      };
+      
+      // First verify the drawing exists and we have access
+      const drawingResponse = await fetch(`/api/drawings/${metadata.drawingId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!drawingResponse.ok) {
+        if (drawingResponse.status === 404) {
+          throw new Error('Drawing not found');
+        } else if (drawingResponse.status === 401) {
+          throw new Error('Please log in to save toolpaths');
+        } else if (drawingResponse.status === 403) {
+          throw new Error('You do not have permission to access this drawing');
+        }
+        throw new Error('Failed to verify drawing access');
+      }
+      
+      const response = await fetch('/api/toolpaths', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(toolpathData),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please log in to save toolpaths');
+        } else if (response.status === 403) {
+          throw new Error('You do not have permission to save toolpaths');
+        }
+        throw new Error('Failed to save toolpath');
+      } 
+      
+      const savedToolpath = await response.json();
+      setSaveFeedback(`Toolpath "${metadata.name}" saved successfully!`);
+      setShowSaveModal(false);
+      if (savedToolpath.id) {
+        toast.success(`Toolpath saved successfully`);
+        router.push(`/toolpaths/${savedToolpath.id}`);
+      }
+      // Maybe notify parent component or refresh list
+    } catch (err: any) {
+      setSaveError(err || 'An error occurred while saving');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Render machine section
   const renderMachineSection = () => {
     return (
@@ -5232,7 +5315,7 @@ function generateText3DToolpath(element: any, settings: any): string {
                       }
                     })
                     .map((tool, idx) => (
-                      <option key={`predefined-tool-${tool.name}-${idx}`} value={tool.name}>
+                      <option key={`predefined-${tool.name || `tool-${idx}`}`} value={tool.name}>
                         {tool.name} - {tool.type} {tool.diameter}mm
                       </option>
                     ))}
@@ -5252,8 +5335,8 @@ function generateText3DToolpath(element: any, settings: any): string {
                           return true; // Show all for 3D printer
                         }
                       })
-                      .map((tool, idx) => (
-                        <option key={`user-tool-${tool.id}-${idx}`} value={tool.id}>
+                      .map((tool) => (
+                        <option key={`user-${tool.id}`} value={tool.id}>
                           {tool.name} - {tool.type} {tool.properties.diameter}mm
                         </option>
                       ))}
@@ -6058,9 +6141,29 @@ function generateText3DToolpath(element: any, settings: any): string {
           </>
         )}
       </button>
+
+      <button
+    onClick={() => {
+      if (!currentGCode) {
+        toast.error('No G-code generated yet!');
+        return;
+      }
       
+      // Save the G-code to localStorage for the toolpaths page to pick up
+      localStorage.setItem('gcodeFromToolpathGenerator', currentGCode);
+      localStorage.setItem('settingsFromToolpathGenerator', JSON.stringify(settings));
       
+      // Redirect to toolpaths page to create a new toolpath
+      router.push('/toolpaths?fromGenerator=true');
       
+      toast.success('G-code ready to save as toolpath');
+    }}
+    className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center mt-2"
+  >
+    <Save size={18} className="mr-2" />
+    Save as Toolpath
+  </button>
+
       {/* Aggiungere la possibilità di salvare/caricare configurazioni */}
       <div className="mt-4 pt-4 border-t border-gray-200">
         <div className="flex justify-between items-center">

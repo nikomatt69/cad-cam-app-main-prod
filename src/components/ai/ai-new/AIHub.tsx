@@ -205,7 +205,7 @@ const AIHub: React.FC<AIHubProps> = ({
   };
   
   return (
-    <div className={`relative bg-white dark:bg-gray-800 rounded-lg border-0 flex h-[600px] ${className || ''}`}>
+    <div className={`relative bg-white dark:bg-gray-800 rounded-lg border-0 flex h-[800px] ${className || ''}`}>
       
       
       {/* Pulsante di collasso/espansione */}

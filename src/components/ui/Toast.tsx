@@ -10,6 +10,7 @@ export interface Toast {
   message: string;
   type: ToastType;
   duration?: number;
+  title?: string;
 }
 
 interface ToastProps {
@@ -42,64 +43,63 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
   const getIcon = () => {
     switch (toast.type) {
       case 'success':
-        return <CheckCircle className="text-green-500" size={18} />;
+        return <CheckCircle className="text-green-500" size={20} />;
       case 'error':
-        return <AlertCircle className="text-red-500" size={18} />;
+        return <AlertCircle className="text-red-500" size={20} />;
       case 'warning':
-        return <AlertTriangle className="text-yellow-500" size={18} />;
+        return <AlertTriangle className="text-yellow-500" size={20} />;
       default:
-        return <Info className="text-blue-500" size={18} />;
+        return <Info className="text-blue-500" size={20} />;
     }
   };
   
-  const getBgColor = () => {
+  const getTitle = () => {
     switch (toast.type) {
       case 'success':
-        return 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800';
+        return 'Success';
       case 'error':
-        return 'bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-800';
+        return 'Error';
       case 'warning':
-        return 'bg-yellow-50 dark:bg-yellow-900 border-yellow-200 dark:border-yellow-800';
+        return 'Warning';
       default:
-        return 'bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800';
+        return 'Info';
     }
   };
-  
-  const getTextColor = () => {
-    switch (toast.type) {
-      case 'success':
-        return 'text-green-800 dark:text-green-200';
-      case 'error':
-        return 'text-red-800 dark:text-red-200';
-      case 'warning':
-        return 'text-yellow-800 dark:text-yellow-200';
-      default:
-        return 'text-blue-800 dark:text-blue-200';
-    }
-  };
-  
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.8 }}
+      initial={{ opacity: 0, y: -20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-      className={`flex items-center p-4 mb-2 border rounded-lg shadow-md ${getBgColor()} ${getTextColor()}`}
-      style={{ width: '300px' }}
+      exit={{ opacity: 0, y: -20, scale: 0.95, transition: { duration: 0.2 } }}
+      className="relative backdrop-blur-xl backdrop-saturate-150 bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-lg overflow-hidden"
+      style={{ width: '320px', WebkitBackdropFilter: 'blur(20px)' }}
     >
-      <div className="flex-shrink-0 mr-2">
-        {getIcon()}
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 mt-0.5">
+            {getIcon()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-sm text-gray-900 dark:text-white">
+              {toast.title || getTitle()}
+            </h3>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+              {toast.message}
+            </p>
+          </div>
+          <button
+            onClick={() => onClose(toast.id)}
+            className="flex-shrink-0 ml-2 mt-0.5 text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </div>
-      <div className="flex-1">
-        <p className="text-sm font-medium">{toast.message}</p>
-      </div>
-      <button
-        className="ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
-        onClick={() => onClose(toast.id)}
-      >
-        <X size={16} />
-      </button>
       
-      <div className="absolute bottom-0 left-0 h-1 bg-current opacity-20 rounded-b-lg" style={{ width: `${progress}%` }} />
+      <div 
+        className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-100"
+        style={{ width: `${progress}%` }}
+      />
     </motion.div>
   );
 };

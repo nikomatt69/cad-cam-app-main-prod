@@ -36,6 +36,9 @@ model User {
   pushSubscriptions       PushSubscription[]
   ComponentVersion        ComponentVersion[]
   ComponentComment        ComponentComment[]
+  Toolpath                Toolpath[]
+  ToolpathVersion         ToolpathVersion[]
+  ToolpathComment         ToolpathComment[]
 }
 
 // Subscription model for Stripe integration
@@ -145,6 +148,7 @@ model Project {
   drawings      Drawing[]
   components    Component[]
   notifications Notification[] // Aggiunto per il sistema di notifiche
+  Toolpath      Toolpath[]
 }
 
 model Drawing {
@@ -160,7 +164,7 @@ model Drawing {
   // Relationships
   project   Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
   versions  DrawingVersion[]
-  toolPaths ToolPath[]
+  toolpaths Toolpath[]
 }
 
 model DrawingVersion {
@@ -205,7 +209,7 @@ model Material {
   // Relationships
   owner        User?         @relation(fields: [ownerId], references: [id])
   organization Organization? @relation(fields: [organizationId], references: [id])
-  toolPaths    ToolPath[]
+  toolpaths    Toolpath[]
 }
 
 model Tool {
@@ -230,27 +234,58 @@ model Tool {
   // Relationships
   owner        User?         @relation(fields: [ownerId], references: [id])
   organization Organization? @relation(fields: [organizationId], references: [id])
-  toolPaths    ToolPath[]
+  toolpaths    Toolpath[]
 }
 
-model ToolPath {
-  id              String   @id @default(cuid())
+model Toolpath {
+  id              String            @id @default(cuid())
   name            String
   description     String?
-  data            Json // Stores the toolpath data
-  gcode           String? // Generated G-code
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  drawingId       String
+  data            Json?
+  type            String? // e.g., 'mill', 'lathe', '3dprinter'
+  operationType   String? // e.g., 'contour', 'pocket', 'drill'
+  gcode           String? // Stored G-code
+  thumbnail       String? // URL to thumbnail image
+  isPublic        Boolean           @default(false)
+  projectId       String
+  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  createdBy       String
+  user            User              @relation(fields: [createdBy], references: [id])
+  versions        ToolpathVersion[]
+  comments        ToolpathComment[]
+  Drawing         Drawing?          @relation(fields: [drawingId], references: [id])
+  drawingId       String?
+  Material        Material?         @relation(fields: [materialId], references: [id])
   materialId      String?
-  machineConfigId String?
+  Tool            Tool?             @relation(fields: [toolId], references: [id])
   toolId          String?
+  MachineConfig   MachineConfig?    @relation(fields: [machineConfigId], references: [id])
+  machineConfigId String?
+}
 
-  // Relationships
-  drawing       Drawing        @relation(fields: [drawingId], references: [id], onDelete: Cascade)
-  material      Material?      @relation(fields: [materialId], references: [id])
-  machineConfig MachineConfig? @relation(fields: [machineConfigId], references: [id])
-  tool          Tool?          @relation(fields: [toolId], references: [id])
+model ToolpathVersion {
+  id            String   @id @default(cuid())
+  toolpathId    String
+  toolpath      Toolpath @relation(fields: [toolpathId], references: [id], onDelete: Cascade)
+  data          Json?
+  gcode         String?
+  changeMessage String?
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  createdAt     DateTime @default(now())
+}
+
+model ToolpathComment {
+  id         String   @id @default(cuid())
+  toolpathId String
+  toolpath   Toolpath @relation(fields: [toolpathId], references: [id], onDelete: Cascade)
+  content    String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model MachineConfig {
@@ -266,7 +301,7 @@ model MachineConfig {
 
   // Relationships
   owner     User       @relation(fields: [ownerId], references: [id])
-  toolPaths ToolPath[]
+  toolpaths Toolpath[]
 }
 
 // Logging models

@@ -31,24 +31,31 @@ interface UserProfile {
 
 interface Project {
   id: string;
-  title: string;
-  description: string;
+  name: string;
+  description: string | null;
   thumbnail: string | null;
-  tags: string[];
   createdAt: string;
   updatedAt: string;
-  stars: number;
 }
 
 interface Component {
   id: string;
-  title: string;
-  description: string;
+  name: string;
+  description: string | null;
   thumbnail: string | null;
-  tags: string[];
   createdAt: string;
   updatedAt: string;
-  downloads: number;
+  projectId: string;
+}
+
+interface Toolpath {
+  id: string;
+  name: string;
+  description: string | null;
+  thumbnail: string | null;
+  createdAt: string;
+  updatedAt: string;
+  projectId: string;
 }
 
 export default function ProfilePage() {
@@ -59,8 +66,9 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [components, setComponents] = useState<Component[]>([]);
+  const [toolpaths, setToolpaths] = useState<Toolpath[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'projects' | 'components'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'components' | 'toolpaths'>('projects');
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
@@ -118,6 +126,12 @@ export default function ProfilePage() {
       if (!componentsRes.ok) throw new Error('Failed to fetch components');
       const componentsData = await componentsRes.json();
       setComponents(componentsData);
+
+      // Fetch toolpaths
+      const toolpathsRes = await fetch('/api/user/toolpaths');
+      if (!toolpathsRes.ok) throw new Error('Failed to fetch toolpaths');
+      const toolpathsData = await toolpathsRes.json();
+      setToolpaths(toolpathsData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -145,6 +159,12 @@ export default function ProfilePage() {
       if (!componentsRes.ok) throw new Error('Failed to fetch components');
       const componentsData = await componentsRes.json();
       setComponents(componentsData);
+
+      // Fetch public toolpaths
+      const toolpathsRes = await fetch(`/api/users/${userId}/toolpaths`);
+      if (!toolpathsRes.ok) throw new Error('Failed to fetch toolpaths');
+      const toolpathsData = await toolpathsRes.json();
+      setToolpaths(toolpathsData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -272,14 +292,12 @@ export default function ProfilePage() {
                     <div className="text-sm font-medium text-gray-500">Components</div>
                   </div>
                   <div className="px-4 py-2 text-center">
-                    <div className="text-2xl font-semibold text-gray-900">{profile.organizations?.length || 0}</div>
-                    <div className="text-sm font-medium text-gray-500">Organizations</div>
+                    <div className="text-2xl font-semibold text-gray-900">{toolpaths.length}</div>
+                    <div className="text-sm font-medium text-gray-500">Toolpaths</div>
                   </div>
                   <div className="px-4 py-2 text-center">
-                    <div className="text-2xl font-semibold text-gray-900">
-                      {projects.reduce((sum, project) => sum + project.stars, 0)}
-                    </div>
-                    <div className="text-sm font-medium text-gray-500">Total Stars</div>
+                    <div className="text-2xl font-semibold text-gray-900">{profile.organizations?.length || 0}</div>
+                    <div className="text-sm font-medium text-gray-500">Organizations</div>
                   </div>
                 </div>
               </div>
@@ -311,6 +329,16 @@ export default function ProfilePage() {
               >
                 Components
               </button>
+              <button
+                onClick={() => setActiveTab('toolpaths')}
+                className={`${
+                  activeTab === 'toolpaths'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              >
+                Toolpaths
+              </button>
             </nav>
           </div>
           
@@ -322,12 +350,12 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {projects.map((project) => (
                       <div key={project.id} className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow duration-300">
-                        <Link href={`/projects/${project?.id}`}>
+                        <Link href={`/projects/${project.id}`}>
                           <div className="h-48 bg-gray-200 relative">
                             {project.thumbnail ? (
                               <img 
                                 src={project.thumbnail} 
-                                alt={project.title}
+                                alt={project.name}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -337,30 +365,11 @@ export default function ProfilePage() {
                             )}
                           </div>
                           <div className="p-4">
-                            <h3 className="text-lg font-medium text-gray-900 mb-1">{project.title}</h3>
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">{project.name}</h3>
                             <p className="text-sm text-gray-500 line-clamp-2 h-10 mb-2">{project.description}</p>
-                            
-                            <div className="flex flex-wrap gap-2 mt-2 mb-3">
-                              {project.tags.slice(0, 3).map((tag, idx) => (
-                                <span key={idx} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  {tag}
-                                </span>
-                              ))}
-                              {project.tags.length > 3 && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                  +{project.tags.length - 3}
-                                </span>
-                              )}
-                            </div>
                             
                             <div className="flex justify-between items-center text-sm text-gray-500">
                               <span>Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
-                              <span className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                </svg>
-                                {project.stars}
-                              </span>
                             </div>
                           </div>
                         </Link>
@@ -402,7 +411,7 @@ export default function ProfilePage() {
                             {component.thumbnail ? (
                               <img
                                 src={component.thumbnail} 
-                                alt={component.title}
+                                alt={component.name}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -412,30 +421,14 @@ export default function ProfilePage() {
                             )}
                           </div>
                           <div className="p-4">
-                            <h3 className="text-lg font-medium text-gray-900 mb-1">{component.title}</h3>
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">{component.name}</h3>
                             <p className="text-sm text-gray-500 line-clamp-2 h-10 mb-2">{component.description}</p>
-                            
-                            <div className="flex flex-wrap gap-2 mt-2 mb-3">
-                              {component.tags.slice(0, 3).map((tag, idx) => (
-                                <span key={idx} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  {tag}
-                                </span>
-                              ))}
-                              {component.tags.length > 3 && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                  +{component.tags.length - 3}
-                                </span>
-                              )}
-                            </div>
                             
                             <div className="flex justify-between items-center text-sm text-gray-500">
                               <span>Updated {new Date(component.updatedAt).toLocaleDateString()}</span>
-                              <span className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                {component.downloads}
-                              </span>
+                              <Link href={`/projects/${component.projectId}`} className="text-blue-600 hover:text-blue-800">
+                                View Project
+                              </Link>
                             </div>
                           </div>
                         </Link>
@@ -458,6 +451,65 @@ export default function ProfilePage() {
                             <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                           </svg>
                           New Component
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'toolpaths' && (
+              <>
+                {toolpaths.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {toolpaths.map((toolpath) => (
+                      <div key={toolpath.id} className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow duration-300">
+                        <Link href={`/toolpaths/${toolpath.id}`}>
+                          <div className="h-48 bg-gray-200 relative">
+                            {toolpath.thumbnail ? (
+                              <img
+                                src={toolpath.thumbnail} 
+                                alt={toolpath.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-gray-400 text-lg">No thumbnail</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-4">
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">{toolpath.name}</h3>
+                            <p className="text-sm text-gray-500 line-clamp-2 h-10 mb-2">{toolpath.description}</p>
+                            
+                            <div className="flex justify-between items-center text-sm text-gray-500">
+                              <span>Updated {new Date(toolpath.updatedAt).toLocaleDateString()}</span>
+                              <Link href={`/projects/${toolpath.projectId}`} className="text-blue-600 hover:text-blue-800">
+                                View Project
+                              </Link>
+                            </div>
+                          </div>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No toolpaths</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {isOwnProfile ? 'Get started by creating a new toolpath.' : 'This user has no public toolpaths yet.'}
+                    </p>
+                    {isOwnProfile && (
+                      <div className="mt-6">
+                        <Link href="/toolpaths/new" className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                          </svg>
+                          New Toolpath
                         </Link>
                       </div>
                     )}

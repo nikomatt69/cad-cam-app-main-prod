@@ -24,6 +24,7 @@ import Image from 'next/image';
 import AIAssistantButton from '../ai/ai-new/AIAssistantButton';
 import AIModal from '../components/AIModal';
 import {isMobile} from 'react-device-detect'
+import AIBottomSheet from '../components/AIBottomSheet';
 interface EnhancedToolbarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -216,7 +217,7 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             
           </button>
       
-          <AIModal />
+          <AIBottomSheet />
         </div>
       </div>
       <div className="flex items-center space-x-2">

@@ -33,10 +33,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             image: true
           }
         },
-        toolPaths: {
+        toolpaths: {
           select: {
             id: true,
-            drawing: {
+            Drawing: {
               select: {
                 project: {
                   select: {
@@ -75,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Handle different HTTP methods
     if (req.method === 'GET') {
       // Count usages
-      const usageCount = await prisma.toolPath.count({
+      const usageCount = await prisma.toolpath.count({
         where: {
           machineConfigId: id
         }
@@ -161,7 +161,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
       
       // Count usages
-      const usageCount = await prisma.toolPath.count({
+      const usageCount = await prisma.toolpath.count({
         where: {
           machineConfigId: id
         }
@@ -183,7 +183,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       
       // Check if the machine config is being used by any toolpaths
-      const usageCount = await prisma.toolPath.count({
+      const usageCount = await prisma.toolpath.count({
         where: {
           machineConfigId: id
         }
@@ -236,9 +236,9 @@ async function checkPermissions(machineConfig: any, userId: string): Promise<Per
   }
   
   // Check for access via toolpaths
-  const hasToolpathAccess = machineConfig.toolPaths.some((tp: any) => 
-    tp.drawing?.project?.ownerId === userId || 
-    (tp.drawing?.project?.organization?.users && tp.drawing?.project?.organization?.users.length > 0)
+  const hasToolpathAccess = machineConfig.toolpaths.some((tp: any) => 
+    tp.Drawing?.project?.ownerId === userId || 
+    (tp.Drawing?.project?.organization?.users && tp.Drawing?.project?.organization?.users.length > 0)
   );
   
   if (hasToolpathAccess) {

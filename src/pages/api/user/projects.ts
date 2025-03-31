@@ -8,29 +8,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const userId = await requireAuth(req, res);
   if (!userId) return;
   
-  const { id } = req.query;
-  
-  if (!id || typeof id !== 'string') {
-    return res.status(400).json({ message: 'Drawing ID is required' });
-  }
-  
-  
+
   
   
   if (req.method === 'GET') {
     try {
       const projects = await prisma.project.findMany({
-        where: { id: userId },
+        where: { ownerId: userId },
         orderBy: { updatedAt: 'desc' },
         select: {
           id: true,
-          
+          name: true,
           description: true,
-         
-         
           createdAt: true,
           updatedAt: true,
-         
         }
       });
       
