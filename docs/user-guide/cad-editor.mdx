@@ -1,0 +1,1488 @@
+---
+title: "CAD Editor"
+description: "Complete guide to the CAD Editor and its advanced features"
+---
+
+# CAD Editor
+
+The CAD Editor is the heart of the application, where you can create and modify 2D and 3D models with a wide range of drawing tools and parametric features. This section explores in detail all the features available in the CAD Editor.
+
+<Frame>
+  <img src="/images/fullcad.png" alt="CAD Editor Overview" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+## CAD Editor Interface
+
+When you open the CAD Editor, you'll find yourself in front of a complete interface composed of several functional areas:
+
+### Top Toolbar
+
+<Frame>
+  <img src="/images/toolbar-cad.png" alt="Top toolbar" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+The top toolbar contains:
+
+<AccordionGroup>
+  <Accordion title="File Menu" icon="file">
+    Options for file management:
+    - **New**: Create a new drawing or model
+    - **Open**: Open an existing file
+    - **Save/Save As**: Save current work
+    - **Import**: Import models from other formats
+    - **Export**: Export model in various formats (STL, OBJ, STEP, etc.)
+    - **Print**: Send model to print
+    - **Document Settings**: Configure global document parameters
+  </Accordion>
+  <Accordion title="Edit Menu" icon="pen-to-square">
+    Editing tools:
+    - **Undo/Redo**: Undo or restore recent actions
+    - **Cut/Copy/Paste**: Standard operations on selected elements
+    - **Delete**: Remove selected elements
+    - **Select All**: Select all elements in active drawing
+    - **Select by Properties**: Select elements based on specific criteria
+    - **Duplicate**: Create a copy of selected elements
+    - **Transform**: Advanced transformation options
+  </Accordion>
+  <Accordion title="View Menu" icon="eye">
+    View controls:
+    - **Zoom**: Zoom in, out, fit to view, zoom selection
+    - **Pan**: Move current view
+    - **Orbit**: Rotate 3D view around model
+    - **Standard Views**: Front, side, top, isometric views
+    - **Display Style**: Wireframe, shaded, realistic
+    - **Grid and Snap**: Configure grid and snap behavior
+    - **Layer Visibility**: Manage which layers are visible
+  </Accordion>
+  <Accordion title="Tools Menu" icon="screwdriver-wrench">
+    Access to advanced tools:
+    - **Measure**: Tools for measuring distances, angles, areas
+    - **Analysis**: Geometric analysis and verification tools
+    - **Settings**: Configure application preferences
+    - **Plugins**: Manage installed extensions and plugins
+    - **Macros**: Record and play action sequences
+    - **Advanced Tools**: Specialized functionality
+  </Accordion>
+  <Accordion title="Quick Access Buttons" icon="bolt">
+    Icons for most used functions, customizable according to your preferences. By default include:
+    - Save
+    - Undo/Redo
+    - Zoom
+    - Selection
+    - Common creation tools
+  </Accordion>
+  <Accordion title="Library Button" icon="book">
+    Access to the unified library of components and tools, including:
+    - Standard components (screws, bolts, bearings, etc.)
+    - Common mechanical parts
+    - Structural profiles
+    - Saved custom components
+    - Reusable models and templates
+  </Accordion>
+  <Accordion title="Import/Export Button" icon="file-export">
+    Quick access to import and export functions, supporting:
+    - Proprietary formats (.cad, .model)
+    - Standard formats (.stp, .iges, .stl, .obj)
+    - Exchange formats (.dxf, .dwg)
+    - Collaboration and review formats
+  </Accordion>
+</AccordionGroup>
+
+### Left Sidebar
+
+<Frame>
+  <img src="/images/left-sidebar.png" alt="Left sidebar" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+The left sidebar is divided into three main tabs:
+
+<Tabs>
+  <Tab title="Tools">
+    Contains all drawing and modification tools:
+    
+    <AccordionGroup>
+      <Accordion title="Base Shapes" icon="shapes">
+        - **Line**: Draw straight line segments between two points. You can specify exact length and angle, or draw freely. Use Shift key to constrain to 45° angles.
+        - **Rectangle**: Draw rectangles and squares specifying two corner points. Additional options for rounded or chamfered corners.
+        - **Circle**: Create circles with various methods: center-radius, diameter, three points, tangent to two elements. Essential for many mechanical constructions.
+        - **Arc**: Draw circular arcs with flexible definition methods: three points, center-start-end, start-end-radius, etc.
+        - **Ellipse**: Create ellipses and elliptical arcs specifying center and axes. Also for organic shapes and projections.
+        - **Polygon**: Generate regular polygons with a specified number of sides. Options for inscribed or circumscribed relative to a circle.
+        - **Polyline**: Create a series of connected line segments.
+        - **Spline**: Draw smooth curves through control points. Ideal for complex and curvilinear forms with continuity of curvature.
+        - **Point**: Create reference points.
+        - **Text**: Add text and annotations.
+      </Accordion>
+      <Accordion title="Modification Tools" icon="pen-fancy">
+        - **Fillet (Round)**: Rounds angles between lines or surfaces.
+        - **Chamfer (Miter)**: Creates angled chamfers.
+        - **Offset**: Creates parallel copies of curves or surfaces.
+        - **Extend**: Extends curves to a boundary.
+        - **Trim**: Divides curves at specific points.
+        - **Join**: Combines separate but connected curves.
+        - **Divide**: Separates curves into equal parts or at specific points.
+      </Accordion>
+      <Accordion title="Dimensioning Tools" icon="arrows-left-right">
+        - **Linear Dimension**: Measures horizontal or vertical distances.
+        - **Aligned Dimension**: Measures distances in any direction.
+        - **Angular Dimension**: Measures angles between lines or surfaces.
+        - **Diametral Dimension**: Measures diameters of circles or arcs.
+        - **Radial Dimension**: Measures radii of circles or arcs.
+        - **Technical Text**: Adds standardized annotations.
+        - **Symbols**: Inserts technical symbols (tolerances, finishes, etc.).
+      </Accordion>
+      <Accordion title="Transformation Tools" icon="arrows-rotate">
+        - **Move**: Moves selected elements.
+        - **Rotate**: Rotates elements around a point.
+        - **Scale**: Increases or decreases elements.
+        - **Mirror**: Creates symmetrical copies.
+        - **Array**: Generates linear, circular, or matrix patterns.
+        - **Align**: Aligns selected elements.
+        - **Distort**: Modifies shape with advanced controls.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+  <Tab title="Levels">
+    Manages drawing levels:
+    
+    - **List of Levels**: Shows all levels with controls for:
+      - Visibility (eye icon)
+      - Block (lock icon)
+      - Color (color indicator)
+    - **Management Buttons**:
+      - Create new level
+      - Delete level
+      - Level properties
+      - Order levels
+    - **Filters and Search**: Quickly find specific levels
+    - **Grouping of Levels**: Organizes levels in hierarchical structures
+  </Tab>
+  <Tab title="Settings">
+    Controls general drawing settings:
+    
+    <AccordionGroup>
+      <Accordion title="Units of Measure" icon="ruler">
+        - Millimeters, centimeters, meters
+        - Inches, feet
+        - Precision (number of decimal places)
+        - Visualization format
+      </Accordion>
+      <Accordion title="Grid and Snap" icon="border-all">
+        - Grid size
+        - Grid visibility
+        - Snap to grid
+        - Snap to objects (endpoints, midpoints, intersections)
+        - Snap to geometry (tangent, perpendicular, etc.)
+      </Accordion>
+      <Accordion title="Tolerances" icon="bullseye">
+        - Snap tolerance
+        - Geometric tolerance
+        - Visualization tolerance
+        - System tolerances
+      </Accordion>
+      <Accordion title="Display Preferences" icon="display">
+        - Default line style
+        - Background and selection colors
+        - Default visualization style
+        - Rendering options
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+### Central Working Area
+
+<Frame>
+  <img src="/images/cad-work.png" alt="Central working area" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+The central working area is the main space where you draw and modify your models:
+
+- **Reference Grid** configurable for precision and scale
+- **Coordinate System** with origin (0,0) at default center
+- **Unlimited Drawing Area** with zoom and pan functions
+- **2D or 3D Visualization** with customizable projection options
+- **Visual Feedback** during element creation, with:
+  - Real-time coordinates
+  - Snap indicators
+  - Automatic constraints (horizontal, vertical, etc.)
+  - Preview of elements during creation
+
+<Note>
+  You can customize the working area with different background colors, grid styles, and visualization options from Settings.
+</Note>
+
+### Properties Panel (Right Sidebar)
+
+<Frame>
+  <img src="/images/right-sidebar-cad.png" alt="Properties panel" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+The properties panel shows information and controls for the selected element:
+
+- **Precise Coordinates** (x, y, z) for positioning
+- **Dimensions** (width, height, diameter, etc.) with direct modification
+- **Specific Properties** (radius, angle, thickness, etc.) of the element
+- **Style** (color, line thickness, transparency, material)
+- **Material Properties** (when applicable)
+- **Constraints and Parameters** for parametric design
+
+The panel updates dynamically based on the selected element, showing only relevant properties.
+
+### Status Bar
+
+The status bar shows contextual information:
+
+- **Current Cursor Position** in real-time
+- **Current Unit of Measure** and options to change it quickly
+- **Status of Snap and Grid** (active/inactive)
+- **Active Level** current
+- **Current Visualization Scale**
+- **Specific Help Messages** for the current tool
+
+<Tip>
+  Pay attention to messages in the status bar: often they provide useful tips on using the current tool or suggestions for next steps.
+</Tip>
+## Base Drawing Tools
+
+The CAD Editor offers a complete series of tools for creating 2D and 3D geometries:
+
+### 2D Geometric Tools
+
+<CardGroup cols={2}>
+  <Card title="Point" icon="circle-dot">
+    Creates single points in space, useful as references or for geometric constructions. You can specify exact coordinates or place points with the mouse.
+  </Card>
+  <Card title="Line" icon="minus">
+    Draws straight line segments between two points. You can specify exact length and angle, or draw freely. Use Shift key to constrain to 45° angles.
+  </Card>
+  <Card title="Polyline" icon="chart-line">
+    Creates a series of connected line segments. Useful for complex shapes and paths. Each vertex can be modified individually after creation.
+  </Card>
+  <Card title="Rectangle" icon="square">
+    Draws rectangles specifying two corner points. Additional options for rounded or chamfered corners, and for creating perfect squares.
+  </Card>
+  <Card title="Circle" icon="circle">
+    Creates circles with various methods: center and radius, center and diameter, three points, tangent to two elements. Essential for many mechanical constructions.
+  </Card>
+  <Card title="Arc" icon="circle-half-stroke">
+    Draws circular arcs with flexible definition methods: three points, center-start-end, start-end-radius, etc.
+  </Card>
+  <Card title="Ellipse" icon="egg">
+    Creates ellipses specifying center and axes. Options also for elliptical arcs, useful for organic shapes and projections.
+  </Card>
+  <Card title="Spline" icon="bezier-curve">
+    Draws smooth curves through control points. Ideal for complex and curvilinear forms with continuity of curvature.
+  </Card>
+  <Card title="Polygon" icon="octagon">
+    Generates regular polygons with a specified number of sides. Options for inscribed or circumscribed relative to a circle.
+  </Card>
+  <Card title="Text" icon="font">
+    Adds text annotations to your drawing. Supports fonts, styles, technical symbols, and precise alignment.
+  </Card>
+</CardGroup>
+
+<Tip>
+  For each drawing tool, check the properties panel on the right for additional options and alternative creation methods.
+</Tip>
+
+### 3D Tools
+
+<CardGroup cols={2}>
+  <Card title="Extrusion" icon="cube">
+    Converts 2D shapes into 3D objects by extruding them with a specified height. Options for multiple directions and angles of form.
+  </Card>
+  <Card title="Revolution" icon="rotate-3d">
+    Creates 3D objects by rotating 2D shapes around an axis. Ideal for cylindrical objects like vases, bottles, or components with threads.
+  </Card>
+  <Card title="Sweep" icon="arrow-turn-up">
+    Generates 3D objects following a path with a 2D cross-section. Perfect for tubing, guides, and organic shapes.
+  </Card>
+  <Card title="Loft" icon="layer-group">
+    Creates 3D surfaces between two or more 2D sections. Useful for shape transitions and objects with varying sections.
+  </Card>
+  <Card title="Primitive 3D" icon="shapes">
+    Creates basic 3D shapes directly: box, sphere, cylinder, cone, torus, and other basic shapes.
+  </Card>
+<Card title="Boolean Operations" icon="object-group">
+    Combines solids with union, subtraction, and intersection. Fundamental for creating complex geometries starting from simpler shapes.
+  </Card>
+</CardGroup>
+
+<Frame>
+  <img src="/images/work-cad.png" alt="3D Tools in Action" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Precision Tools
+
+For creating accurate and precise geometries, the CAD Editor offers various assistance tools:
+
+<AccordionGroup>
+  <Accordion title="Snap to Object" icon="magnet">
+    Automatically snaps to significant points of existing elements:
+    - **Endpoint**: Ends of lines, arcs, and curves
+    - **Midpoint**: Center of a line segment or arc
+    - **Intersection**: Point where two elements intersect
+    - **Center**: Center of circles, arcs, or ellipses
+    - **Quadrant**: Points on circles and ellipses
+    - **Tangent**: Points of tangency on curves
+    - **Perpendicular**: Points creating perpendicular lines
+    - **Parallel**: Points creating parallel lines
+    
+    The snap function activates automatically when the cursor approaches these points, showing a distinct icon for each type of snap.
+  </Accordion>
+  <Accordion title="Grid and Snap to Grid" icon="border-all">
+    Aligns elements to a regular grid to maintain order and precision:
+    - **Visible Grid**: Shows a reference grid in the working area
+    - **Snap to Grid**: Forces the cursor to snap to grid points
+    - **Adaptive Grid**: Changes automatically with zoom
+    - **Configuration**: Customizes spacing, color, and style of the grid
+    
+    The grid can be temporarily disabled by holding down the Alt key while drawing.
+  </Accordion>
+  <Accordion title="Measurement Tools" icon="ruler-combined">
+    Measures distances, angles, and areas with precision:
+    - **Distance Measurement**: Between points, from point to line, between parallel elements
+    - **Angle Measurement**: Between lines, three points, or relative to axes
+    - **Area Calculation**: Calculates the area of closed shapes or regions
+    - **Volume Calculation**: Calculates the volume of 3D objects
+    - **Curvature Analysis**: Evaluates the curvature of surfaces and curves
+    
+    The results of measurements can be displayed directly on the drawing or in a dedicated panel.
+  </Accordion>
+  <Accordion title="Construction Lines and Axes" icon="bullseye-arrow">
+    Reference lines for precise alignment:
+    - **Construction Lines**: Infinite lines not included in the final model
+    - **Reference Axes**: Establish orientation and position
+    - **Reference Planes**: Surface references for 3D constructions
+    - **Temporary Guides**: Appear during operations to aid alignment
+    
+    These guides can be attached to existing elements and used as references for new constructions.
+  </Accordion>
+  <Accordion title="Relative and Absolute Coordinates" icon="location-crosshairs">
+    Entering precise coordinates:
+    - **Absolute Coordinates**: Relative to the system origin (0,0,0)
+    - **Relative Coordinates**: Relative to the last point or selected element
+    - **Polar Coordinates**: Using distance and angle instead of X,Y,Z
+    - **Dynamic Input**: Displaying and entering values during drawing
+    
+    You can alternate between these methods during drawing by pressing the Tab key.
+  </Accordion>
+  <Accordion title="Geometric Constraints" icon="link">
+    Imposes relationships between elements:
+    - **Horizontal/Vertical**: Forces lines to be perfectly horizontal or vertical
+    - **Perpendicularity**: Ensures that two lines are perpendicular at 90°
+    - **Parallelism**: Maintains parallel lines between them
+    - **Tangency**: Forces curves to be tangent
+    - **Coincidence**: Forces points to coincide
+    - **Equality**: Maintains elements with equal dimensions
+    
+    These constraints appear as visual symbols on the drawing and can be modified or removed at any time.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Use Ctrl+arrow keys to increase precision during drawing, allowing finer cursor movements.
+</Tip>
+
+## Modification and Transformation
+
+Once you've created the base elements, you can modify and transform them using various tools:
+
+### Selection Tools
+
+Precise selection is crucial for effective modifications:
+
+<AccordionGroup>
+  <Accordion title="Single Selection" icon="hand-pointer">
+    - Select an element with a direct click
+    - The selected element is highlighted with the selection color
+    - Modification handles appear for quick adjustments
+    - The properties panel updates to show the parameters of the selected element
+  </Accordion>
+  <Accordion title="Multiple Selection" icon="object-group">
+    - Select multiple elements by holding Shift and clicking
+    - Use selection box by dragging a rectangle:
+      - From left to right: selects only elements completely inside the rectangle
+      - From right to left: selects all elements touched by the rectangle
+    - Use Ctrl+A to select all visible elements
+    - Ctrl+click on a selected element to deselect it
+  </Accordion>
+  <Accordion title="Selection by Properties" icon="filter">
+    - Select elements based on color, level, type, or other properties
+    - Access this function from the Edit > Select by Properties menu
+    - Use complex selection queries with AND/OR operators
+    - Save frequently used selection queries for reuse
+  </Accordion>
+  <Accordion title="Selection Filters" icon="filter-circle-xmark">
+    - Limits selection to specific types of objects (points, lines, faces, etc.)
+    - Configure filters from the status bar or contextual menu
+    - Quickly toggle filters with icons in the status bar
+    - Create custom filters for specific workflow flows
+  </Accordion>
+</AccordionGroup>
+
+### Modification Tools
+
+After selecting elements, you can modify them using these tools:
+
+<CardGroup cols={3}>
+  <Card title="Translation" icon="arrows-up-down-left-right">
+    Moves selected elements in any direction. You can specify exact distance and direction, or drag with the mouse.
+  </Card>
+  <Card title="Rotation" icon="rotate">
+    Rotates elements around a specific point. You can define the angle precisely or interactively.
+  </Card>
+  <Card title="Scaling" icon="up-right-and-down-left-from-center">
+    Scales elements uniformly or non-uniformly. You can specify precise scale factors or use visual manipulators.
+  </Card>
+  <Card title="Mirror" icon="mirror">
+    Creates a mirrored copy of elements relative to an axis. Useful for symmetrical objects.
+  </Card>
+  <Card title="Array" icon="table-cells">
+    Creates multiple copies in linear, circular, or matrix format. Ideal for repetitive patterns.
+  </Card>
+  <Card title="Fillet (Rounded Corner)" icon="ruler-triangle">
+    Rounds angles with a specified radius. Applicable to line intersections, solid edges, and surfaces.
+  </Card>
+  <Card title="Chamfer (Miter)" icon="diamond">
+    Creates a chamfered angle on an angle. You can specify equal or different distances for each side.
+  </Card>
+  <Card title="Offset" icon="copy">
+    Creates a parallel copy of lines, curves, or contours at a specified distance.
+  </Card>
+  <Card title="Trim/Extend" icon="scissors">
+    Modifies the length of lines and curves to end exactly at a reference edge.
+  </Card>
+  <Card title="Divide/Join" icon="object-ungroup">
+    Separates elements into distinct parts or combines connected elements into a single entity.
+  </Card>
+</CardGroup>
+
+<Frame>
+  <img src="/images/trasform.png" alt="Modification Tools in Action" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Advanced Transformations
+
+For more complex modifications, the CAD Editor offers advanced transformation tools:
+
+<AccordionGroup>
+  <Accordion title="Deformation" icon="wand-magic-sparkles">
+    - **Free Deformation**: Modifies shape with advanced manipulation controls at vertices
+    - **Deformation with cage**: Uses a control cage to deform complex objects
+    - **Morphing**: Gradually transforms one shape into another
+    - **Bend**: Bends objects with specified angle and radius
+    - **Twist**: Applies torsion around an axis
+    - **Taper**: Gradually narrows or widens a shape
+  </Accordion>
+  <Accordion title="Projection" icon="video">
+    - **Projection on Plane**: Projects geometries onto a reference plane
+    - **Projection on Surface**: Maps geometries onto curved surfaces
+    - **Parallel Projection**: Maintains proportions and angles
+    - **Perspective Projection**: Creates perspective effects
+    - **Surface Development**: Flattens curved surfaces for manufacturing
+  </Accordion>
+  <Accordion title="Alignment" icon="arrows-to-dot">
+    - **Point-to-Point Alignment**: Moves objects by making points coincide
+    - **Axis-to-Axis Alignment**: Aligns reference axes between objects
+    - **Plane-to-Plane Alignment**: Aligns reference planes between objects
+    - **Best-Fit Alignment**: Finds the best match between point sets
+    - **Alignment with Multiple Constraints**: Combines different types of alignment
+  </Accordion>
+  <Accordion title="Stirring" icon="expand">
+    - **Stirring with Fence**: Modifies parts of an object selected from a "fence"
+    - **Stirring of Faces**: Moves faces while maintaining continuity
+    - **Proportional Stirring**: Maintains proportions during stirring
+    - **Stirring with Constraints**: Respects constraints and relationships during operation
+  </Accordion>
+  <Accordion title="Coordinate Transformation" icon="calculator">
+    - **Transformation Matrices**: Applies precise mathematical transformations
+    - **Concatenated Transformations**: Combines multiple transformations in sequence
+    - **Non-linear Transformations**: Applies complex and non-linear transformations
+    - **Transformation with Script**: Uses scripts for customized transformations
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Advanced transformations are particularly useful for organic shape design, ergonomic components, and adapting existing geometries.
+</Note>
+## Level Management
+
+Levels allow you to organize your drawing into logical groups of elements:
+
+<Frame>
+  <img src="/images/layers.png" alt="Layers Panel" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Basic Level Functionality
+
+<AccordionGroup>
+  <Accordion title="Level Creation" icon="layer-plus">
+    - **New Level**: Adds new levels with custom names
+    - **Duplicate Level**: Creates a copy of an existing level
+    - **Levels from Template**: Creates levels from predefined configurations
+    - **Levels from Selection**: Creates a new level from selected elements
+    
+    New levels are automatically added to the layers panel and can be immediately used.
+  </Accordion>
+  <Accordion title="Level Visibility" icon="eye">
+    - **Show/Hide**: Controls the visibility of each level through the eye icon
+    - **Selective Visualization**: Shows only specific levels
+    - **Isolation**: Shows a single level while hiding all others
+    - **Visualization States**: Saves and recalls visibility configurations
+    
+    Elements in hidden levels are not selectable or editable, but are still included in calculations and exports if not otherwise specified.
+  </Accordion>
+  <Accordion title="Active Level" icon="pen-to-square">
+    - **Select Active Level**: Sets the level on which new objects will be created
+    - **Visual Indicator**: The active level is highlighted in the panel
+    - **Quick Change**: Uses shortcuts or status bar selector to change level
+    - **Automatic Activation**: Option to automatically activate a level of a selected element
+    
+    You can change the active level at any time during drawing operations.
+  </Accordion>
+  <Accordion title="Level Locking" icon="lock">
+    - **Lock/Unlock**: Prevents modifications to objects on locked levels
+    - **Visible Elements**: Elements on locked levels are visible but not editable
+    - **References**: Useful for using reference geometries without accidentally altering them
+    - **Partial Locking**: Options to lock only certain properties (position, dimensions, style)
+    
+    Locking is indicated by a lock icon in the layers panel. Elements in locked levels can be referenced but not directly modified.
+  </Accordion>
+  <Accordion title="Multi-Level Modification" icon="object-group">
+    - **Move Between Levels**: Transfers selected objects to another level
+    - **Copy Between Levels**: Duplicates objects while keeping the original on the source level
+    - **Multi-Level Selection**: Selects elements on different levels simultaneously
+    - **Mass Modification**: Modifies properties of multiple levels at once
+    
+    To move objects between levels, select them and use the "Move to Level" option from the contextual menu or from the properties panel.
+  </Accordion>
+</AccordionGroup>
+
+### Level Properties
+
+Each level can have specific properties that affect the elements contained:
+
+<AccordionGroup>
+  <Accordion title="Level Color" icon="palette">
+    - **Default Color**: Sets a standard color for all objects on the level
+    - **Local Override**: Individual elements can have colors that override the level's
+    - **ByLayer Mode**: Forces elements to use the color of the level always
+    - **ByEntity Mode**: Allows individual colors for each element
+    
+    The level color is displayed as a colored sample next to the level name in the panel.
+  </Accordion>
+  <Accordion title="Line Type" icon="grip-lines">
+    - **Default Styles**: Continuous, dashed, dotted, dash-dot, etc.
+    - **Custom Styles**: Create custom line patterns
+    - **Type Scale**: Adjust the density of line pattern
+    - **Global Application**: Apply style to all elements on the level
+    
+    Line type is particularly useful for distinguishing different types of elements (visible, hidden, construction, etc.).
+  </Accordion>
+  <Accordion title="Line Weight" icon="ruler-vertical">
+    - **Default Weight**: Sets the standard thickness for lines on the level
+    - **Units**: Millimeters, points, or pixels
+    - **Scalable Display**: Adapts visual thickness to display scale
+    - **Printing**: Controls how thicknesses are applied in printing
+    
+    Line weights can be displayed in real-time or only in printing, depending on user preferences.
+  </Accordion>
+  <Accordion title="Transparency" icon="glass-water">
+    - **Transparency Level**: From completely opaque to completely transparent
+    - **Depth Display**: Controls how transparent elements interact visually
+    - **Selection Effect**: Influences the selectability of elements
+    - **Rendering**: Impact on rendering quality and speed
+    
+    Transparency is particularly useful for viewing internal geometries or overlaying different components while maintaining readability.
+  </Accordion>
+</AccordionGroup>
+
+### Level Organization
+
+For complex projects, good level organization is essential:
+
+<AccordionGroup>
+  <Accordion title="Level Groups" icon="folder-tree">
+    - **Hierarchical Structure**: Organize levels in groups and subgroups
+    - **Expansion/Collapse**: Show or hide internal group structure
+    - **Inheritance**: Group properties can be inherited by contained levels
+    - **Group Operations**: Apply changes to all levels in a group
+    
+    Level groups are displayed as folders in the levels panel and can be expanded or collapsed to simplify visualization.
+  </Accordion>
+  <Accordion title="Level Filters" icon="filter">
+    - **Name Filters**: Find levels based on text patterns
+    - **Property Filters**: Filter by color, visibility, lock status, etc.
+    - **Saved Filters**: Create and reuse complex filter configurations
+    - **Dynamic Filters**: Automatic update based on changes
+    
+    Filters are accessible from the top of the levels panel and allow quick management of projects with many levels.
+  </Accordion>
+  <Accordion title="Level Templates" icon="clone">
+    - **Default Configurations**: Save sets of levels as templates
+    - **Import/Export**: Share level configurations between projects
+    - **Company Standards**: Create templates conforming to your organization's standards
+    - **Automatic Application**: Apply templates when starting new projects
+    
+    Level templates ensure consistency between different projects and facilitate adherence to drawing standards.
+  </Accordion>
+  <Accordion title="Level State Management" icon="layer-group">
+    - **Save States**: Store different visibility and property configurations
+    - **Quick Recall**: Easily switch between saved configurations
+    - **View-linked States**: Associate level configurations with specific views
+    - **State Sequences**: Create presentations or workflows
+    
+    Level states are useful for quickly switching between different model views, such as exploded views, sections, or alternative configurations.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  For complex projects, create a consistent naming convention for levels, such as "01-Base", "02-Dimensions", "03-Notes". This will make it much easier to navigate between levels and keep the drawing organized.
+</Tip>
+
+## Annotation and Dimensioning
+
+The annotation tools allow you to add technical information to your drawing:
+
+<Frame>
+  <img src="/images/draawbar.png" alt="Dimensions and Annotations" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Dimensioning Tools
+
+<CardGroup cols={2}>
+  <Card title="Linear Dimension" icon="ruler-horizontal">
+    Measures the distance between two points in horizontal or vertical direction. Ideal for standard dimensions aligned with axes.
+  </Card>
+  <Card title="Aligned Dimension" icon="ruler">
+    Measures the actual distance between two points in any direction. The dimension line follows the angle of measurement.
+  </Card>
+  <Card title="Angular Dimension" icon="angle">
+    Measures the angle between two lines or three points. Displays angle in degrees, radians, or degrees/minutes/seconds.
+  </Card>
+  <Card title="Diametral and Radial Dimension" icon="circle">
+    Measures diameters and radii of circles and arcs. Automatically positions diameter (Ø) or radius (R) symbols.
+  </Card>
+  <Card title="Chain Dimension" icon="link-horizontal">
+    Creates a series of consecutive dimensions. Each dimension starts from the endpoint of the previous one.
+  </Card>
+  <Card title="Baseline Dimension" icon="arrows-from-line">
+    Creates multiple dimensions from a common reference point. Useful for dimensioning various features from a baseline.
+  </Card>
+</CardGroup>
+
+### Dimensioning Styles
+
+Customize the appearance of dimensions to match standards and preferences:
+
+<AccordionGroup>
+  <Accordion title="Units and Precision" icon="ruler-combined">
+    - **Primary Units**: Millimeters, centimeters, inches, etc.
+    - **Alternate Units**: Display a second set of units (e.g. mm and inches)
+    - **Precision**: Number of decimal places to display
+    - **Rounding**: Rules for rounding values
+    - **Formatting**: Separators, leading/trailing zeros
+  </Accordion>
+  <Accordion title="Prefixes and Suffixes" icon="text">
+    - **Prefixes**: Text to add before the numeric value
+    - **Suffixes**: Text or symbols to add after the value
+    - **Special Symbols**: Ø, ², ³, °, etc.
+    - **Tolerance Formatting**: Display format for tolerances
+  </Accordion>
+  <Accordion title="Arrow and Extension Lines" icon="arrow-right">
+    - **Arrow Style**: Filled, open, dot, bar, architectural, etc.
+    - **Arrow Size**: Size of arrowhead
+    - **Extension Lines**: Length, offset, style
+    - **Dimension Lines**: Style, positioning, spacing
+  </Accordion>
+  <Accordion title="Text Positioning" icon="text-size">
+    - **Vertical Position**: Above, centered, below the dimension line
+    - **Horizontal Position**: Centered, left, right, optimal
+    - **Alignment**: Inline with dimension or horizontal
+    - **Rotation**: Aligned or custom
+  </Accordion>
+</AccordionGroup>
+
+### Textual Annotations
+
+Add text and notes to your drawings:
+
+<AccordionGroup>
+  <Accordion title="Single-line Text" icon="text">
+    - **Quick Text**: Add labels and brief notes
+    - **Formatting**: Font, size, bold, italic, underline
+    - **Alignment**: Left, center, right
+    - **Rotation**: Position text at any angle
+  </Accordion>
+  <Accordion title="Multi-line Text" icon="align-left">
+    - **Advanced Editor**: Create formatted paragraphs of text
+    - **Multiple Styles**: Use different styles within the same text block
+    - **Line Spacing**: Control line height, margins, indentation
+    - **Bulleted Lists**: Create formatted lists and bullet points
+  </Accordion>
+  <Accordion title="Text Styles" icon="font">
+    - **Style Management**: Create and save custom text styles
+    - **Font Library**: Access all system and special fonts
+    - **Company Styles**: Apply styles conforming to organizational standards
+    - **Import Styles**: Import configurations from other projects
+  </Accordion>
+  <Accordion title="Automatic Text Fields" icon="calendar">
+    - **Date and Time**: Insert current date, automatically updated
+    - **Project Properties**: Automatically insert author, title, revision
+    - **Calculated Fields**: Derived values from model properties
+    - **Counters**: Numbering for elements
+  </Accordion>
+  <Accordion title="Leaders" icon="arrow-pointer">
+    - **Reference Lines**: Connect text to specific parts of the drawing
+    - **Arrow Styles**: Customize arrowheads for reference lines
+    - **Multi-segment Lines**: Create complex paths with multiple segments
+    - **Smart Leaders**: Automatically adapt to layout
+  </Accordion>
+</AccordionGroup>
+
+### Symbols and Markings
+
+Add standardized symbols and technical markings:
+
+<AccordionGroup>
+  <Accordion title="Standard Symbols" icon="square-info">
+    - **Common Symbols**: Welding, surface finish, tolerance grade
+    - **Symbol Library**: Access a vast collection of technical symbols
+    - **Custom Symbols**: Create and save your own symbols
+    - **Alignment**: Position symbols precisely relative to geometry
+  </Accordion>
+  <Accordion title="Tolerances" icon="plus-minus">
+    - **Dimensional Tolerances**: ±, upper/lower limits, fit
+    - **Geometric Tolerances**: GD&T symbols for planarity, roundness, etc.
+    - **Control Frames**: Create complete tolerance frames
+    - **Datums**: Define and reference datum points
+  </Accordion>
+  <Accordion title="Revision Markings" icon="file-pen">
+    - **Revision Clouds**: Highlight modified areas
+    - **Revision Symbols**: Indicate revision level and affected area
+    - **Revision History**: Keep track of changes
+    - **Revision Tables**: Automatically generate revision tables
+  </Accordion>
+  <Accordion title="Tables" icon="table">
+    - **Table Creation**: Add tables with rows and columns
+    - **Styling**: Customize borders, fill, and formatting
+    - **Data Linking**: Link cells to model properties
+    - **Formulas**: Use formulas to calculate values
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Create standardized dimensioning and annotation styles at the beginning of the project and save them in the template. This will ensure consistency throughout the drawing and significantly speed up the documentation process.
+</Tip>
+
+## Parametric Design
+
+Parametric design allows you to create models that adapt automatically when dimensions or other parameters change:
+
+<Frame>
+  <img src="/images/trasform.png" alt="Parametric Design" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Parameters and Variables
+
+<AccordionGroup>
+  <Accordion title="Parameter Definition" icon="sliders">
+    - **Parameter Creation**: Define variables with specific names and values
+    - **Parameter Types**: Numeric, boolean, text, lists, points, vectors
+    - **Units**: Associate specific units to parameters (mm, degrees, etc.)
+    - **Default Values**: Set initial values for parameters
+    - **Descriptions and Metadata**: Document the meaning and use of each parameter
+    
+    Parameters act as global variables accessible throughout the project.
+  </Accordion>
+  <Accordion title="Formulas and Relations" icon="calculator">
+    - **Mathematical Expressions**: Define mathematical relationships between parameters
+    - **Built-in Functions**: Use sin, cos, tan, sqrt, pow, min, max, etc.
+    - **Conditional Operators**: Implement if-then-else logic in formulas
+    - **Geometry Reference**: Extract values from existing geometric elements
+    - **Custom Functions**: Create and reuse complex formulas
+    
+    Example: `height = width * 2` creates a relationship where height is always double the width.
+  </Accordion>
+  <Accordion title="Parameter Tables" icon="table-cells">
+    - **Multiple Configurations**: Manage different parameter configurations
+    - **Design Variants**: Quickly create alternative versions
+    - **Import/Export**: Exchange data with spreadsheets
+    - **Parametric Testing**: Test model with different value sets
+    - **Interpolation**: Generate intermediate values between configurations
+    
+    Parameter tables are ideal for product families with variable dimensions or characteristics.
+  </Accordion>
+  <Accordion title="Dimensional Constraints" icon="ruler-combined">
+    - **Controlled Dimensions**: Link dimensions to parameters
+    - **Bidirectional Update**: Modify dimension to update parameter and vice versa
+    - **Temporary Override**: Temporarily replace parametric values
+    - **Visibility**: Show or hide parametric dimensions in drawing
+    - **Coloring**: Visually identify parametric dimensions
+    
+    Dimensional constraints allow you to quickly modify the model by directly manipulating displayed dimensions.
+  </Accordion>
+</AccordionGroup>
+
+### Geometric Constraints
+
+<CardGroup cols={3}>
+  <Card title="Coincidence" icon="circle-dot">
+    Forces points to coincide. Useful for connecting elements or ensuring continuity between curves and surfaces.
+  </Card>
+  <Card title="Collinearity" icon="grip-lines">
+    Forces points to lie on the same line. Ensures precise alignment of different elements.
+  </Card>
+  <Card title="Parallelism" icon="equals">
+    Keeps lines parallel to each other. Fundamental for regular and symmetrical structures.
+  </Card>
+  <Card title="Perpendicularity" icon="right-angle">
+    Keeps lines perpendicular (at 90°). Essential for right angles and orthogonal structures.
+  </Card>
+  <Card title="Tangency" icon="circle-half">
+    Forces lines or curves to be tangent. Important for smooth transitions between elements.
+  </Card>
+  <Card title="Symmetry" icon="mirror">
+    Keeps elements symmetrical about an axis. Perfect for mirrored parts.
+  </Card>
+  <Card title="Equality" icon="ruler">
+    Forces elements to maintain equal dimensions. Very useful for regular repetitions.
+  </Card>
+  <Card title="Concentricity" icon="bulls-eye">
+    Forces curves to share the same center. Ideal for concentric elements.
+  </Card>
+  <Card title="Fix" icon="thumbtack">
+    Locks points in specific positions. Useful for defining reference points.
+  </Card>
+</CardGroup>
+
+<Tip>
+  Constraints are represented by specific icons on the drawing. Hovering over a constraint icon will show a description and highlight the involved elements.
+</Tip>
+
+### History-Based Modeling
+
+Parametric modeling maintains the history of operations, allowing flexible modifications:
+
+<AccordionGroup>
+  <Accordion title="Feature Tree" icon="sitemap">
+    - **Chronological View**: Shows the sequence of creation operations
+    - **Hierarchical Organization**: Displays dependencies between features
+    - **Navigation**: Expand/collapse branches and feature groups
+    - **Search**: Quickly find specific features
+    - **Annotations**: Add notes to document design decisions
+    
+    The feature tree is displayed in a dedicated panel or as part of the model browser.
+  </Accordion>
+  <Accordion title="Feature Editing" icon="pen-to-square">
+    - **Direct Selection**: Select a feature from the tree or model
+    - **Parameter Update**: Update values and relationships
+    - **Geometry Edit**: Change the geometric definition of the feature
+    - **Smart Update**: Model updates automatically
+    - **Change Propagation**: Changes propagate to all dependent features
+    
+    Editing previous features automatically updates all subsequent operations.
+  </Accordion>
+  <Accordion title="Feature Reordering" icon="arrow-up-arrow-down">
+    - **Drag and Drop**: Change operation order by dragging
+    - **Intermediate Insert**: Add new features at any point in history
+    - **Move Earlier/Later**: Move features before or after others
+    - **Dependency Analysis**: View impact of reordering
+    - **Conflict Resolution**: Automatically manage dependencies during reordering
+    
+    Feature reordering allows optimization of creation flow or resolving problematic dependencies.
+  </Accordion>
+  <Accordion title="Temporary Suppression" icon="eye-slash">
+    - **Deactivation**: Temporarily disable features without deleting them
+    - **Alternative Views**: Explore model versions without certain features
+    - **Simplification**: Reduce complexity to improve performance
+    - **Diagnostics**: Isolate problems by hiding specific features
+    - **Reactivation**: Restore suppressed features when needed
+    
+    Suppression is indicated by a specific icon in the feature tree and suppressed elements are displayed faded or not displayed at all.
+  </Accordion>
+</AccordionGroup>
+
+<Frame>
+  <img src="/images/toolbar-cad.png" alt="Feature Tree" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+## Component Library Management
+
+The library allows you to reuse standard parts and components in your projects:
+
+### Unified Library Usage
+
+<Steps>
+  <Step title="Access the Library">
+    Open the library from the button in the top toolbar or use the shortcut Ctrl+L (Cmd+L on Mac)
+  </Step>
+  <Step title="Navigate Categories">
+    Browse components organized by type (mechanical, electrical, structural, etc.)
+  </Step>
+  <Step title="Search Components">
+    Use the search bar to quickly find specific components by name or tag
+  </Step>
+  <Step title="Filter Results">
+    Apply filters for dimensions, material, or other properties to refine the search
+  </Step>
+</Steps>
+
+<Frame>
+  <img src="/images/lib.png" alt="Component Library" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Component Insertion
+
+<AccordionGroup>
+  <Accordion title="Component Preview" icon="eye">
+    - **3D Visualization**: Rotate and inspect the component before insertion
+    - **Detailed Information**: Display dimensions, weight, material, and other metadata
+    - **Variants**: Explore different configurations of the same component
+    - **Documentation**: Access technical specifications and usage notes
+    
+    The preview allows you to verify that the component is the desired one before inserting it into the drawing.
+  </Accordion>
+  <Accordion title="Positioning" icon="arrows-up-down-left-right">
+    - **Insertion Points**: Position components using predefined points
+    - **Snap to Geometry**: Align to existing elements in the drawing
+    - **Orientation**: Rotate and orient the component during insertion
+    - **Precise Positioning**: Enter exact coordinates or use constraints
+    - **Multiple Insertion**: Place multiple instances of the same component
+    
+    During insertion, dynamic references are displayed to help with precise positioning.
+  </Accordion>
+  <Accordion title="Rotation and Scale" icon="up-right-and-down-left-from-center">
+    - **3D Rotation**: Rotate the component in any direction
+    - **Constrained Rotation**: Limit rotation to specific axes or angles
+    - **Uniform Scale**: Resize proportionally across all dimensions
+    - **Non-uniform Scale**: Modify specific dimensions while maintaining proportions of others
+    - **Parametric Scaling**: Use parameters to control dimensions
+    
+    Transformations can be applied during insertion or later by modifying the component.
+  </Accordion>
+  <Accordion title="Snap Points" icon="magnet">
+    - **Connection Points**: Automatically align to predefined points
+    - **Smart Snap**: Recognize relationships between components (e.g. holes and screws)
+    - **Assembly Preview**: Visualize how components connect
+    - **Automatic Constraints**: Create appropriate constraints during insertion
+    - **Manual Override**: Override automatic behavior when necessary
+    
+    Snap points make it much faster and more precise to create complex assemblies.
+  </Accordion>
+</AccordionGroup>
+
+### Custom Component Creation
+
+<Steps>
+  <Step title="Create the Component">
+    Draw the component using standard CAD tools
+  </Step>
+  <Step title="Save to Library">
+    Select the component and choose "Save to Library" from the context menu or File > Save to Library
+  </Step>
+  <Step title="Add Metadata">
+    Fill in the component information:
+    - Name and description
+    - Tags for search
+    - Category and subcategory
+    - Author and creation date
+    - Version and status
+  </Step>
+  <Step title="Define Parameters">
+    Identify which dimensions should be parametric and define:
+    - Parameter names
+    - Default values
+    - Allowed ranges
+    - Dependencies between parameters
+  </Step>
+  <Step title="Configure Insertion Points">
+    Define points and surfaces that will be used to position the component
+  </Step>
+  <Step title="Organize in Library">
+    Add the component to appropriate categories or create new categories
+  </Step>
+</Steps>
+
+<Tip>
+  When creating custom components, take the time to add complete metadata and parameterize key dimensions. This will make the component much more flexible and easier to find in the future.
+</Tip>
+
+### Parametrization
+
+Parametric components can adapt to various needs:
+
+<AccordionGroup>
+  <Accordion title="Variable Dimensions" icon="arrows-maximize">
+    - **Dimensional Parameters**: Control length, width, height, diameters
+    - **Allowed Ranges**: Define min/max limits for each parameter
+    - **Standard Dimensions**: Create lists of standard values (e.g. normalized diameters)
+    - **Predefined Scales**: Configure common scale ratios
+    - **Sizing Rules**: Define how dimensions interact with each other
+  </Accordion>
+  <Accordion title="Configurations" icon="table-list">
+    - **Default Configurations**: Create saved sets of parameters
+    - **Product Variants**: Define standard component versions
+    - **Configuration Tables**: Manage series of components with parametric tables
+    - **Fly Configuration**: Modify parameters during insertion
+    - **Context-dependent Configuration**: Adapt automatically to insertion context
+  </Accordion>
+  <Accordion title="Conditional Features" icon="code-branch">
+    - **Optional Features**: Enable/disable specific functionalities
+    - **Conditional Logic**: Define rules based on parameter values
+    - **Alternative Geometry**: Change shape based on specific conditions
+    - **Intelligent Suppression**: Automatically hide irrelevant details
+    - **Context-adaptive Behavior**: Modify behavior based on assembly context
+  </Accordion>
+  <Accordion title="Derived Properties" icon="calculator">
+    - **Automatic Calculations**: Generate properties like weight, volume, center of mass
+    - **Physical Properties**: Estimate characteristics like moment of inertia, resistance
+    - **Estimated Costs**: Calculate costs based on material, complexity, operations
+    - **Performance Estimates**: Estimate performance parameters (e.g. flow rate, thermal resistance)
+    - **Compatibility**: Verify compatibility with other components
+  </Accordion>
+</AccordionGroup>
+
+## AI Design Assistant Integration
+
+The AI Design Assistant helps you create complex geometries from textual descriptions:
+
+<Frame>
+  <img src="/images/aipanel.png" alt="AI Design Assistant" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Using the AI Design Assistant
+
+<Steps>
+  <Step title="Access the Assistant">
+    Find the AI Design Assistant in the right side panel or access it from the Tools > AI Design Assistant menu
+  </Step>
+  <Step title="Enter Description">
+    Describe what you want to create using natural language, specifying dimensions, shapes, and characteristics
+  </Step>
+  <Step title="Add Details">
+    Include technical specifications, constraints, or preferences to guide the generation
+  </Step>
+  <Step title="Generate the Model">
+    Click "Generate" to create the model based on your description
+  </Step>
+  <Step title="Refine Iteratively">
+    Modify the description to adjust the result and regenerate the model until you get the desired result
+  </Step>
+</Steps>
+
+<Note>
+  The AI Design Assistant supports detailed descriptions and can understand a wide range of technical terminology. The more specific your description, the more accurate the result will be.
+</Note>
+
+### Types of Generatable Models
+
+The AI Design Assistant can generate various categories of models:
+
+<CardGroup cols={2}>
+  <Card title="Organic Shapes" icon="hill-rockslide">
+    Natural and fluid models like biomimetic structures, ergonomic forms, and objects with complex curves. Ideal for industrial design and consumer-oriented products.
+  </Card>
+  <Card title="Mechanical Components" icon="gears">
+    Functional mechanical parts like brackets, supports, gears, housings, and mechanisms. Includes features like holes, ribs, fillets, and chamfers.
+  </Card>
+  <Card title="Patterns and Textures" icon="border-all">
+    Repetitive and decorative structures like grids, lattices, parametric textures, and geometric patterns. Useful for functional and aesthetic surfaces.
+  </Card>
+  <Card title="Geometric Complexes" icon="shapes">
+    Combinations of basic geometric shapes in complex configurations, including architectural structures, modular frameworks, and composite systems.
+  </Card>
+</CardGroup>
+
+### Effective AI Prompts
+
+To get the best results from the AI Design Assistant, follow these guidelines:
+
+<AccordionGroup>
+  <Accordion title="Be Specific" icon="bullseye">
+    Provide precise details about dimensions, proportions, and features.
+    
+    **Generic Example**: "Create a monitor stand"
+    
+    **Specific Example**: "Create a monitor stand with circular base (25cm diameter), height adjustable from 10 to 30cm, and articulated arm with maximum load of 8kg. The base should have 4 non-slip feet."
+  </Accordion>
+  <Accordion title="Use Technical Terminology" icon="book-atlas">
+    Use standard CAD/CAM terms for greater precision.
+    
+    **Generic Example**: "Make a piece with some holes"
+    
+    **Technical Example**: "Create a rectangular flange 80x120mm with 10mm thickness, with 4 through holes of 8mm diameter positioned 10mm from edges, and a central countersunk hole of 25mm diameter with 45° countersink for flat head screws."
+  </Accordion>
+  <Accordion title="Specify Constraints" icon="link">
+    Mention particular limitations or requirements that the model must respect.
+    
+    **Basic Example**: "Draw a box"
+    
+    **Example with Constraints**: "Draw a storage box with internal volume of at least 2 liters, but that can fit in a 25x15x10cm space. The lid must be waterproof and easy to open without tools."
+  </Accordion>
+  <Accordion title="Describe the Function" icon="screwdriver-wrench">
+    Explain what the component is for to guide functional design.
+    
+    **Basic Example**: "Design a bracket"
+    
+    **Functional Example**: "Design a mounting bracket to fix a cylindrical sensor (30mm diameter, 45mm length) to a vertical wall, keeping the sensor perpendicular to the wall. The bracket must allow easy sensor removal for maintenance."
+  </Accordion>
+  <Accordion title="Gradual Iteration" icon="arrow-progress">
+    Start with simple shapes and add complexity step by step.
+    
+    **Direct Approach**: "Create a complete 4:1 ratio gear system"
+    
+    **Iterative Approach**: 
+    1. "Create a gear with 40 teeth, module 2, 10mm thickness" 
+    2. "Now add a second 10-tooth gear meshing with the first"
+    3. "Add shafts for both gears with appropriate diameter"
+    4. "Add a frame that contains both gears maintaining correct center distance"
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Keep in mind that you can combine AI generation with manual modeling. Generate a base model with AI and then refine it with traditional CAD tools.
+</Tip>
+
+### Modifying AI Results
+
+After generation, you can refine the model:
+
+<AccordionGroup>
+  <Accordion title="Manual Editing" icon="hand">
+    - **Standard Tools**: Use normal CAD tools to refine geometry
+    - **Direct Edit**: Manipulate faces, edges, and vertices of the generated model
+    - **Boolean Operations**: Combine with other shapes to achieve more complex geometries
+    - **Additional Features**: Add holes, threads, chamfers, fillets, and other features
+    - **Topology Optimization**: Lighten and optimize structure while maintaining strength
+  </Accordion>
+  <Accordion title="Parameterization" icon="sliders">
+    - **Parameter Identification**: Convert fixed dimensions to modifiable parameters
+    - **Relationship Creation**: Define mathematical relationships between parameters
+    - **Configuration Tables**: Create model variants with different configurations
+    - **Parametric Testing**: Verify model behavior with different parameter combinations
+    - **Documentation**: Add explanatory notes for created parameters
+  </Accordion>
+  <Accordion title="Combination" icon="object-group">
+    - **Model Merging**: Combine multiple AI results into a single complex model
+    - **Component Library**: Save generated parts for reuse in future projects
+    - **Mix Techniques**: Integrate AI models with manually created or library components
+    - **Assembly**: Use generated models as components in a larger assembly
+    - **Variants**: Create alternative versions based on the same initial concept
+  </Accordion>
+  <Accordion title="Optimization" icon="gauge-high">
+    - **Geometry Simplification**: Reduce complexity for better performance
+    - **Manufacturing Optimization**: Modify to suit specific production processes
+    - **Structural Analysis**: Verify and reinforce critical areas
+    - **Weight Reduction**: Lighten the model while maintaining necessary strength
+    - **Standardization**: Adapt dimensions and features to industry standards
+  </Accordion>
+</AccordionGroup>
+
+## File and Project Management
+
+The CAD Editor offers complete functionality for managing your projects:
+
+### Saving and Opening Files
+
+<AccordionGroup>
+  <Accordion title="Native Formats" icon="file-lines">
+    - **Proprietary Format**: Save in .cad or .model format to maintain all information
+    - **Complete Projects**: Save entire projects with all components and relationships
+    - **Complete Metadata**: Preserve parameters, history, constraints, and annotations
+    - **Compression**: Optimize file sizes for efficient storage
+    - **Protection**: Options to protect files with password or encryption
+  </Accordion>
+  <Accordion title="Autosave" icon="floppy-disk">
+    - **Periodic Saving**: Recover work in case of unexpected closure
+    - **Configurable Interval**: Set autosave frequency
+    - **Separate Location**: Autosave files don't overwrite originals
+    - **Automatic Recovery**: Offers to recover interrupted sessions at startup
+    - **Automatic Cleanup**: Manages obsolete autosave files
+  </Accordion>
+  <Accordion title="Backup" icon="database">
+    - **Incremental Backups**: Automatically create backup copies at configurable intervals
+    - **Backup Rotation**: Maintains a specific number of previous versions
+    - **Cloud Backup**: Option to save backups in cloud for greater security
+    - **Local Backups**: Storage on local devices or folders
+    - **Easy Recovery**: Simple interface for recovering from backups
+  </Accordion>
+  <Accordion title="Version History" icon="clock-rotate-left">
+    - **Integrated Versioning**: Track significant changes over time
+    - **Version Annotations**: Add notes to describe changes
+    - **Visual Comparison**: View differences between versions
+    - **Selective Recovery**: Recover specific elements from previous versions
+    - **Project Timeline**: View project evolution over time
+  </Accordion>
+</AccordionGroup>
+
+### Import and Export
+
+<AccordionGroup>
+  <Accordion title="Standard CAD Formats" icon="file-import">
+    - **2D Formats**: DXF, DWG for technical drawings
+    - **3D Formats**: STEP, IGES, SAT for solid models
+    - **Neutral Formats**: X_T, X_B for exchange between different CAD systems
+    - **Import Options**: Control over layers, units, tolerances
+    - **Automatic Repair**: Correction of common issues during import
+  </Accordion>
+  <Accordion title="Exchange Formats" icon="arrows-rotate">
+    - **Intermediate Formats**: Conversion between different CAD/CAM systems
+    - **Data Preservation**: Options to maintain specific information
+    - **Mapping**: Smart conversion between different data structures
+    - **Validation**: Verify data integrity during conversion
+    - **Reports**: Documentation of any issues or data loss
+  </Accordion>
+  <Accordion title="Mesh Formats" icon="cubes">
+    - **STL**: Standard for 3D printing and rapid prototyping
+    - **OBJ**: Common format for 3D graphics
+    - **PLY**: Polygon format for 3D scans
+    - **3MF**: Modern format for additive manufacturing
+    - **Resolution Options**: Control over mesh density
+  </Accordion>
+  <Accordion title="Raster Images" icon="image">
+    - **PNG/JPG**: Export images for documentation
+    - **Configurable Resolution**: Control over image quality
+    - **Transparency**: Support for transparent backgrounds (PNG)
+    - **Current or Multiple Views**: Export current view or multiple views
+    - **Watermark**: Option to add watermarks to images
+  </Accordion>
+  <Accordion title="PDF" icon="file-pdf">
+    - **Vector Documentation**: Export to PDF format for sharing
+    - **3D PDF**: Include interactive 3D models in PDFs
+    - **Layout Configuration**: Control over page size and scale
+    - **PDF Layers**: Maintain layer structure in export
+    - **Metadata**: Include project and author information
+  </Accordion>
+</AccordionGroup>
+
+### Managing Multiple Drawings
+
+<AccordionGroup>
+  <Accordion title="Referenced Drawings" icon="file-contract">
+    - **External References**: Create links between different drawings
+    - **Dependencies**: View and manage relationships between files
+    - **Relative References**: Maintain links even when changing path
+    - **Change Notifications**: Alerts when referenced files are modified
+    - **Selective Loading**: Load only necessary references for better performance
+  </Accordion>
+  <Accordion title="Automatic Update" icon="arrows-spin">
+    - **Synchronization**: Automatically update drawings when references change
+    - **Change Propagation**: Transfer changes between linked drawings
+    - **Update Control**: Options for manual or automatic updates
+    - **Local Overrides**: Maintain local modifications during updates
+    - **Conflict Resolution**: Tools for managing conflicting changes
+  </Accordion>
+  <Accordion title="Multiple Layouts" icon="table-columns">
+    - **Different Views**: Create different views and configurations of the same model
+    - **Technical Sheets**: Generate multiple views, sections, and details in a single document
+    - **Layout Templates**: Use standardized formats for technical documentation
+    - **Custom Configurations**: Adapt layouts to specific documentation needs
+    - **Multiple Printing**: Manage different settings for each layout
+  </Accordion>
+  <Accordion title="Worksheets" icon="copy">
+    - **Organization**: Group related drawings in a single project
+    - **Easy Navigation**: Quickly switch between related drawings
+    - **Consistency**: Maintain consistency between drawings in the same project
+    - **Share Configurations**: Use same styles and standards across drawings
+    - **Batch Processing**: Apply operations to groups of related drawings
+  </Accordion>
+</AccordionGroup>
+
+### Cloud and Collaboration
+
+<AccordionGroup>
+  <Accordion title="Cloud Synchronization" icon="cloud">
+    - **Cross-platform Access**: Access your projects from any device
+    - **Automatic Backup**: Safeguard your work with cloud backups
+    - **Versioning**: Track and manage project versions
+    - **Selective Sync**: Choose which projects to sync locally
+    - **Offline Work**: Continue working without connection and sync later
+  </Accordion>
+  <Accordion title="Sharing" icon="share-nodes">
+    - **Direct Sharing**: Send links to projects with other team members
+    - **External Sharing**: Share with external collaborators or clients
+    - **Access Levels**: Control what recipients can view or modify
+    - **Access Tracking**: Monitor who has viewed or modified projects
+    - **Comments and Feedback**: Collect input directly in project context
+  </Accordion>
+  <Accordion title="Access Control" icon="user-lock">
+    - **Granular Permissions**: Manage who can view, comment, or modify
+    - **User Groups**: Assign permissions to teams or departments
+    - **Temporary Access**: Grant time-limited access
+    - **Watermark**: Add watermarks to shared files for security
+    - **Revoke Access**: Remove permissions when no longer needed
+  </Accordion>
+  <Accordion title="Comments and Annotations" icon="message">
+    - **Contextual Notes**: Add comments directly on drawing elements
+    - **Discussion Threads**: Organized conversations about specific aspects
+    - **Assignments**: Assign comments or requests to specific members
+    - **Notifications**: Alerts when new comments are added
+    - **Resolution**: Mark issues as resolved after addressing them
+  </Accordion>
+</AccordionGroup>
+
+## Tips and Best Practices for the CAD Editor
+
+### Workflow Optimization
+
+<AccordionGroup>
+  <Accordion title="Keyboard Shortcuts" icon="keyboard">
+    Learn the main shortcuts to speed up common operations:
+    <Frame>
+    <img src="/images/keyboard.png" alt="Keyboard Shortcuts" style={{ borderRadius: '0.5rem' }} />
+   </Frame> 
+    - **Ctrl+S** (Cmd+S): Save
+    - **Ctrl+Z/Y** (Cmd+Z/Shift+Cmd+Z): Undo/Redo
+    - **Ctrl+C/V/X** (Cmd+C/V/X): Copy/Paste/Cut
+    - **Space**: Toggle between current tool and selection
+    - **F**: Fit to view
+    - **Ctrl+1/2/3/4** (Cmd+1/2/3/4): Standard views (Front/Top/Right/Isometric)
+    - **Ctrl+B** (Cmd+B): Regenerate model
+    - **Tab**: Cycle through selectable elements under cursor
+    - **Delete**: Delete selected elements
+    
+    A complete list of shortcuts is available in the Help > Keyboard Shortcuts menu.
+  </Accordion>
+  <Accordion title="Interface Customization" icon="sliders">
+    Adapt the interface to your specific needs:
+    
+    - **Workspace Layout**: Configure panel arrangement and sizes
+    - **Custom Toolbars**: Add frequently used tools
+    - **Menus and Palettes**: Organize tools in logical groups
+    - **Color Themes**: Choose themes optimized for long work sessions
+    - **User Profiles**: Save different configurations for different types of activities
+    
+    Access customization options from Tools > Preferences > Interface menu.
+  </Accordion>
+  <Accordion title="Templates" icon="file-circle-plus">
+    Create and use templates for recurring drawing types:
+    
+    - **Basic Templates**: For standard projects with default settings
+    - **Industry Templates**: Optimized for specific disciplines (mechanical, architectural, etc.)
+    - **Company Templates**: With your organization's standards, blocks, and styles
+    - **Personal Templates**: Adapted to your specific workflow
+    - **Template Library**: Manage and share templates within the team
+    
+    Save a file as template from File > Save as Template menu.
+  </Accordion>
+  <Accordion title="Frequent Saving" icon="floppy-disk">
+    Adopt the habit of regularly saving your work:
+    
+    - **Incremental Saves**: Create numbered versions to track evolution
+    - **Autosave Configuration**: Set short intervals (5-10 minutes)
+    - **Save Before Complex Operations**: Create safe restore points
+    - **Regular Backups**: Export safety copies to external devices
+    - **Save Comments**: Add notes about what was modified
+    
+    The Ctrl+S (Cmd+S) key combination should become an automatic reflex.
+  </Accordion>
+</AccordionGroup>
+
+### Organizing Models
+
+<AccordionGroup>
+  <Accordion title="Naming Conventions" icon="tag">
+    Use descriptive and systematic names:
+    
+    - **Prefixes for type**: Use prefixes like "ASM_" for assemblies, "PRT_" for parts
+    - **Logical Naming**: Include part numbers or project codes
+    - **Versioning**: Incorporate version numbers or dates
+    - **Brief Descriptions**: Balance brevity and clarity
+    - **Consistency**: Follow the same system across all projects
+    
+    Examples: "PRT_10234_SupportBracePrincipal_v2" or "ASM_TrasmissionePrincipale_2024-03"
+  </Accordion>
+  <Accordion title="Hierarchical Structure" icon="diagram-project">
+    Organize complex elements into logical subgroups:
+    
+    - **Functional Components**: Group by function or system
+    - **Intermediate Assemblies**: Create for related parts
+    - **References**: Use parent-child relationships correctly
+    - **Visibility Management**: Organize for easy selective viewing
+    - **Modularity**: Design for reuse and maintainability
+    
+    A good hierarchical structure facilitates navigation and modification of complex projects.
+  </Accordion>
+  <Accordion title="Metadata" icon="tags">
+    Add descriptive information for easier search:
+    
+    - **Standard Properties**: Author, date, status, revision
+    - **Keywords and Categories**: Keywords for easy search
+    - **Technical Information**: Material, production process, tolerances
+    - **Usage Notes**: Special instructions or limitations
+    - **External References**: Links to specific or related documentation
+    
+    Metadata makes your models easier to find, understand, and manage.
+  </Accordion>
+  <Accordion title="Integrated Documentation" icon="book">
+    Include notes and references directly in the file:
+    
+    - **Project Notes**: Explanations of design decisions
+    - **Change Log**: Main changes over time
+    - **Project Constraints**: Documentation of project criteria
+    - **Instructions**: How to use or modify the model
+    - **External References**: Links to specific or applicable standards
+    
+    Integrated documentation ensures that critical information remains with the model.
+  </Accordion>
+</AccordionGroup>
+
+### Performance Optimization
+
+<AccordionGroup>
+  <Accordion title="Simplifying Geometry" icon="minimize">
+    Reduce complexity when possible:
+    
+    - **Appropriate Detail**: Use only the necessary level of detail
+    - **Feature Suppression**: Temporarily disable unnecessary details
+    - **Simplified Representations**: Create lightweight versions for assemblies
+    - **Derived Parts**: Use simplified models for reference
+    - **Schematic Substitution**: Replace complex components with schematic representations
+    
+    A simpler model is easier to manipulate and less prone to issues.
+  </Accordion>
+  <Accordion title="Managing Levels" icon="layer-group">
+    Hide unnecessary levels to improve performance:
+    
+    - **Detail Levels**: Organize elements by importance
+    - **Level Freezing**: Make inactive levels unmodifiable
+    - **Construction Geometry**: Separate auxiliary geometry
+    - **Visibility Overrides**: Configure presets for different activities
+    - **Cleaning**: Periodically remove empty or unused levels
+    
+    Efficient level management improves both performance and visual clarity.
+  </Accordion>
+  <Accordion title="Selective Visualization" icon="eye">
+    Use appropriate visualization modes:
+    
+    - **Wireframe**: For quick navigation and selection
+    - **Shaded Simple**: For general editing
+    - **Realistic Rendering**: Only when necessary for evaluations
+    - **Environmental Occlusion**: Balancing speed and comprehensibility
+    - **Adaptive Visualization**: Automatic adjustment based on actions
+    
+    Adapting visualization modes can significantly improve performance.
+  </Accordion>
+  <Accordion title="Memory Management" icon="microchip">
+    Close unnecessary drawings to free resources:
+    
+    - **Open File Limitation**: Keep only necessary files open
+    - **Cache Cleaning**: Regularly clear temporary cache
+    - **Database Optimization**: Periodically compact databases
+    - **Resource Monitoring**: Keep an eye on memory usage
+    - **Regular Restart**: Restart application during long breaks
+    
+    Proactive resource management prevents crashes and slowdowns during long sessions.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  For complex projects, consider the "top-down" approach: start with a simplified general layout and add details progressively. This keeps the project manageable even in early stages and helps prevent performance issues.
+</Tip>
+
+---
+
+With these features and tools, the CAD Editor offers everything you need to create and manage complex 2D and 3D models. In the next section, we'll explore the CAM Editor and its toolpath generation capabilities.

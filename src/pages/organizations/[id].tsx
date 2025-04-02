@@ -205,7 +205,7 @@ export default function OrganizationDetailPage() {
       <DynamicLayout>
         <div className="p-6">
           {/* Organization header */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-6 mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg p-6 mb-6">
             <div>
               <div className="flex items-center">
                 <div className="mr-4 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -303,7 +303,7 @@ export default function OrganizationDetailPage() {
           </div>
           
           {/* Tab content */}
-          <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg">
+          <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg">
             {/* Overview */}
             {activeTab === 'overview' && (
               <div className="p-6">
@@ -386,7 +386,7 @@ export default function OrganizationDetailPage() {
                           )}
                         </tr>
                       </thead>
-                      <tbody className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white divide-y divide-gray-200">
+                      <tbody className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white divide-y divide-gray-200">
                         {members.map((member) => (
                           <tr key={member.id}>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -491,7 +491,7 @@ export default function OrganizationDetailPage() {
                       {projects.map((project) => (
                         <div
                           key={project.id}
-                          className="border rounded-md shadow-sm hover:shadow-md transition-shadow bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white overflow-hidden cursor-pointer"
+                          className="border rounded-md shadow-sm hover:shadow-md transition-shadow bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white overflow-hidden cursor-pointer"
                           onClick={() => router.push(`/projects/${project.id}`)}
                         >
                           <div className="p-4">
@@ -570,7 +570,7 @@ export default function OrganizationDetailPage() {
                     <div className="mt-3">
                       <button
                         type="button"
-                        className="inline-flex justify-center py-2 px-4 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        className="inline-flex justify-center py-2 px-4 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                       >
                         Delete Organization
                       </button>
@@ -590,9 +590,9 @@ export default function OrganizationDetailPage() {
               
               <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
               
-              <div className="inline-block align-bottom bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="inline-block align-bottom bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <form onSubmit={handleInviteMember}>
-                  <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div className="sm:flex sm:items-start">
                       <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
                         <Mail className="h-6 w-6 text-blue-600" />
@@ -654,7 +654,7 @@ export default function OrganizationDetailPage() {
                     </button>
                     <button
                       type="button"
-                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                       onClick={() => setShowInviteModal(false)}
                     >
                       Cancel

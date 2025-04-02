@@ -1,0 +1,857 @@
+# API Reference
+
+This comprehensive API reference documents the core interfaces, methods, and data structures for the CAD/CAM application. It is primarily intended for developers who are creating extensions or integrating with the application.
+
+## API Overview
+
+The application exposes several APIs that can be used to extend or integrate with its functionality:
+
+1. **Core API**: Fundamental application functions and data structures
+2. **Model API**: Creation and manipulation of 3D models
+3. **Text-to-CAD API**: Generate models from text descriptions
+4. **Export/Import API**: File format conversion functions
+5. **Extension API**: Register and manage extensions
+6. **UI API**: Create and integrate custom user interface components
+
+## Authentication
+
+Most API endpoints require authentication. The application uses JSON Web Tokens (JWT) for authentication:
+
+### Obtaining a Token
+
+```typescript
+// POST /api/auth/login
+const response = await fetch('/api/auth/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    email: 'user@example.com',
+    password: 'password'
+  })
+});
+
+const { token, user } = await response.json();
+```
+
+### Using a Token
+
+```typescript
+// Include the token in the Authorization header
+const response = await fetch('/api/models', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+```
+
+## Core API
+
+The Core API provides access to fundamental application functionality.
+
+### Application State
+
+```typescript
+// Get application state
+const state = await api.core.getApplicationState();
+
+// Listen for state changes
+api.core.onStateChanged((newState) => {
+  console.log('Application state changed:', newState);
+});
+
+// Set application preferences
+await api.core.setPreferences({
+  units: 'mm',
+  theme: 'dark',
+  autosave: true,
+  autosaveInterval: 5
+});
+```
+
+### Error Handling
+
+All API methods follow a consistent error handling pattern:
+
+```typescript
+try {
+  const result = await api.someMethod();
+  // Success case
+} catch (error) {
+  if (error.code === 'NOT_AUTHORIZED') {
+    // Handle authorization errors
+  } else if (error.code === 'VALIDATION_ERROR') {
+    // Handle validation errors
+    console.error('Validation errors:', error.details);
+  } else {
+    // Handle other errors
+    console.error('API error:', error.message);
+  }
+}
+```
+
+## Model API
+
+The Model API provides methods for creating, querying, and manipulating 3D models.
+
+### Model Management
+
+```typescript
+// Create a new model
+const model = await api.models.create({
+  name: 'My Model',
+  type: '3d',
+  metadata: {
+    author: 'User Name',
+    description: 'Example model'
+  }
+});
+
+// Get model by ID
+const model = await api.models.getById('model_id');
+
+// List all models
+const models = await api.models.list({
+  limit: 50,
+  offset: 0,
+  sort: 'createdAt',
+  order: 'desc'
+});
+
+// Update model
+await api.models.update('model_id', {
+  name: 'Updated Model Name',
+  metadata: {
+    tags: ['example', 'updated']
+  }
+});
+
+// Delete model
+await api.models.delete('model_id');
+```
+
+### Geometry Operations
+
+```typescript
+// Add primitive to model
+const boxFeature = await api.models.addPrimitive('model_id', {
+  type: 'box',
+  width: 10,
+  height: 5,
+  depth: 3,
+  position: [0, 0, 0],
+  orientation: [0, 0, 0, 1] // Quaternion
+});
+
+// Add feature to model
+const filletFeature = await api.models.addFeature('model_id', {
+  type: 'fillet',
+  edges: ['edge_id_1', 'edge_id_2'],
+  radius: 0.5
+});
+
+// Modify feature
+await api.models.updateFeature('model_id', 'feature_id', {
+  radius: 0.75
+});
+
+// Perform boolean operation
+await api.models.booleanOperation('model_id', {
+  type: 'union', // 'union', 'subtract', 'intersect'
+  targetBody: 'body_id_1',
+  toolBody: 'body_id_2'
+});
+```
+
+### Model Query
+
+```typescript
+// Get model topology
+const topology = await api.models.getTopology('model_id');
+
+// Query specific elements
+const faces = await api.models.queryElements('model_id', {
+  type: 'face',
+  attribute: 'area',
+  condition: 'greaterThan',
+  value: 10
+});
+
+// Measure distance
+const distance = await api.models.measureDistance('model_id', {
+  from: { type: 'vertex', id: 'vertex_id_1' },
+  to: { type: 'vertex', id: 'vertex_id_2' }
+});
+```
+
+## Text-to-CAD API
+
+The Text-to-CAD API provides methods for generating 3D models from text descriptions.
+
+### Text Processing
+
+```typescript
+// Process text description
+const processedText = await api.textToCad.processText({
+  text: 'Create a cylindrical container with 10cm diameter and 15cm height',
+  options: {
+    enhanceWithAI: true,
+    extractParameters: true
+  }
+});
+
+// Get extracted parameters
+const parameters = processedText.parameters;
+console.log('Extracted parameters:', parameters);
+// Output: { diameter: { value: 10, unit: 'cm' }, height: { value: 15, unit: 'cm' } }
+```
+
+### Model Generation
+
+```typescript
+// Generate model from text
+const result = await api.textToCad.generateModel({
+  textDescription: 'Create a cylindrical container with 10cm diameter and 15cm height',
+  format: 'model', // Return a model object rather than a file
+  options: {
+    resolution: 'high',
+    units: 'mm'
+  }
+});
+
+// Access the generated model
+const model = result.model;
+
+// Generate model and export directly to a file
+const fileResult = await api.textToCad.generateModel({
+  textDescription: 'Create a cylindrical container with 10cm diameter and 15cm height',
+  format: 'stl',
+  options: {
+    resolution: 'high',
+    units: 'mm'
+  }
+});
+
+// Access the exported file
+const fileData = fileResult.file.data; // Base64-encoded file
+```
+
+### Parameter Modification
+
+```typescript
+// Modify parameters and regenerate
+const result = await api.textToCad.generateModelWithParameters({
+  textDescription: 'Create a cylindrical container',
+  parameters: {
+    diameter: { value: 15, unit: 'cm' },
+    height: { value: 20, unit: 'cm' },
+    wallThickness: { value: 0.3, unit: 'cm' }
+  },
+  format: 'model'
+});
+```
+
+## Export/Import API
+
+The Export/Import API provides methods for converting models to various file formats.
+
+### Exporting Models
+
+```typescript
+// Export model to STL
+const stlFile = await api.export.toSTL('model_id', {
+  quality: 'high',
+  binary: true
+});
+
+// Export model to OBJ
+const objFile = await api.export.toOBJ('model_id', {
+  includeTextures: true,
+  includeNormals: true
+});
+
+// Export model to STEP
+const stepFile = await api.export.toSTEP('model_id', {
+  schema: 'AP214'
+});
+
+// Export model with custom exporter extension
+const customFile = await api.export.withExporter('model_id', 'custom-exporter', {
+  customOption1: 'value',
+  customOption2: true
+});
+```
+
+### Importing Models
+
+```typescript
+// Import from file (using FormData)
+const formData = new FormData();
+formData.append('file', file); // File from input element
+
+const model = await api.import.fromFile(formData, {
+  format: 'auto', // Auto-detect format
+  units: 'mm',
+  createNewModel: true,
+  modelName: 'Imported Model'
+});
+
+// Import from URL
+const model = await api.import.fromURL('https://example.com/model.stl', {
+  format: 'stl',
+  units: 'mm'
+});
+```
+
+## Extension API
+
+The Extension API provides methods for registering and managing extensions.
+
+### Extension Registration
+
+```typescript
+// Register an extension
+const extension = await api.extensions.register({
+  id: 'my-custom-extension',
+  name: 'My Custom Extension',
+  version: '1.0.0',
+  type: 'cad-generator',
+  execute: async (context) => {
+    // Extension implementation
+    return {
+      // Extension result
+    };
+  }
+});
+
+// Check if extension is registered
+const isRegistered = await api.extensions.isRegistered('my-custom-extension');
+```
+
+### Extension Management
+
+```typescript
+// Get extension by ID
+const extension = await api.extensions.getById('my-custom-extension');
+
+// List all extensions
+const extensions = await api.extensions.list({
+  type: 'cad-generator' // Filter by type
+});
+
+// Execute extension
+const result = await api.extensions.execute('my-custom-extension', {
+  // Context parameters
+  text: 'Generate a model',
+  options: {
+    param1: 'value1'
+  }
+});
+
+// Unregister extension
+await api.extensions.unregister('my-custom-extension');
+```
+
+## UI API
+
+The UI API provides methods for creating and managing custom user interface components.
+
+### Panel Management
+
+```typescript
+// Register a custom panel
+const panel = await api.ui.registerPanel({
+  id: 'my-custom-panel',
+  name: 'My Custom Panel',
+  icon: 'custom-icon',
+  position: 'right',
+  component: MyCustomPanelComponent
+});
+
+// Show panel
+await api.ui.showPanel('my-custom-panel');
+
+// Hide panel
+await api.ui.hidePanel('my-custom-panel');
+
+// Update panel content
+await api.ui.updatePanel('my-custom-panel', {
+  data: {
+    // Custom data to pass to the panel
+  }
+});
+```
+
+### Dialog Management
+
+```typescript
+// Show dialog
+const result = await api.ui.showDialog({
+  title: 'Confirmation',
+  message: 'Are you sure you want to proceed?',
+  buttons: [
+    { id: 'cancel', label: 'Cancel' },
+    { id: 'confirm', label: 'Confirm', primary: true }
+  ]
+});
+
+// Check dialog result
+if (result.button === 'confirm') {
+  // User confirmed
+}
+
+// Show custom dialog component
+const result = await api.ui.showCustomDialog({
+  title: 'Custom Dialog',
+  component: MyCustomDialogComponent,
+  props: {
+    // Props to pass to the dialog component
+  },
+  width: 500,
+  height: 400
+});
+```
+
+### Notification Management
+
+```typescript
+// Show notification
+api.ui.notify({
+  type: 'success', // 'success', 'info', 'warning', 'error'
+  message: 'Operation completed successfully',
+  duration: 5000 // milliseconds
+});
+
+// Show progress
+const progressId = api.ui.showProgress({
+  message: 'Processing model...',
+  progress: 0
+});
+
+// Update progress
+api.ui.updateProgress(progressId, {
+  progress: 50,
+  message: 'Applying modifications...'
+});
+
+// Complete progress
+api.ui.completeProgress(progressId, {
+  message: 'Processing complete',
+  type: 'success'
+});
+```
+
+## Event System
+
+The application provides an event system for subscribing to application events.
+
+### Event Subscription
+
+```typescript
+// Subscribe to model changes
+const unsubscribe = api.events.subscribe('model.changed', (data) => {
+  console.log('Model changed:', data.modelId);
+});
+
+// Unsubscribe when no longer needed
+unsubscribe();
+
+// Subscribe with options
+api.events.subscribe('model.changed', (data) => {
+  console.log('Model changed:', data.modelId);
+}, {
+  once: true, // Only trigger once
+  filter: (data) => data.modelId === 'specific_model_id' // Only trigger for specific model
+});
+```
+
+### Available Events
+
+The following events are available for subscription:
+
+#### Application Events
+
+- `app.initialized`: Application has been initialized
+- `app.themeChanged`: Application theme has been changed
+- `app.preferencesChanged`: User preferences have been updated
+- `app.beforeClose`: Application is about to close (can be cancelled)
+
+#### Model Events
+
+- `model.created`: New model has been created
+- `model.opened`: Existing model has been opened
+- `model.saved`: Model has been saved
+- `model.closed`: Model has been closed
+- `model.changed`: Model has been modified
+- `model.featuresChanged`: Model features have been modified
+- `model.parametersChanged`: Model parameters have been updated
+- `model.selectionChanged`: Selection in the model has changed
+
+#### Text-to-CAD Events
+
+- `textToCad.processingStarted`: Text processing has started
+- `textToCad.processingCompleted`: Text processing has completed
+- `textToCad.generationStarted`: Model generation has started
+- `textToCad.generationProgress`: Model generation progress update
+- `textToCad.generationCompleted`: Model generation has completed
+- `textToCad.generationFailed`: Model generation has failed
+
+#### Extension Events
+
+- `extension.registered`: New extension has been registered
+- `extension.unregistered`: Extension has been unregistered
+- `extension.executed`: Extension has been executed
+- `extension.executionFailed`: Extension execution has failed
+
+#### UI Events
+
+- `ui.panelShown`: Panel has been shown
+- `ui.panelHidden`: Panel has been hidden
+- `ui.dialogShown`: Dialog has been shown
+- `ui.dialogClosed`: Dialog has been closed
+- `ui.viewChanged`: 3D view has been changed (camera, viewport, etc.)
+
+### Custom Events
+
+You can define and trigger custom events:
+
+```typescript
+// Define custom event handler
+api.events.subscribe('myExtension.customEvent', (data) => {
+  console.log('Custom event triggered:', data);
+});
+
+// Trigger custom event
+api.events.emit('myExtension.customEvent', {
+  // Custom event data
+  action: 'completed',
+  result: {
+    // Result data
+  }
+});
+```
+
+## Command System
+
+The application provides a command system for executing and managing application commands.
+
+### Executing Commands
+
+```typescript
+// Execute a command
+const result = await api.commands.execute('create.box', {
+  width: 10,
+  height: 5,
+  depth: 3,
+  position: [0, 0, 0]
+});
+
+// Execute a command with a specific target
+const result = await api.commands.execute('fillet.edges', {
+  modelId: 'model_id',
+  edges: ['edge_id_1', 'edge_id_2'],
+  radius: 0.5
+});
+```
+
+### Command History
+
+```typescript
+// Get command history
+const history = await api.commands.getHistory();
+
+// Undo last command
+await api.commands.undo();
+
+// Redo last undone command
+await api.commands.redo();
+
+// Jump to specific point in history
+await api.commands.jumpToHistory(historyId);
+```
+
+### Custom Commands
+
+You can register custom commands:
+
+```typescript
+// Register a custom command
+api.commands.register({
+  id: 'myExtension.customCommand',
+  label: 'My Custom Command',
+  category: 'Custom',
+  execute: async (params) => {
+    // Command implementation
+    return {
+      // Command result
+    };
+  },
+  undo: async (params, result) => {
+    // Undo implementation
+  }
+});
+
+// Execute the custom command
+const result = await api.commands.execute('myExtension.customCommand', {
+  // Command parameters
+});
+```
+
+## Data Types
+
+The API uses several common data structures.
+
+### Model
+
+```typescript
+interface Model {
+  id: string;
+  name: string;
+  type: '2d' | '3d';
+  features: Feature[];
+  parameters: Parameter[];
+  metadata: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+### Feature
+
+```typescript
+interface Feature {
+  id: string;
+  type: string;
+  name: string;
+  parameters: Parameter[];
+  children?: Feature[];
+  parent?: string;
+  geometry?: any;
+  metadata?: Record<string, any>;
+}
+```
+
+### Parameter
+
+```typescript
+interface Parameter {
+  id: string;
+  name: string;
+  label: string;
+  value: number | string | boolean | any[];
+  unit?: string;
+  type: 'number' | 'string' | 'boolean' | 'array' | 'object';
+  min?: number;
+  max?: number;
+  step?: number;
+  options?: any[];
+  expression?: string;
+  computed?: boolean;
+  visible?: boolean;
+  readOnly?: boolean;
+  category?: string;
+  description?: string;
+}
+```
+
+### ProcessedText
+
+```typescript
+interface ProcessedText {
+  original: string;
+  normalized: string;
+  enhanced?: string;
+  constraints: TextConstraint[];
+  parameters: Record<string, any>;
+  metadata: Record<string, any>;
+}
+
+interface TextConstraint {
+  type: 'dimension' | 'geometric' | 'material' | string;
+  value?: number;
+  unit?: string;
+  relation?: string;
+  target?: string;
+  material?: string;
+  original: string;
+}
+```
+
+### Extension
+
+```typescript
+interface Extension {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  author: string;
+  type: 'cad-generator' | 'model-modifier' | 'exporter';
+  accessLevel: 'public' | 'private' | 'restricted';
+  capabilities?: string[];
+  dependencies?: Record<string, string>;
+  execute: (context: ExtensionContext) => Promise<ExtensionResult>;
+}
+
+interface ExtensionContext {
+  [key: string]: any;
+}
+
+interface ExtensionResult {
+  [key: string]: any;
+}
+```
+
+## RESTful API
+
+In addition to the JavaScript API, the application provides a RESTful HTTP API for remote integration:
+
+### Authentication
+
+```
+POST /api/auth/login
+POST /api/auth/refresh
+POST /api/auth/logout
+```
+
+### Models
+
+```
+GET /api/models
+POST /api/models
+GET /api/models/:id
+PUT /api/models/:id
+DELETE /api/models/:id
+```
+
+### Text-to-CAD
+
+```
+POST /api/text-to-cad/process
+POST /api/text-to-cad/generate
+```
+
+### Extensions
+
+```
+GET /api/extensions
+POST /api/extensions
+GET /api/extensions/:id
+DELETE /api/extensions/:id
+POST /api/extensions/:id/execute
+```
+
+For detailed documentation of the RESTful API endpoints, see the [REST API Documentation](./rest-api.md).
+
+## Webhook Integration
+
+The application provides webhook integration for receiving notifications about application events:
+
+### Registering Webhooks
+
+```typescript
+// Register a webhook
+const webhook = await api.webhooks.register({
+  url: 'https://example.com/webhook',
+  events: ['model.created', 'model.changed'],
+  secret: 'webhook_secret_key' // Used for signature verification
+});
+
+// List registered webhooks
+const webhooks = await api.webhooks.list();
+
+// Update webhook
+await api.webhooks.update(webhook.id, {
+  events: ['model.created', 'model.changed', 'model.deleted']
+});
+
+// Delete webhook
+await api.webhooks.delete(webhook.id);
+```
+
+### Webhook Payload
+
+When an event occurs, the application sends a POST request to the registered webhook URL with a JSON payload:
+
+```json
+{
+  "event": "model.created",
+  "timestamp": "2023-05-15T14:30:00Z",
+  "data": {
+    "modelId": "model_123456",
+    "name": "My Model",
+    "userId": "user_789012"
+  },
+  "signature": "sha256=..."
+}
+```
+
+### Verifying Webhook Signatures
+
+To verify the authenticity of webhook requests, the application includes a signature in the `X-Webhook-Signature` header. The signature is a HMAC SHA-256 hash of the payload, using the webhook secret as the key.
+
+```javascript
+// Node.js example of signature verification
+const crypto = require('crypto');
+
+function verifyWebhookSignature(payload, signature, secret) {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(`sha256=${expectedSignature}`),
+    Buffer.from(signature)
+  );
+}
+```
+
+## Rate Limiting
+
+The API enforces rate limits to prevent abuse:
+
+- **Standard Rate Limit**: 100 requests per minute
+- **Text-to-CAD Generation**: 10 requests per minute
+- **Extension Execution**: 20 requests per minute
+
+Rate limit headers are included in API responses:
+
+```
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1620000000
+```
+
+## Versioning
+
+The API follows semantic versioning (SemVer) for version control. The current version is specified in the API base URL:
+
+```
+/api/v1/models
+```
+
+For backward compatibility, the application supports multiple API versions simultaneously. For extension development, it is recommended to target the latest stable version.
+
+## Error Codes
+
+The API uses consistent error codes across all endpoints:
+
+| Code | Description |
+|------|-------------|
+| `UNAUTHORIZED` | Authentication required or failed |
+| `FORBIDDEN` | Insufficient permissions |
+| `NOT_FOUND` | Requested resource not found |
+| `VALIDATION_ERROR` | Invalid parameters or data |
+| `RATE_LIMITED` | Rate limit exceeded |
+| `EXTENSION_ERROR` | Error in extension execution |
+| `GENERATION_ERROR` | Error in model generation |
+| `INTERNAL_ERROR` | Internal server error |
+
+## Additional Resources
+
+- [API Changelog](./api-changelog.md)
+- [API Examples Repository](https://github.com/your-organization/api-examples)
+- [Extension Development Guide](../api-extensions/creating-extensions.md)
+- [API Client Libraries](./api-clients.md)

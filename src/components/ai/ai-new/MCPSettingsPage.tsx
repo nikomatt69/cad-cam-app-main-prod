@@ -123,7 +123,7 @@ const MCPInsightsPanel: React.FC<MCPInsightsPanelProps> = ({ className = '' }) =
               insights.materialPreferences.map((material: string, index: number) => (
                 <span 
                   key={index}
-                  className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded text-xs"
+                  className="px-2 py-0.5 bg-blue-100 dark:bg-blue-800/30 text-blue-800 dark:text-blue-300 rounded text-xs"
                 >
                   {material}
                 </span>

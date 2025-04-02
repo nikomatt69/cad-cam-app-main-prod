@@ -51,7 +51,7 @@ const SettingsPanel: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-sm rounded-md overflow-hidden">
+      <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-sm rounded-md overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 flex items-center">
           <Settings size={18} className="text-blue-600 mr-2" />
           <span className="font-medium text-gray-700">General Settings</span>
@@ -104,7 +104,7 @@ const SettingsPanel: React.FC = () => {
       </div>
       
       {/* Impostazioni della griglia */}
-      <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-sm rounded-md overflow-hidden">
+      <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-sm rounded-md overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 flex items-center">
           <Grid size={18} className="text-blue-600 mr-2" />
           <span className="font-medium text-gray-700">Grid Settings</span>
@@ -120,7 +120,7 @@ const SettingsPanel: React.FC = () => {
                 id="gridVisible"
                 checked={gridVisible}
                 onChange={toggleGrid}
-                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-4 appearance-none cursor-pointer"
+                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-4 appearance-none cursor-pointer"
               />
               <label
                 htmlFor="gridVisible"
@@ -143,7 +143,7 @@ const SettingsPanel: React.FC = () => {
                 id="snapToGrid"
                 checked={snapToGrid}
                 onChange={handleToggleSnapToGrid}
-                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-4 appearance-none cursor-pointer"
+                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-4 appearance-none cursor-pointer"
               />
               <label
                 htmlFor="snapToGrid"
@@ -163,7 +163,7 @@ const SettingsPanel: React.FC = () => {
                 id="snapToObjects"
                 checked={snapToObjects}
                 onChange={handleToggleSnapToObjects}
-                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-4 appearance-none cursor-pointer"
+                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-4 appearance-none cursor-pointer"
               />
               <label
                 htmlFor="snapToObjects"
@@ -177,7 +177,7 @@ const SettingsPanel: React.FC = () => {
       </div>
       
       {/* Impostazioni assi */}
-      <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-sm rounded-md overflow-hidden">
+      <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-sm rounded-md overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 flex items-center">
           <Compass size={18} className="text-blue-600 mr-2" />
           <span className="font-medium text-gray-700">Axis Settings</span>
@@ -193,7 +193,7 @@ const SettingsPanel: React.FC = () => {
                 id="axisVisible"
                 checked={axisVisible}
                 onChange={toggleAxis}
-                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-4 appearance-none cursor-pointer"
+                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-4 appearance-none cursor-pointer"
               />
               <label
                 htmlFor="axisVisible"
@@ -207,7 +207,7 @@ const SettingsPanel: React.FC = () => {
       </div>
       
       {/* Impostazioni autosalvataggio */}
-      <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-sm rounded-md overflow-hidden">
+      <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-sm rounded-md overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 flex items-center">
           <Info size={18} className="text-blue-600 mr-2" />
           <span className="font-medium text-gray-700">Other Settings</span>
@@ -223,7 +223,7 @@ const SettingsPanel: React.FC = () => {
                 id="autoSave"
                 checked={autoSave}
                 onChange={handleToggleAutoSave}
-                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-4 appearance-none cursor-pointer"
+                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-4 appearance-none cursor-pointer"
               />
               <label
                 htmlFor="autoSave"

@@ -270,7 +270,6 @@ const ProjectCard = ({ project, onClick }: { project: Project, onClick: () => vo
       whileTap="tap"
       className="bg-white dark:bg-gray-900 shadow-md rounded-xl overflow-hidden cursor-pointer border border-gray-100 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-900/50 transition-colors"
       onClick={onClick}
-      variants={cardHoverVariants}
     >
       <div className="p-6">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white group-hover:text-blue-600 mb-2">{project.name}</h3>

@@ -6071,7 +6071,7 @@ function generateText3DToolpath(element: any, settings: any): string {
   );
   }
   return (
-    <div className={`bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white p-4 rounded-md shadow-md ${showFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}>
+    <div className={`bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white p-4 rounded-md shadow-md ${showFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-900">Generatore Percorso Utensile</h2>
         <div className="flex items-center space-x-2">

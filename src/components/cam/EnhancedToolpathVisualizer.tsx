@@ -13,6 +13,7 @@ import {
   createCycleVisualization 
 } from './visualizer/cycleUtils';
 import { CyclesList, CycleDetailsPanel, CycleAnimationControls } from './visualizer/CycleUIComponents';
+import { DynamicToolpathVisualizer } from '../dynamic-imports';
 
 const EnhancedToolpathVisualizer: React.FC<EnhancedToolpathVisualizerProps> = ({
   width,
@@ -150,19 +151,18 @@ const EnhancedToolpathVisualizer: React.FC<EnhancedToolpathVisualizerProps> = ({
   return (
     <div className="relative" style={{ width, height }}>
       {/* Main toolpath visualizer with forwarded props */}
-      <ToolpathVisualizer
-        ref={visualizerRef}
-        width={width}
-        height={height}
-        gcode={gcode}
-        isSimulating={isSimulating}
-        selectedTool={selectedTool}
-        showWorkpiece={showWorkpiece}
-        onSimulationComplete={onSimulationComplete}
-        onSimulationProgress={onSimulationProgress}
-        onToolChange={onToolChange}
-        onSceneCreated={handleSceneRef}
-      />
+      <DynamicToolpathVisualizer 
+      width="100%" 
+      height="100%" 
+      gcode={gcode}
+      isSimulating={isSimulating}
+      selectedTool={selectedTool}
+      showWorkpiece={showWorkpiece}
+      onSimulationComplete={onSimulationComplete}
+      onSimulationProgress={onSimulationProgress}
+      onToolChange={onToolChange}
+      
+    />
       
       {/* Fixed cycle visualization overlays */}
       {detectedCycles.length > 0 && (

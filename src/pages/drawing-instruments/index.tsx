@@ -242,7 +242,7 @@ export default function DrawingInstrumentsPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {instruments.map((instrument) => (
-              <div key={instrument.id} className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden">
+              <div key={instrument.id} className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden">
                 <div className="p-6">
                   <div className="flex items-center mb-4">
                     <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mr-3">
@@ -333,7 +333,7 @@ export default function DrawingInstrumentsPage() {
         {/* Drawing Instrument Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-lg shadow-xl max-w-md w-full">
               <div className="px-6 py-4 border-b">
                 <h3 className="text-lg font-medium text-gray-900">
                   {selectedInstrument ? 'Edit Drawing Instrument' : 'Create Drawing Instrument'}

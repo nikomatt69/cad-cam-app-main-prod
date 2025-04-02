@@ -131,7 +131,7 @@ export class AIAnalytics {
   }
 
   private isValidModel(model: any): model is AIModelType {
-    return ['claude-3-opus-20240229', 'claude-3-5-sonnet-20240229', 'claude-3-haiku-20240229'].includes(model);
+    return ['claude-3-opus-20240229', 'claude-3-5-sonnet-20240229', 'claude-3-haiku-20240229','claude-3-7-sonnet-20250219'].includes(model);
   }
 }
 

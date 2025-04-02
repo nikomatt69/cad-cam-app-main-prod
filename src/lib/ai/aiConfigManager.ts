@@ -24,12 +24,12 @@ export const DEFAULT_CONFIG: AIServiceConfig = {
 };
 
 export const MODEL_CAPABILITIES = {
-  [AI_MODELS.CLAUDE_OPUS]: {
+  [AI_MODELS.CLAUDE_SONNET]: {
     maxTokens: 8000,
     bestFor: ['complex_design', 'detailed_analysis'],
     costTier: 'high',
   },
-  [AI_MODELS.CLAUDE_SONNET]: {
+  [AI_MODELS.CLAUDE_OPUS]: {
     maxTokens: 6000,
     bestFor: ['general_purpose', 'design_assistance'],
     costTier: 'medium',

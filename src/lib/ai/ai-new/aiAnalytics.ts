@@ -231,7 +231,10 @@ export class AIAnalytics {
       'claude-3-opus-20240229': 0.15,
       'claude-3-5-sonnet-20240229': 0.08,
       'claude-3-haiku-20240229': 0.03,
-      'claude-3-7-sonnet-20250219': 0.08
+      'claude-3-7-sonnet-20250219': 0.08,
+      'gpt-4': 0.08,
+      'gpt-4-turbo-preview': 0.08,
+      'gpt-3.5-turbo': 0.08
     };
     
     let totalCost = 0;

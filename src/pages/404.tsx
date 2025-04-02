@@ -55,7 +55,7 @@ export default function Custom404() {
           <div className="flex flex-col items-center space-y-4">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Go back
             </button>

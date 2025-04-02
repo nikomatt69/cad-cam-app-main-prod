@@ -1,0 +1,1079 @@
+---
+title: "AI Features"
+description: "Complete guide to the AI features and their integration in the CAD/CAM application"
+---
+
+# AI Features
+
+The CAD/CAM application integrates advanced artificial intelligence features that revolutionize the way you design and produce. This section explores in detail how AI can assist and enhance your workflow from initial conception to final production.
+
+<Frame>
+  <img src="/images/aipanel.png" alt="AI Features Overview" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+## AI Features Overview
+
+Artificial intelligence is integrated into various aspects of the application, offering assistance in different process stages:
+
+### Main AI Components
+
+<CardGroup cols={2}>
+  <Card title="AI Design Assistant" icon="wand-magic-sparkles">
+    Generates CAD models from textual descriptions, helping you quickly create complex geometries.
+  </Card>
+  <Card title="AI Toolpath Optimizer" icon="route">
+    Optimizes toolpaths for speed and quality, improving machining efficiency.
+  </Card>
+  <Card title="AI Material Advisor" icon="cubes">
+    Suggests optimal materials for specific applications based on requirements.
+  </Card>
+  <Card title="AI Parameter Optimizer" icon="sliders">
+    Optimizes machining parameters for different operations.
+  </Card>
+  <Card title="AI Problem Solver" icon="lightbulb">
+    Identifies and suggests solutions for design or production issues.
+  </Card>
+</CardGroup>
+
+### AI Integration Benefits
+
+<AccordionGroup>
+  <Accordion title="Workflow Acceleration" icon="bolt">
+    - **Reduced Design Time**: Automate repetitive tasks
+    - **Faster Programming**: Quick generation of toolpaths
+    - **Streamlined Process**: Optimized workflow steps
+    - **Efficient Iterations**: Rapid design modifications
+  </Accordion>
+  <Accordion title="Creative Block Overcoming" icon="lightbulb">
+    - **Innovation Support**: Generate creative solutions
+    - **Design Inspiration**: Explore alternative approaches
+    - **Pattern Recognition**: Identify optimal solutions
+    - **Iterative Improvement**: Refine designs progressively
+  </Accordion>
+  <Accordion title="Automatic Optimization" icon="gauge-high">
+    - **Performance Enhancement**: Improve efficiency
+    - **Quality Improvement**: Optimize output quality
+    - **Resource Optimization**: Better resource utilization
+    - **Process Streamlining**: Automate optimization steps
+  </Accordion>
+  <Accordion title="Skill Democratization" icon="users">
+    - **Accessible Expertise**: Make advanced techniques available
+    - **Learning Support**: Guide users through complex processes
+    - **Standardization**: Ensure consistent quality
+    - **Knowledge Transfer**: Share best practices
+  </Accordion>
+  <Accordion title="Continuous Learning" icon="brain">
+    - **Adaptive Improvement**: System learns from usage
+    - **Feedback Integration**: Incorporate user feedback
+    - **Performance Evolution**: Enhance capabilities over time
+    - **Pattern Recognition**: Identify improvement areas
+  </Accordion>
+</AccordionGroup>
+
+### Underlying AI Technologies
+
+<AccordionGroup>
+  <Accordion title="Machine Learning" icon="microchip">
+    - **Data Learning**: Algorithms learn from past data
+    - **Pattern Recognition**: Identify recurring patterns
+    - **Predictive Analysis**: Forecast outcomes
+    - **Adaptive Behavior**: Adjust to new information
+  </Accordion>
+  <Accordion title="Deep Learning" icon="network-wired">
+    - **Neural Networks**: Process complex patterns
+    - **Feature Extraction**: Identify key characteristics
+    - **Hierarchical Learning**: Understand layered relationships
+    - **Complex Recognition**: Handle sophisticated patterns
+  </Accordion>
+  <Accordion title="Natural Language Processing" icon="language">
+    - **Text Understanding**: Process written descriptions
+    - **Context Analysis**: Understand context and intent
+    - **Language Generation**: Create natural responses
+    - **Command Processing**: Interpret user instructions
+  </Accordion>
+  <Accordion title="Computer Vision" icon="eye">
+    - **Image Analysis**: Process visual information
+    - **3D Recognition**: Understand spatial relationships
+    - **Pattern Detection**: Identify visual patterns
+    - **Quality Assessment**: Evaluate visual quality
+  </Accordion>
+  <Accordion title="Optimization Algorithms" icon="chart-line">
+    - **Parameter Optimization**: Find optimal values
+    - **Multi-objective Balancing**: Balance multiple criteria
+    - **Constraint Handling**: Manage system limitations
+    - **Performance Tuning**: Optimize system behavior
+  </Accordion>
+</AccordionGroup>
+
+## AI Design Assistant
+
+### Main Features
+
+<CardGroup cols={2}>
+  <Card title="Text Generation" icon="text">
+    Creates 2D and 3D geometries from natural language descriptions.
+  </Card>
+  <Card title="Context Understanding" icon="brain">
+    Correctly interprets ambiguous requests and requirements.
+  </Card>
+  <Card title="Parametric Generation" icon="sliders">
+    Produces models with modifiable parameters.
+  </Card>
+  <Card title="Constraint Respect" icon="lock">
+    Takes into account specified limitations and requirements.
+  </Card>
+  <Card title="Multiple Variants" icon="copy">
+    Generates different alternatives based on the same description.
+  </Card>
+</CardGroup>
+
+### Using the AI Design Assistant
+
+<Steps>
+  <Step title="Access the Assistant">
+    Open the AI Design Assistant from the right side panel of the CAD Editor
+  </Step>
+  <Step title="Enter Description">
+    Provide a clear description of the desired component
+  </Step>
+  <Step title="Specify Constraints">
+    Add any critical constraints or parameters
+  </Step>
+  <Step title="Generate Model">
+    Click "Generate" to create the model
+  </Step>
+  <Step title="Explore and Modify">
+    Review and adjust the result as needed
+  </Step>
+</Steps>
+
+### Effective Prompt Tips
+
+<AccordionGroup>
+  <Accordion title="Be Specific" icon="bullseye">
+    Example: "A helical gear with 24 teeth, module 2mm, helix angle 15°"
+  </Accordion>
+  <Accordion title="Provide Context" icon="info-circle">
+    Example: "A mounting bracket for XYZ series electric motor"
+  </Accordion>
+  <Accordion title="Mention Dimensions" icon="ruler">
+    Example: "A container 100mm wide, 150mm long, and 50mm high"
+  </Accordion>
+  <Accordion title="Include Material" icon="cubes">
+    Example: "An aluminum support resistant to lateral loads"
+  </Accordion>
+  <Accordion title="Describe Function" icon="screwdriver-wrench">
+    Example: "A mechanism converting rotary motion to linear motion"
+  </Accordion>
+</AccordionGroup>
+
+### Modification and Refinement
+
+<AccordionGroup>
+  <Accordion title="Parametric Modification" icon="sliders">
+    - Adjust key parameters to adapt the model
+    - Modify dimensions and relationships
+    - Update constraints and requirements
+    - Fine-tune specific features
+  </Accordion>
+  <Accordion title="Direct Editing" icon="pen-to-square">
+    - Use standard CAD tools for refinement
+    - Modify geometry directly
+    - Add or remove features
+    - Adjust surface properties
+  </Accordion>
+  <Accordion title="Iteration" icon="arrows-rotate">
+    - Generate new versions with modified prompts
+    - Compare different iterations
+    - Combine best features
+    - Refine progressively
+  </Accordion>
+  <Accordion title="Combination" icon="object-group">
+    - Merge multiple generations
+    - Create complex assemblies
+    - Combine with existing models
+    - Build complete systems
+  </Accordion>
+  <Accordion title="Annotation" icon="sticky-note">
+    - Add technical information
+    - Include metadata
+    - Document modifications
+    - Track changes
+  </Accordion>
+</AccordionGroup>
+
+## AI Toolpath Optimizer
+
+### Main Features
+
+<CardGroup cols={2}>
+  <Card title="Cycle Time Reduction" icon="clock">
+    Minimizes machining times through optimized toolpaths.
+  </Card>
+  <Card title="Surface Quality" icon="sparkles">
+    Optimizes for best surface finish quality.
+  </Card>
+  <Card title="Tool Life Extension" icon="screwdriver-wrench">
+    Reduces tool stress and wear.
+  </Card>
+  <Card title="Multi-objective Balance" icon="balance-scale">
+    Optimizes for multiple criteria simultaneously.
+  </Card>
+  <Card title="Smart Adaptation" icon="arrows-rotate">
+    Adapts to specific machines and conditions.
+  </Card>
+</CardGroup>
+
+### Usage Mode
+
+<Steps>
+  <Step title="Generate Toolpaths">
+    Create toolpaths normally in the CAM Editor
+  </Step>
+  <Step title="Select Optimization">
+    Choose "Optimize with AI" from the context menu
+  </Step>
+  <Step title="Configure Objectives">
+    Set optimization goals and their priorities
+  </Step>
+  <Step title="Start Optimization">
+    Launch optimization and preview results
+  </Step>
+  <Step title="Compare Results">
+    Compare original and optimized paths
+  </Step>
+  <Step title="Apply Changes">
+    Accept the preferred version
+  </Step>
+</Steps>
+
+### Optimization Parameters
+
+<AccordionGroup>
+  <Accordion title="Speed Priority" icon="gauge-high">
+    - Focus on cycle time reduction
+    - Optimize feed rates
+    - Minimize air cutting
+    - Balance with quality
+  </Accordion>
+  <Accordion title="Quality Priority" icon="sparkles">
+    - Focus on surface finish
+    - Optimize cutting conditions
+    - Maintain consistent quality
+    - Balance with efficiency
+  </Accordion>
+  <Accordion title="Balanced Approach" icon="balance-scale">
+    - Balance speed and quality
+    - Consider multiple factors
+    - Optimize overall performance
+    - Adapt to requirements
+  </Accordion>
+  <Accordion title="Conservative Mode" icon="shield">
+    - Maximum safety focus
+    - Reliable operation
+    - Stable cutting conditions
+    - Risk minimization
+  </Accordion>
+  <Accordion title="Custom Configuration" icon="sliders">
+    - Manual priority setting
+    - Custom optimization rules
+    - Specific requirements
+    - Flexible adaptation
+  </Accordion>
+</AccordionGroup>
+
+### Comparative Analysis
+
+<AccordionGroup>
+  <Accordion title="Side-by-Side View" icon="columns">
+    - Simultaneous visualization
+    - Easy comparison
+    - Visual differences
+    - Interactive switching
+  </Accordion>
+  <Accordion title="Comparative Statistics" icon="chart-bar">
+    - Key metrics comparison
+    - Performance indicators
+    - Quality metrics
+    - Efficiency measures
+  </Accordion>
+  <Accordion title="Predictive Simulation" icon="crystal-ball">
+    - Result prediction
+    - Strategy comparison
+    - Performance forecast
+    - Risk assessment
+  </Accordion>
+  <Accordion title="Differential Analysis" icon="arrows-left-right">
+    - Version differences
+    - Change highlighting
+    - Impact assessment
+    - Improvement tracking
+  </Accordion>
+  <Accordion title="Virtual Testing" icon="flask">
+    - Behavior simulation
+    - Real condition testing
+    - Performance validation
+    - Quality verification
+  </Accordion>
+</AccordionGroup>
+
+## AI Material Advisor
+
+### Main Features
+
+<CardGroup cols={2}>
+  <Card title="Contextual Suggestions" icon="lightbulb">
+    Recommends materials based on component function.
+  </Card>
+  <Card title="Requirement Analysis" icon="clipboard-check">
+    Evaluates strength, weight, cost requirements.
+  </Card>
+  <Card title="Material Comparison" icon="scale-balanced">
+    Compares properties of different materials.
+  </Card>
+  <Card title="Behavior Simulation" icon="crystal-ball">
+    Predicts material behavior in use.
+  </Card>
+  <Card title="Production Considerations" icon="industry">
+    Evaluates machinability with different processes.
+  </Card>
+</CardGroup>
+
+### Using the Material Advisor
+
+<Steps>
+  <Step title="Select Component">
+    Choose the component for material suggestions
+  </Step>
+  <Step title="Open Advisor">
+    Access the AI Material Advisor from Tools menu
+  </Step>
+  <Step title="Specify Requirements">
+    Define functional requirements and priorities
+  </Step>
+  <Step title="View Suggestions">
+    Review suggested materials with comparative analysis
+  </Step>
+  <Step title="Explore Alternatives">
+    Examine alternatives and their characteristics
+  </Step>
+  <Step title="Apply Selection">
+    Apply the chosen material to the component
+  </Step>
+</Steps>
+
+### Selection Criteria
+
+<AccordionGroup>
+  <Accordion title="Mechanical Requirements" icon="gears">
+    - Strength properties
+    - Stiffness characteristics
+    - Hardness specifications
+    - Fatigue resistance
+  </Accordion>
+  <Accordion title="Physical Properties" icon="atom">
+    - Density characteristics
+    - Thermal conductivity
+    - Electrical properties
+    - Corrosion resistance
+  </Accordion>
+  <Accordion title="Environmental Factors" icon="leaf">
+    - Corrosion resistance
+    - Temperature range
+    - Chemical resistance
+    - Weather resistance
+  </Accordion>
+  <Accordion title="Economic Considerations" icon="money-bill">
+    - Material cost
+    - Processing cost
+    - Availability
+    - Lifecycle cost
+  </Accordion>
+  <Accordion title="Sustainability" icon="recycle">
+    - Environmental impact
+    - Recyclability
+    - Energy efficiency
+    - Carbon footprint
+  </Accordion>
+</AccordionGroup>
+
+### Material Database
+
+<AccordionGroup>
+  <Accordion title="Standard Materials" icon="list">
+    - Common material types
+    - Industry standards
+    - Typical applications
+    - Basic properties
+  </Accordion>
+  <Accordion title="Specialized Materials" icon="flask">
+    - Advanced alloys
+    - Composite materials
+    - Special coatings
+    - Custom formulations
+  </Accordion>
+  <Accordion title="Verified Properties" icon="certificate">
+    - Industry standards
+    - Test data
+    - Quality certifications
+    - Performance records
+  </Accordion>
+  <Accordion title="Regular Updates" icon="arrows-rotate">
+    - Database maintenance
+    - New materials
+    - Updated properties
+    - Version control
+  </Accordion>
+  <Accordion title="Custom Integration" icon="plug">
+    - Proprietary materials
+    - Custom databases
+    - Special properties
+    - Company standards
+  </Accordion>
+</AccordionGroup>
+
+## AI Parameter Optimizer
+
+### Main Features
+
+<CardGroup cols={2}>
+  <Card title="Smart Parameter Selection" icon="sliders">
+    Automatically selects optimal cutting parameters.
+  </Card>
+  <Card title="Real-time Adaptation" icon="arrows-rotate">
+    Adjusts parameters based on machining conditions.
+  </Card>
+  <Card title="Performance Optimization" icon="gauge-high">
+    Optimizes for efficiency and quality.
+  </Card>
+  <Card title="Tool Life Management" icon="screwdriver-wrench">
+    Extends tool life through optimal parameters.
+  </Card>
+  <Card title="Quality Assurance" icon="certificate">
+    Ensures consistent part quality.
+  </Card>
+</CardGroup>
+
+### Using the Parameter Optimizer
+
+<Steps>
+  <Step title="Select Operation">
+    Choose the machining operation to optimize
+  </Step>
+  <Step title="Open Optimizer">
+    Access the AI Parameter Optimizer from the CAM menu
+  </Step>
+  <Step title="Set Objectives">
+    Define optimization goals and constraints
+  </Step>
+  <Step title="Run Optimization">
+    Start the parameter optimization process
+  </Step>
+  <Step title="Review Results">
+    Analyze suggested parameters and their impact
+  </Step>
+  <Step title="Apply Parameters">
+    Apply the optimized parameters to the operation
+  </Step>
+</Steps>
+
+### Optimization Criteria
+
+<AccordionGroup>
+  <Accordion title="Cutting Speed" icon="gauge-high">
+    - Optimal cutting speed calculation
+    - Material-specific recommendations
+    - Tool life considerations
+    - Surface finish impact
+  </Accordion>
+  <Accordion title="Feed Rate" icon="forward">
+    - Feed rate optimization
+    - Chip load management
+    - Tool deflection control
+    - Surface quality balance
+  </Accordion>
+  <Accordion title="Depth of Cut" icon="ruler">
+    - Optimal depth calculation
+    - Tool strength consideration
+    - Machine capability limits
+    - Process stability
+  </Accordion>
+  <Accordion title="Step Over" icon="arrows-left-right">
+    - Step over optimization
+    - Surface finish control
+    - Material removal rate
+    - Tool engagement
+  </Accordion>
+  <Accordion title="Coolant Usage" icon="droplet">
+    - Coolant flow optimization
+    - Temperature control
+    - Tool life enhancement
+    - Surface finish impact
+  </Accordion>
+</AccordionGroup>
+
+### Parameter Validation
+
+<AccordionGroup>
+  <Accordion title="Simulation Testing" icon="crystal-ball">
+    - Virtual machining simulation
+    - Parameter validation
+    - Performance prediction
+    - Risk assessment
+  </Accordion>
+  <Accordion title="Quality Verification" icon="magnifying-glass">
+    - Surface finish analysis
+    - Dimensional accuracy
+    - Tool wear prediction
+    - Process stability
+  </Accordion>
+  <Accordion title="Machine Compatibility" icon="industry">
+    - Machine capability check
+    - Power requirements
+    - Speed range verification
+    - Feed rate limits
+  </Accordion>
+  <Accordion title="Safety Assessment" icon="shield">
+    - Safety parameter validation
+    - Risk factor analysis
+    - Emergency stop capability
+    - Operator safety
+  </Accordion>
+  <Accordion title="Cost Analysis" icon="calculator">
+    - Production cost optimization
+    - Tool life impact
+    - Cycle time analysis
+    - Resource utilization
+  </Accordion>
+</AccordionGroup>
+
+## AI Problem Solver
+
+### Main Features
+
+<CardGroup cols={2}>
+  <Card title="Issue Detection" icon="magnifying-glass">
+    Identifies potential problems in designs and toolpaths.
+  </Card>
+  <Card title="Solution Generation" icon="lightbulb">
+    Suggests optimal solutions to detected issues.
+  </Card>
+  <Card title="Preventive Analysis" icon="shield">
+    Prevents problems before they occur.
+  </Card>
+  <Card title="Learning System" icon="brain">
+    Improves solutions based on user feedback.
+  </Card>
+  <Card title="Knowledge Base" icon="book">
+    Maintains database of common issues and solutions.
+  </Card>
+</CardGroup>
+
+### Using the Problem Solver
+
+<Steps>
+  <Step title="Select Analysis">
+    Choose the type of analysis to perform
+  </Step>
+  <Step title="Run Analysis">
+    Start the problem detection process
+  </Step>
+  <Step title="Review Issues">
+    Examine detected problems and their severity
+  </Step>
+  <Step title="View Solutions">
+    Review suggested solutions and alternatives
+  </Step>
+  <Step title="Apply Fixes">
+    Implement selected solutions
+  </Step>
+  <Step title="Verify Results">
+    Confirm problem resolution
+  </Step>
+</Steps>
+
+### Analysis Types
+
+<AccordionGroup>
+  <Accordion title="Design Validation" icon="check">
+    - Geometric validation
+    - Feature compatibility
+    - Manufacturing feasibility
+    - Assembly verification
+  </Accordion>
+  <Accordion title="Toolpath Analysis" icon="route">
+    - Collision detection
+    - Tool engagement analysis
+    - Machine capability check
+    - Process stability
+  </Accordion>
+  <Accordion title="Quality Control" icon="certificate">
+    - Surface finish prediction
+    - Dimensional accuracy
+    - Tolerance verification
+    - Quality standards
+  </Accordion>
+  <Accordion title="Performance Optimization" icon="gauge-high">
+    - Cycle time analysis
+    - Resource utilization
+    - Efficiency improvement
+    - Cost optimization
+  </Accordion>
+  <Accordion title="Safety Assessment" icon="shield">
+    - Safety compliance
+    - Risk assessment
+    - Emergency procedures
+    - Operator safety
+  </Accordion>
+</AccordionGroup>
+
+### Solution Management
+
+<AccordionGroup>
+  <Accordion title="Solution Database" icon="database">
+    - Common solutions
+    - Best practices
+    - Industry standards
+    - Expert knowledge
+  </Accordion>
+  <Accordion title="Custom Solutions" icon="screwdriver-wrench">
+    - Company-specific fixes
+    - Custom procedures
+    - Special requirements
+    - Unique processes
+  </Accordion>
+  <Accordion title="Solution Validation" icon="check-double">
+    - Effectiveness verification
+    - Implementation testing
+    - Result confirmation
+    - Performance tracking
+  </Accordion>
+  <Accordion title="Knowledge Sharing" icon="share">
+    - Team collaboration
+    - Experience sharing
+    - Best practice updates
+    - Solution improvement
+  </Accordion>
+  <Accordion title="Continuous Learning" icon="brain">
+    - Solution refinement
+    - Pattern recognition
+    - Performance improvement
+    - System updates
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  The AI features work best when you provide clear, specific information about your requirements. Take time to understand and use the various optimization options available for each feature.
+</Tip>
+
+---
+
+The AI features of the CAD/CAM application offer a powerful assistant that amplifies your creative and technical capabilities. Used with awareness, these technologies can dramatically improve productivity, quality, and innovation. In the next section, we'll explore the collaboration and sharing features, essential for team work.
+
+## AI Integration in Workflow
+
+### Enhanced Workflow
+
+<CardGroup cols={2}>
+  <Card title="Design Phase" icon="pencil-ruler">
+    Rapid idea generation with AI Design Assistant.
+  </Card>
+  <Card title="Engineering Phase" icon="gears">
+    Verification and improvement with AI Problem Solver.
+  </Card>
+  <Card title="CAM Phase" icon="industry">
+    Optimized toolpath generation.
+  </Card>
+  <Card title="Production Phase" icon="cogs">
+    Intelligent monitoring and real-time adaptation.
+  </Card>
+</CardGroup>
+
+### AI Environment Configuration
+
+<AccordionGroup>
+  <Accordion title="Assistance Level" icon="sliders">
+    - Discreet suggestions
+    - Active collaboration
+    - Custom preferences
+    - Adaptive behavior
+  </Accordion>
+  <Accordion title="Priority Focus" icon="bullseye">
+    - Speed optimization
+    - Quality focus
+    - Cost reduction
+    - Resource efficiency
+  </Accordion>
+  <Accordion title="Work Style" icon="user">
+    - Interactive mode
+    - Batch processing
+    - Automated workflow
+    - Hybrid approach
+  </Accordion>
+  <Accordion title="Domain Knowledge" icon="book">
+    - Industry specialization
+    - Process optimization
+    - Material expertise
+    - Tool knowledge
+  </Accordion>
+  <Accordion title="Interface Preferences" icon="desktop">
+    - Visual feedback
+    - Command line
+    - Mixed interface
+    - Custom layout
+  </Accordion>
+</AccordionGroup>
+
+### Learning and Adaptation
+
+<AccordionGroup>
+  <Accordion title="Feedback Learning" icon="arrows-rotate">
+    - User interaction analysis
+    - Performance improvement
+    - Pattern recognition
+    - Behavior adaptation
+  </Accordion>
+  <Accordion title="User Personalization" icon="user-gear">
+    - Preference learning
+    - Style adaptation
+    - Workflow optimization
+    - Custom settings
+  </Accordion>
+  <Accordion title="Organizational Learning" icon="building">
+    - Company knowledge
+    - Process optimization
+    - Best practices
+    - Standard procedures
+  </Accordion>
+  <Accordion title="Domain Specialization" icon="microscope">
+    - Industry expertise
+    - Technical knowledge
+    - Process understanding
+    - Quality standards
+  </Accordion>
+  <Accordion title="Model Updates" icon="cloud-arrow-up">
+    - Regular updates
+    - Feature additions
+    - Performance improvements
+    - Bug fixes
+  </Accordion>
+</AccordionGroup>
+
+## Privacy and Data Management
+
+### Privacy Policies
+
+<CardGroup cols={2}>
+  <Card title="Data Control" icon="shield">
+    Maintain full control over your data.
+  </Card>
+  <Card title="Local Processing" icon="computer">
+    Many features operate entirely locally.
+  </Card>
+  <Card title="Encryption" icon="lock">
+    All transmitted data is encrypted.
+  </Card>
+  <Card title="Anonymization" icon="user-secret">
+    AI training data is anonymized.
+  </Card>
+  <Card title="Compliance" icon="certificate">
+    GDPR, CCPA, and other regulations.
+  </Card>
+</CardGroup>
+
+### Data Usage for Learning
+
+<AccordionGroup>
+  <Accordion title="Opt-in Learning" icon="toggle-on">
+    - Explicit consent
+    - Data selection
+    - Usage control
+    - Transparency
+  </Accordion>
+  <Accordion title="Aggregated Data" icon="chart-bar">
+    - Statistical analysis
+    - Anonymous usage
+    - Pattern recognition
+    - Performance metrics
+  </Accordion>
+  <Accordion title="Transparency" icon="eye">
+    - Clear information
+    - Usage details
+    - Data handling
+    - Privacy controls
+  </Accordion>
+  <Accordion title="Tangible Benefits" icon="star">
+    - Feature improvements
+    - Performance gains
+    - Quality enhancements
+    - User experience
+  </Accordion>
+  <Accordion title="Granular Control" icon="sliders">
+    - Detailed settings
+    - Preference management
+    - Data sharing
+    - Privacy options
+  </Accordion>
+</AccordionGroup>
+
+### Integrated Security
+
+<AccordionGroup>
+  <Accordion title="IP Protection" icon="copyright">
+    - Project security
+    - Access control
+    - Version tracking
+    - Audit logging
+  </Accordion>
+  <Accordion title="Data Isolation" icon="box">
+    - Client separation
+    - Project isolation
+    - Access management
+    - Security boundaries
+  </Accordion>
+  <Accordion title="Security Audits" icon="shield-check">
+    - Regular reviews
+    - Vulnerability assessment
+    - Compliance checks
+    - Security updates
+  </Accordion>
+  <Accordion title="Proactive Updates" icon="cloud-arrow-up">
+    - Security patches
+    - Feature updates
+    - Performance improvements
+    - Bug fixes
+  </Accordion>
+  <Accordion title="Access Management" icon="key">
+    - Role-based access
+    - Permission control
+    - User management
+    - Activity monitoring
+  </Accordion>
+</AccordionGroup>
+
+## Current Limitations and Future Developments
+
+### AI Feature Limitations
+
+<CardGroup cols={2}>
+  <Card title="Complexity Limits" icon="exclamation-triangle">
+    Manageable project complexity.
+  </Card>
+  <Card title="Specialist Knowledge" icon="brain">
+    Varying expertise in specific fields.
+  </Card>
+  <Card title="Ambiguity Handling" icon="question">
+    Occasional challenges with ambiguous requests.
+  </Card>
+  <Card title="Creative Guidance" icon="lightbulb">
+    Needs direction for innovative solutions.
+  </Card>
+  <Card title="Data Dependencies" icon="database">
+    Performance varies with training data.
+  </Card>
+</CardGroup>
+
+### Development Roadmap
+
+<AccordionGroup>
+  <Accordion title="Capability Expansion" icon="arrows-up-right">
+    - Complex geometry support
+    - Advanced structures
+    - New features
+    - Enhanced capabilities
+  </Accordion>
+  <Accordion title="IoT Integration" icon="network-wired">
+    - Machine connectivity
+    - Sensor data
+    - Real-time monitoring
+    - Process optimization
+  </Accordion>
+  <Accordion title="Multi-agent Collaboration" icon="users">
+    - Specialized AI systems
+    - Coordinated actions
+    - Task distribution
+    - Result integration
+  </Accordion>
+  <Accordion title="Causal Reasoning" icon="diagram-project">
+    - Cause-effect analysis
+    - Problem solving
+    - Decision making
+    - Impact assessment
+  </Accordion>
+  <Accordion title="Multimodal Interaction" icon="keyboard">
+    - Voice input
+    - Gesture control
+    - Visual recognition
+    - Natural interaction
+  </Accordion>
+</AccordionGroup>
+
+### Contributing to Improvement
+
+<AccordionGroup>
+  <Accordion title="Structured Feedback" icon="comment-dots">
+    - Specific evaluations
+    - Performance feedback
+    - Feature requests
+    - Bug reports
+  </Accordion>
+  <Accordion title="Problem Reporting" icon="exclamation-circle">
+    - Issue documentation
+    - Error tracking
+    - Performance issues
+    - User experience
+  </Accordion>
+  <Accordion title="Feature Suggestions" icon="lightbulb">
+    - New capabilities
+    - Improvements
+    - Workflow enhancements
+    - User interface
+  </Accordion>
+  <Accordion title="Beta Testing" icon="flask">
+    - Early access
+    - Feature testing
+    - Feedback collection
+    - Performance monitoring
+  </Accordion>
+  <Accordion title="Use Case Sharing" icon="share">
+    - Implementation examples
+    - Success stories
+    - Best practices
+    - Industry applications
+  </Accordion>
+</AccordionGroup>
+
+## Tips and Best Practices
+
+### Maximizing Results
+
+<CardGroup cols={2}>
+  <Card title="Context Provision" icon="info-circle">
+    Provide clear context for better results.
+  </Card>
+  <Card title="Progressive Iteration" icon="arrows-repeat">
+    Start general and refine gradually.
+  </Card>
+  <Card title="Constructive Feedback" icon="comment">
+    Guide improvements with specific feedback.
+  </Card>
+  <Card title="Hybrid Approach" icon="arrows-rotate">
+    Combine AI and manual intervention.
+  </Card>
+  <Card title="Result Verification" icon="check-double">
+    Always verify AI outputs critically.
+  </Card>
+</CardGroup>
+
+### Effective Prompt Strategies
+
+<AccordionGroup>
+  <Accordion title="Clarity and Precision" icon="bullseye">
+    - Clear instructions
+    - Specific requirements
+    - Unambiguous language
+    - Detailed context
+  </Accordion>
+  <Accordion title="Technical Language" icon="code">
+    - Industry terminology
+    - Technical specifications
+    - Standard terms
+    - Professional vocabulary
+  </Accordion>
+  <Accordion title="Explicit Priorities" icon="list-ol">
+    - Clear objectives
+    - Priority levels
+    - Critical factors
+    - Success criteria
+  </Accordion>
+  <Accordion title="Constraints and Requirements" icon="lock">
+    - Technical limits
+    - Process requirements
+    - Quality standards
+    - Safety considerations
+  </Accordion>
+  <Accordion title="Examples and References" icon="image">
+    - Visual examples
+    - Reference models
+    - Similar cases
+    - Best practices
+  </Accordion>
+</AccordionGroup>
+
+### Training Integration
+
+<AccordionGroup>
+  <Accordion title="Understanding Reasoning" icon="brain">
+    - Logic analysis
+    - Decision process
+    - Solution approach
+    - Learning outcomes
+  </Accordion>
+  <Accordion title="Alternative Exploration" icon="arrows-left-right">
+    - Different approaches
+    - Solution comparison
+    - Method evaluation
+    - Best practice learning
+  </Accordion>
+  <Accordion title="Virtual Mentoring" icon="chalkboard-teacher">
+    - Technique learning
+    - Skill development
+    - Knowledge transfer
+    - Experience sharing
+  </Accordion>
+  <Accordion title="Scenario Simulation" icon="crystal-ball">
+    - Virtual testing
+    - Situation analysis
+    - Performance evaluation
+    - Risk assessment
+  </Accordion>
+  <Accordion title="Personalized Learning" icon="user-graduate">
+    - Focused training
+    - Skill gaps
+    - Progress tracking
+    - Achievement goals
+  </Accordion>
+</AccordionGroup>
+
+### Responsible Adoption
+
+<AccordionGroup>
+  <Accordion title="Critical Verification" icon="magnifying-glass">
+    - Result validation
+    - Quality control
+    - Performance check
+    - Safety verification
+  </Accordion>
+  <Accordion title="Human Responsibility" icon="user-shield">
+    - Decision control
+    - Quality assurance
+    - Safety management
+    - Process oversight
+  </Accordion>
+  <Accordion title="Transparency" icon="eye">
+    - Clear communication
+    - Process visibility
+    - Result tracking
+    - Performance monitoring
+  </Accordion>
+  <Accordion title="Constructive Feedback" icon="comment-dots">
+    - Improvement suggestions
+    - Issue reporting
+    - Feature requests
+    - User experience
+  </Accordion>
+  <Accordion title="Continuous Updates" icon="arrows-rotate">
+    - Feature awareness
+    - Capability tracking
+    - Performance monitoring
+    - Best practice updates
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  The AI features work best when you provide clear, specific information about your requirements. Take time to understand and use the various optimization options available for each feature.
+</Tip>
+
+---
+
+The AI features of the CAD/CAM application offer a powerful assistant that amplifies your creative and technical capabilities. Used with awareness, these technologies can dramatically improve productivity, quality, and innovation. In the next section, we'll explore the collaboration and sharing features, essential for team work.

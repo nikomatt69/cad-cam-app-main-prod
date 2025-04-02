@@ -259,7 +259,7 @@ export default function Home() {
           {/* Main application modules - Fixed grid for mobile */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
             {/* CAD Card */}
-            <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
               <div className="h-3 bg-blue-600"></div>
               <div className="p-4 sm:p-6">
                 <div className="flex items-center mb-4">
@@ -284,7 +284,7 @@ export default function Home() {
             </div>
 
             {/* CAM Card */}
-            <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
               <div className="h-3 bg-green-600"></div>
               <div className="p-4 sm:p-6">
                 <div className="flex items-center mb-4">
@@ -309,7 +309,7 @@ export default function Home() {
             </div>
 
             {/* Projects Card */}
-            <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
               <div className="h-3 bg-purple-600"></div>
               <div className="p-4 sm:p-6">
                 <div className="flex items-center mb-4">
@@ -338,7 +338,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
             {/* Resources section - Full width on mobile, 2/3 width on large screens */}
             <div className="lg:col-span-2">
-              <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden">
+              <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden">
                 
                 <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {/* Materials */}
@@ -394,7 +394,7 @@ export default function Home() {
             
             {/* Tools section - Full width on mobile, 1/3 width on large screens */}
             <div>
-              <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden">
+              <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden">
                 <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex justify-between items-center">
                   <h2 className="text-base sm:text-lg font-semibold text-gray-900">Tools</h2>
                   <Link href={`/tools`} className="text-xs sm:text-sm text-blue-600 hover:text-blue-800">
@@ -437,12 +437,12 @@ export default function Home() {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg flex flex-col overflow-hidden">
+          <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg flex flex-col overflow-hidden">
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
               <h2 className="text-base sm:text-lg font-semibold text-gray-900">Recent Activity</h2>
             </div>
             <div className="divide-y divide-gray-200 max-h-72 sm:max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-              <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow rounded-lg p-4 sm:p-6">
+              <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow rounded-lg p-4 sm:p-6">
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-4 sm:mb-6">
                   This page shows all your activity across the platform. 
                 </p>

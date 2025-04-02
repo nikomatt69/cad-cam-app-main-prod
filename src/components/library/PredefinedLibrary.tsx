@@ -95,7 +95,7 @@ export default function PredefinedLibrary({
     return (
       <div 
         key={index} 
-        className="p-4 border rounded-md bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:shadow-md transition-shadow cursor-pointer"
+        className="p-4 border rounded-md bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white hover:shadow-md transition-shadow cursor-pointer"
         onClick={() => onSelectItem(item)}
       >
         <div className="flex items-center mb-3">
@@ -174,7 +174,7 @@ export default function PredefinedLibrary({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
         <div className="px-6 py-4 border-b flex justify-between items-center">
           <h2 className="text-lg font-medium text-gray-900">
             {getLibraryTitle()}

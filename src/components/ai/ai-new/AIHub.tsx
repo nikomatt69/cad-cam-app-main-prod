@@ -24,10 +24,13 @@ import { AIModelType } from '@/src/types/AITypes';
 import AIDesignAssistant from '../AIDesignAssistant';
 import AIToolpathOptimizer from '../AIToolpathOptimizer';
 import MCPInsightsPanel from './MCPSettingsPage';
+import OpenAISetupPanel from './OpenAISetupPanel';
+import AIProviderBadge from './AIProviderBadge';
+import AIProviderSelector from './AIProviderSelector';
 
 
 // Tipi di tool AI disponibili
-type AITool = 'textToCad' | 'designAssistant' | 'toolpathOptimizer' | 'settings' | 'analytics' | 'mpc';
+type AITool = 'textToCad' | 'designAssistant' | 'toolpathOptimizer' | 'settings' | 'analytics' | 'mpc' | 'openai' | 'badge' | 'provider';
 
 interface AIHubProps {
   initialTool?: AITool;
@@ -96,6 +99,24 @@ const AIHub: React.FC<AIHubProps> = ({
       icon: <Settings size={15} />,
       description: 'Configure MPC AI behavior'
     },
+    { 
+      id: 'openai' as AITool, 
+      name: 'OpenAI Setup', 
+      icon: <Settings size={15} />,
+      description: 'Configure OpenAI AI behavior'
+    },
+    { 
+      id: 'provider' as AITool, 
+      name: 'AI Provider', 
+      icon: <Settings size={15} />,
+      description: 'Configure AI provider behavior'
+    },  
+    { 
+      id: 'badge' as AITool, 
+      name: 'AI Badge', 
+      icon: <Settings size={15} />,
+      description: 'Configure AI badge behavior'
+    },
   ];
 
   // Indicatore di performance colorato
@@ -143,6 +164,14 @@ const AIHub: React.FC<AIHubProps> = ({
         return <AIToolpathOptimizer />;
         case 'mpc':
           return <MCPInsightsPanel />;
+      case 'settings':
+        return <AISettingsPanel />;
+      case 'openai':
+        return <OpenAISetupPanel />;
+      case 'badge':
+        return <AIProviderBadge />;  
+      case 'provider':
+        return <AIProviderSelector />;
       case 'analytics':
         return (
           <div className="p-4 space-y-4">

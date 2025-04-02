@@ -180,7 +180,7 @@ const CAMWorkpieceSetup: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-4 space-y-4">
+    <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg p-4 space-y-4">
       <h3 className="text-lg font-medium text-gray-900">Workpiece Configuration for CAM</h3>
       
       {/* Machine selection */}
@@ -192,7 +192,7 @@ const CAMWorkpieceSetup: React.FC = () => {
           name="machine"
           value={selectedMachine?.id || ''}
           onChange={handleMachineChange}
-          className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         >
           <option value="">Select a machine</option>
           {machineConfigs.map((config) => (
@@ -249,7 +249,7 @@ const CAMWorkpieceSetup: React.FC = () => {
                 name="width"
                 value={formState.width}
                 onChange={handleInputChange}
-                className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <span className="text-gray-500 sm:text-sm">{formState.units}</span>
@@ -266,7 +266,7 @@ const CAMWorkpieceSetup: React.FC = () => {
                 name="height"
                 value={formState.height}
                 onChange={handleInputChange}
-                className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <span className="text-gray-500 sm:text-sm">{formState.units}</span>
@@ -283,7 +283,7 @@ const CAMWorkpieceSetup: React.FC = () => {
                 name="depth"
                 value={formState.depth}
                 onChange={handleInputChange}
-                className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <span className="text-gray-500 sm:text-sm">{formState.units}</span>
@@ -303,7 +303,7 @@ const CAMWorkpieceSetup: React.FC = () => {
                 name="diameter"
                 value={formState.diameter}
                 onChange={handleInputChange}
-                className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <span className="text-gray-500 sm:text-sm">{formState.units}</span>
@@ -320,7 +320,7 @@ const CAMWorkpieceSetup: React.FC = () => {
                 name="length"
                 value={formState.length}
                 onChange={handleInputChange}
-                className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <span className="text-gray-500 sm:text-sm">{formState.units}</span>
@@ -340,7 +340,7 @@ const CAMWorkpieceSetup: React.FC = () => {
             name="material"
             value={formState.material}
             onChange={handleInputChange}
-            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="aluminum">Aluminum</option>
             <option value="steel">Steel</option>
@@ -361,7 +361,7 @@ const CAMWorkpieceSetup: React.FC = () => {
             name="units"
             value={formState.units}
             onChange={handleInputChange}
-            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="mm">Millimeters (mm)</option>
             <option value="inch">Inches (inch)</option>
@@ -382,7 +382,7 @@ const CAMWorkpieceSetup: React.FC = () => {
             onChange={handleInputChange}
             step="0.1"
             min="0"
-            className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
             <span className="text-gray-500 sm:text-sm">{formState.units}</span>
@@ -478,7 +478,7 @@ const CAMWorkpieceSetup: React.FC = () => {
               });
             }
           }}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           Reset
         </button>
@@ -492,7 +492,7 @@ const CAMWorkpieceSetup: React.FC = () => {
       </div>
       
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white bg-opacity-75">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white bg-opacity-75">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
       )}

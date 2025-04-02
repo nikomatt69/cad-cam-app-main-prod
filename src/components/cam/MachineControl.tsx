@@ -170,7 +170,7 @@ const MachineControl: React.FC<MachineControlProps> = ({ gcode }) => {
   };
   
   return (
-    <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white p-4 rounded-md shadow-md">
+    <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white p-4 rounded-md shadow-md">
       <h2 className="text-xl font-semibold text-gray-900 mb-4">Machine control </h2>
       
       {/* Connection status and controls */}

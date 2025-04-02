@@ -2814,7 +2814,7 @@ M5`;
   };
 
   return (
-    <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-lg shadow-md overflow-hidden">
       <div className="bg-gray-50 border-b border-gray-200 p-4">
         <h2 className="text-lg font-medium text-gray-900">Cicli di Lavorazione</h2>
         <p className="text-sm text-gray-500">

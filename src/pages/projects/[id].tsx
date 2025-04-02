@@ -502,7 +502,7 @@ export default function ProjectDetailPage() {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="text-gray-600 dark:text-gray-300 mb-8 max-w-md"
           >
-            The project you are looking for doesn't exist or you don't have access to it.
+            The project you are looking for doesn&apos;t exist or you don&apos;t have access to it.
           </motion.p>
           <motion.button
             onClick={() => router.push('/projects')}

@@ -1,0 +1,2152 @@
+---
+title: "CAM Editor"
+description: "Complete guide to the CAM Editor for generating and optimizing toolpaths"
+---
+
+# CAM Editor
+
+The CAM Editor is a fundamental component of the application that allows you to transform your CAD models into toolpaths and G-code for CNC machining. This section explores in detail all the features available in the CAM Editor.
+
+<Frame>
+  <img src="/images/cammedit.png" alt="CAM Editor Overview" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+## CAM Editor Interface
+
+The CAM Editor presents a comprehensive interface organized to facilitate workflow from design to production:
+
+### Top Toolbar
+
+<Frame>
+  <img src="/images/toolcam.png" alt="CAM toolbar" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+The top toolbar contains:
+
+<AccordionGroup>
+  <Accordion title="File Menu" icon="file">
+    - **Save Options**: Save, open and manage CAM projects
+    - **Import**: Import CAD models in various formats
+    - **Export**: Export toolpaths, G-code and reports
+    - **Setup Documents**: Generate workshop documentation
+    - **Project Preferences**: Settings specific to the current project
+  </Accordion>
+ <Accordion title="Simulation Menu" icon="vr-cardboard">
+    - **Start Simulation**: View simulation of the entire process
+    - **Step-by-Step**: Control simulation advancing one step at a time
+    - **Collision Detection**: Enable collision detection during simulation
+    - **Speed Control**: Adjust playback speed
+    - **Statistics**: View data on time, material removal, etc.
+    - **Display Options**: Configure how simulation is displayed
+  </Accordion>
+  <Accordion title="View" icon="eye">
+    - **Display Styles**: Modify how models and toolpaths are displayed
+    - **Standard Views**: Front, side, top, isometric
+    - **Transparency**: Control transparency to view internal elements
+    - **Sections**: Create section views to analyze internal details
+    - **Measurements**: Tools to measure distances and angles
+    - **Display Filters**: Show/hide specific operation types
+  </Accordion>
+  <Accordion title="Library Button" icon="book">
+    - **Tool Library**: Access to available tool collection
+    - **Material Library**: Selection of predefined and custom materials
+    - **Saved Strategies**: Reuse of optimized machining strategies
+    - **Setup Templates**: Pre-saved machine configurations
+    - **Standard Cycles**: Collection of standard machine cycles
+  </Accordion>
+  <Accordion title="Main Tabs" icon="table-columns">
+    - **Preview**: View model and toolpaths
+    - **G-code Editor**: View and edit generated G-code
+    - **Toolpath Viewer**: Detailed analysis of toolpaths
+    - **Post-processor**: Configuration and generation of specific G-code
+    - **Documentation**: Creation of workshop documentation
+  </Accordion>
+</AccordionGroup>
+
+### Left Sidebar
+
+<Frame>
+  <img src="/images/lef-cam.png" alt="Left Sidebar CAM" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+The left sidebar, similar to the CAD Editor sidebar, is organized in tabs:
+
+<Tabs>
+  <Tab title="Machine">
+    Settings and configurations related to the CNC machine:
+    
+    <AccordionGroup>
+      <Accordion title="Machine Types" icon="robot">
+        - **Milling Machine**: 3, 4, 5 axis, vertical or horizontal
+        - **Lathe**: Standard, multi-spindle, with motorized tools
+        - **Combined Machine**: Turning and milling
+        - **Wire EDM**: Wire or submerged arc
+        - **Laser/Plasma/Waterjet**: For 2D machining
+        - **Workpiece Setup**: Advanced multi-process setup
+      </Accordion>
+      <Accordion title="Machine Parameters" icon="sliders">
+        - **Axis Travel**: Limits of movement in each direction
+        - **Speeds and accelerations**: Limits of speed and acceleration
+        - **Tool Change**: Position and process of tool change
+        - **Home and origins**: Reference positions
+        - **Compensations**: Tool offset and workpiece
+        - **Cooling Systems**: Type and coolant control
+      </Accordion>
+      <Accordion title="Physical Limitations and Capabilities" icon="circle-exclamation">
+        - **Physical Limits**: Maximum size of workpiece
+        - **Spindle Power**: Power capacity and torque
+        - **Accuracy**: Tolerances and repeatability
+        - **Special Features**: Advanced options available
+        - **Measurement Systems**: Available input devices
+        - **Protections**: Safety zones and controls
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+  <Tab title="Levels">
+    Management of levels for selective machining:
+    
+    - **Levels imported from CAD**: Maintaining original structure
+    - **Toolpath Levels**: Organization of operations
+    - **Selective Visibility**: Show/hide groups of operations
+    - **Level Blocking**: Prevents accidental modifications
+    - **Filters**: Displays only specific types of operations
+    - **Reordering**: Reorganizes sequence of operations
+  </Tab>
+  <Tab title="Settings">
+    General configurations of the CAM environment:
+    
+    <AccordionGroup>
+      <Accordion title="Units of Measurement" icon="ruler">
+        - **Metric System**: Millimeters (mm) or inches (in)
+        - **Precision**: Number of decimal places displayed
+        - **Conversion**: Options to convert between systems of units
+        - **Angles**: Degrees, radians, decimal degrees
+        - **Speeds**: Units for feed rates and cutting speeds
+      </Accordion>
+      <Accordion title="Machining Tolerances" icon="bullseye">
+        - **Machine Tolerance**: Precision of machining
+        - **Calculation Tolerance**: For generating toolpaths
+        - **Allowed Deviation**: For curved surfaces
+        - **Over-travel**: For roughing and finishing operations
+        - **Curve Approximation**: Converting curves into segments
+      </Accordion>
+      <Accordion title="Visualization Preferences" icon="palette">
+        - **Path Colors**: Configuration of colors for different types of movement
+        - **Line Thickness**: Visibility of toolpaths
+        - **Direction Arrows**: Visualization of path orientation
+        - **Control Points**: Visualization of significant points
+        - **Piece Transparency**: To view internal toolpaths
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+### Central Display Area
+
+<Frame>
+  <img src="/images/cammedit.png" alt="Central Display Area CAM" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+The central display area changes based on the selected tab:
+
+<Tabs>
+  <Tab title="Preview">
+    Visualization of 3D model and toolpaths:
+    
+    - **3D Model**: Visualization of the workpiece to be machined
+    - **Rough**: Representation of the starting material
+    - **Toolpaths**: Visualization of the generated trajectories
+    - **Rapid Moves**: Outside moves outside the material (typically in different color)
+    - **Tool Positions**: Entry, exit, and change direction points
+    - **Spindle Removal Simulation**: Visualization of material removal progress
+  </Tab>
+  <Tab title="G-code Editor">
+    Text editor with syntax highlighting for G-code:
+    
+    - **Colored Syntax**: Different colors for commands, coordinates, parameters
+    - **Line Numbering**: Clear identification of each block of code
+    - **Automatic Indentation**: Visual organization of code
+    - **Search and Replace**: Tools for quick modifications
+    - **Validation**: Checking for syntax errors or unsupported commands
+    - **Active Block Highlighting**: During simulation or execution
+  </Tab>
+  <Tab title="Toolpath Viewer">
+    Detailed 3D representation of toolpaths with simulation:
+    
+    - **Detailed Visualization**: Each tool movement with actual geometry
+    - **Parameter Control**: Visualization and modification of parameters at each point
+    - **Minimum Radius Identification**: Identifying too tight radii
+    - **Angle Verification**: Checking problematic direction changes
+    - **Critical Points**: Highlighting potential issues
+    - **Speed Profiles**: Visualization of speed along the path
+  </Tab>
+  <Tab title="Post-processor">
+    Interface for generating specific G-code for various CNC controllers:
+    
+    - **Post-processor Selection**: Menu to choose target controller
+    - **Specific Options**: Parameters specific to the selected controller
+    - **G-code Preview**: Visualization of generated code
+    - **Header/Footer Customization**: Customization of standard parts
+    - **Numeration**: Format and increment of line numbers
+    - **Macro Generation**: Creation of subprograms and macros
+  </Tab>
+</Tabs>
+
+### Right Panel (Control)
+
+<Frame>
+  <img src="/images/rightcam.png" alt="Right Control Panel CAM" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+The right panel is organized into three main sections accessible via tabs:
+
+<Tabs>
+  <Tab title="Generator">
+    Tools to create toolpaths:
+    
+    <AccordionGroup>
+      <Accordion title="Operation Selection" icon="list-check">
+        - **Contouring**: Machining along external or internal profiles
+        - **Trough**: Internal area emptying
+        - **Drilling**: Creation of holes with various cycles
+        - **Flattening**: Machining of flat surfaces
+        - **3D Machining**: Strategies for complex surfaces
+        - **Combined Operations**: Multiphase custom machining
+      </Accordion>
+      <Accordion title="Machining Parameters" icon="sliders">
+        - **Depth**: Total and incremental value
+        - **Feed**: Speed of movement in the material
+        - **Spindle Speed**: RPM or cutting speed
+        - **Over-travel**: Material left for subsequent operations
+        - **Coolant**: Control of the cooling system
+        - **Operation Sequence**: Sequence of machining
+      </Accordion>
+      <Accordion title="Cutting Strategies" icon="chess-board">
+        - **Zigzag**: Forward and backward movements
+        - **Spiral**: Movements in a spiral from inside to outside or vice versa
+        - **Parallel**: Parallel passes in one direction
+        - **Radial**: Moves from center to outside or vice versa
+        - **Morphing**: Transition between different strategies
+        - **Adaptive**: Automatic optimization of the path
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+  <Tab title="Cycles">
+    Standard machine cycles:
+    
+    <AccordionGroup>
+      <Accordion title="Drilling Cycles" icon="bullseye-arrow">
+        - **Simple Drilling**: Drilling in a single motion
+        - **Peck Drilling**: Drilling with intermediate retractions
+        - **Deep Drilling**: Strategies for deep holes
+        - **Boring**: Precision finishing of holes
+        - **Thread Milling**: Creation of internal threads
+        - **Thread Grinding**: Precision finishing of existing threads
+      </Accordion>
+      <Accordion title="Freshening Cycles" icon="circle-dashed">
+        - **Troughs**: Internal area emptying
+        - **Islands**: Machining around areas to be preserved
+        - **Rails**: Creation of channels
+        - **Thread with milling cutter**: Creation of internal or external threads
+        - **Engraving**: Machining of texts or decorations
+        - **Chamfers and fillets**: Machining of edges
+      </Accordion>
+      <Accordion title="Turning Cycles" icon="repeat">
+        - **Roughing**: Rapid material removal
+        - **Finishing**: Final pass for dimensional precision
+        - **Thread**: Creation of external threads
+        - **Railing**: Creation of grooves and channels
+        - **Trimming**: Separating the piece from the bar
+        - **Axial Drilling**: Drilling operations on the rotation axis
+      </Accordion>
+      <Accordion title="Custom Cycles" icon="wand-magic-sparkles">
+        - **Cycle Creation**: Definition of custom operations
+        - **Parameterization**: Configuration of cycle variables
+        - **Cycle Library**: Saving for reuse
+        - **Import/Export**: Sharing between projects
+        - **Combination Cycles**: Creation of complex operations
+        - **Documentation**: Notes on functionality
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+  <Tab title="Control">
+    Settings for machine control:
+    
+    <AccordionGroup>
+      <Accordion title="Axis Control" icon="arrows-to-circle">
+        - **Software Limits**: Definition of safe movement limits
+        - **Home and machine zero**: Configuration of reference points
+        - **Axis Synchronization**: Control of multi-axis movements
+        - **Workplane Rotation**: For machining on inclined planes
+        - **Coordinate Transformations**: For complex setups
+        - **Movement Optimization**: Reducing positioning times
+      </Accordion>
+      <Accordion title="Workpiece Origin" icon="location-crosshairs">
+        - **Piece Zero**: Definition of machining origin
+        - **Coordinate Systems**: Management of multiple systems
+        - **Alignment**: Rotation of coordinate system
+        - **Offset**: Compensation and translations
+        - **Preset**: Saved coordinate system configurations
+        - **Keyboard Operations**: Procedures to find origins
+      </Accordion>
+      <Accordion title="Reference Points" icon="map-pin">
+        - **Tool Change Points**: Secure points for tool changes
+        - **Home Positions**: Reference points and safety
+        - **Approach Points**: Secure approach points to the workpiece
+        - **Exit Points**: Secure points for exiting the workpiece
+        - **Retake Points**: Points for retaking after interruptions
+        - **Inspection Points**: Points for checks during machining
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+### Bottom Status Bar
+
+The status bar shows contextual information:
+
+- **Current position in the active coordinate system**
+- **Current unit of measurement** with quick change option
+- **Simulation State** (inactive, running, paused)
+- **Information about the selected toolpath** (length, estimated time)
+- **System messages and warnings** about ongoing operations
+- **Progress of path generation** during complex operation calculations
+
+<Tip>
+  The status bar is a valuable source of information during CAM Editor use. Regularly check the messages displayed for alerts, suggestions, or input requests.
+</Tip>
+
+## Importing and Preparing Models
+
+Before generating toolpaths, it's necessary to import and prepare the CAD models correctly:
+
+### Importing Models
+
+<AccordionGroup>
+  <Accordion title="From Internal CAD Editor" icon="right-left">
+    - **Direct Transition**: Go directly from CAD model to CAM programming
+    - **Preservation of Parameters**: Maintains parametric relationships and model history
+    - **Bidirectional Updates**: CAD changes automatically reflect in CAM
+    - **Feature Recognition**: Automatic recognition of workpiece features
+    - **Selective Import**: Import only specific parts of the model
+    
+    Direct transition is the most efficient method and is accessible from the "CAM" menu in the CAD Editor or by selecting "Open in CAM" from the contextual menu.
+  </Accordion>
+  <Accordion title="From File" icon="file-import">
+    - **Supported Formats**: Import from STEP, IGES, STL, X_T, Parasolid, etc.
+    - **Import Options**: Scale control, unit conversion, tolerance checks
+    - **Automatic Repair**: Correction of common issues in models
+    - **Simplification**: Options to reduce complexity if necessary
+    - **Mesh-to-B-rep Conversion**: Conversion of mesh to solid models
+    
+    To import a file, use "File > Import" or drag the file directly into the workspace.
+  </Accordion>
+  <Accordion title="Reference Geometry" icon="layer-group">
+    - **Morse and Fixtures**: Import systems for simulation
+    - **Machine Components**: Elements of the machine for collision checking
+    - **Supports and Positioners**: Support elements for the workpiece
+    - **Reference Coordinates**: Coordinate systems and reference points
+    - **Control Volumes**: Areas to avoid during machining
+    
+    Reference elements are generally imported as separate components and not intended for machining.
+  </Accordion>
+</AccordionGroup>
+
+### Preparing the Model
+
+<Steps>
+  <Step title="Aligning the Workpiece">
+    Align the model with the machine axes:
+    - Use rotations and translations to position correctly
+    - Align with the machine's coordinate system
+    - Consider the accessibility of tools
+    - Optimize for reducing setup changes
+  </Step>
+  <Step title="Defining the Rough Stock">
+    Specify the dimensions and type of raw material:
+    - Standard shapes (block, cylinder) or custom
+    - Dimensions with appropriate overtravel
+    - Selection of material from the library
+    - Relative positioning to the finished model
+  </Step>
+  <Step title="Setting the Origin">
+    Define the zero point for machining:
+    - Typically on a corner or center of the workpiece
+    - Consider easily identifiable points on the machine
+    - Define one or more coordinate systems (WCS)
+    - Align with the model's characteristics
+  </Step>
+  <Step title="Selecting Geometries">
+    Identify the features to be machined:
+    - Automatic recognition of holes, troughs, profiles
+    - Manual selection of surfaces or features
+    - Organization by type of machining
+    - Definition of priorities and sequences
+  </Step>
+  <Step title="Checking Machinability">
+    Verify potential issues in machinability:
+    - Analysis of negative angles or sub-squares
+    - Verification of minimum radii for available tools
+    - Checking realizable tolerances
+    - Identification of problematic features
+  </Step>
+</Steps>
+
+<Frame>
+  <img src="/images/lef-cam.png" alt="Setup Preparation" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Defining the Setup
+
+<AccordionGroup>
+  <Accordion title="Coordinate Systems" icon="arrows-to-dot">
+    - **WCS Setup**: Definition of the working coordinate system
+    - **Multiple Origins**: Configuration of multiple systems for complex operations
+    - **Alignment with Features**: Orientation based on geometry
+    - **Plane Rotations**: Definition of non-standard workplane rotations
+    - **Origins for Different Operations**: Dedicated zeros for specific operations
+    
+    The coordinate system determines how coordinates in G-code correspond to the real machine.
+  </Accordion>
+  <Accordion title="Reference Points" icon="map-pin">
+    - **Tappable Points**: Definition of easily measurable points
+    - **Edges and Faces**: Geometric references for setup
+    - **Registrations and Pins**: Precise alignment points
+    - **Centering Marks**: Quick alignment marks
+    - **Base Plate**: Definition of base for support
+    
+    Reference points facilitate physical setup on the machine.
+  </Accordion>
+  <Accordion title="Machine Alignment" icon="rotate">
+    - **Axis Mapping**: Mapping of machine axes
+    - **Table Rotations**: Configuration of rotary axes
+    - **Multi-axis**: Setup for 4 or 5 axis machining
+    - **Dynamic Transformations**: TCPC setup for 5 axes
+    - **Machine Kinematics**: Definition of axis movements
+    
+    Correct alignment is crucial for multi-axis machines and to avoid collisions.
+  </Accordion>
+  <Accordion title="Workpiece Clamping" icon="grip-lines">
+    - **Clamping Systems**: Definition of clamps, bushings, or clamps
+    - **Supports and Supports**: Support elements for the workpiece
+    - **Blocking Areas**: Dedicated areas for securing
+    - **Tool Accessibility**: Checking tool access with constraints
+    - **Collisions**: Checking interference between tools and clamping systems
+    
+    Correct definition of constraints is essential for realistic simulation and collision checking.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Proper model preparation and setup definition significantly reduces errors during real machining. Dedicate sufficient time to this phase to avoid costly issues later.
+</Note>
+
+## Managing Tools and Materials
+
+Proper management of tools and materials is crucial for effective machining operations:
+
+### Tool Library
+
+<Frame>
+  <img src="/images/tool-library.png" alt="Tool Library" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+<AccordionGroup>
+  <Accordion title="Types of Tools" icon="screwdriver-wrench">
+    The library includes a wide range of tools for various operations:
+    
+    - **End Mills**: Candela, sphere, toroid, conical, etc.
+    - **Spindles**: Helical, cannon, for centers, for deep holes
+    - **Thread Mills**: For internal and external threads
+    - **Turning Tools**: For roughing, finishing, channeling, threading
+    - **Special Tools**: Cutters, tools for wire erosion, creators
+    - **Boring and Threading Tools**: For precision hole finishing and thread creation
+    
+    Each type of tool has specific parameters that define its geometry and capacity.
+  </Accordion>
+  <Accordion title="Tool Parameters" icon="gear">
+    Each tool is defined by a complete set of parameters:
+    
+    - **Geometric**: Diameter, length, tip radius, angles
+    - **Constructive**: Material, coating, number of cutting edges
+    - **Operational**: Recommended speeds and feeds, cutting depths
+    - **Identifying**: Tool number, code, manufacturer, stock position
+    - **Mounting**: Toolholders, overhang lengths, adapters
+    - **Wear**: Parameters for tool monitoring and tool life
+    
+    Correct parameters are essential for accurate path calculations and simulations.
+  </Accordion>
+  <Accordion title="Tool Geometry" icon="shapes">
+    Precise definition of tool shapes:
+    
+    - **2D Profiles**: Simplified representation for quick simulations
+    - **3D Models**: Accurate representation for collision checking
+    - **Complete Assembly**: Modeling of the entire tool-toolholder assembly
+    - **Customization**: Custom tool geometry for non-standard applications
+    - **Import**: Support for tool catalogs from manufacturers
+    - **Parameterization**: Creation of parametric tool families
+    
+    Accurate geometries are particularly important for collision checking.
+  </Accordion>
+  <Accordion title="Creating Custom Tools" icon="wand-magic-sparkles">
+    Adding non-standard tools to the library:
+    
+    - **Tool Interface**: Dedicated interface for defining geometries
+    - **Parameterization**: Creation of tools from base parameters
+    - **Import from CAD**: Use of 3D models created in CAD
+    - **Derivation**: Modification of existing tools
+    - **Validation**: Checking consistency and completeness of parameters
+    - **Documentation**: Adding notes and technical specifications
+    
+    The ability to create custom tools is essential for specialized machining.
+  </Accordion>
+</AccordionGroup>
+
+### Material Management
+
+<AccordionGroup>
+  <Accordion title="Material Database" icon="database">
+    Selection from a catalog of predefined materials:
+    
+    - **Standard Categories**: Steels, aluminum, titanium, plastics, wood, etc.
+    - **Specific Alloys**: Cataloged by commercial name and standard
+    - **Grades and Treatments**: Differentiation by material state
+    - **Filtered Search**: Find materials by specific properties
+    - **Certified Materials**: Data verified by manufacturers
+    - **Import Catalogs**: Support for external databases
+    
+    The material database is continuously updated with new alloys and materials.
+  </Accordion>
+  <Accordion title="Material Properties" icon="flask">
+    Defining relevant characteristics for machining:
+    
+    - **Physical Properties**: Density, thermal conductivity
+    - **Mechanical Properties**: Hardness, resistance, ductility
+    - **Machinability**: Indicators of machinability for various processes
+    - **Limitations**: Maximum temperatures, susceptibility to damage
+    - **Compatibility**: Interactions with coolants and coatings
+    - **Sustainability**: Information on recyclability and environmental impact
+    
+    Material properties directly influence optimal cutting parameters.
+  </Accordion>
+  <Accordion title="Custom Materials" icon="vial-circle-check">
+    Adding new materials with specific properties:
+    
+    - **Zero Creation**: Complete definition of new materials
+    - **Cloning and Modification**: Starting from similar materials
+    - **Data Import**: From technical drawings and external databases
+    - **Testing and Validation**: Verification through tests
+    - **Documentation**: Adding notes and references
+    - **Sharing**: Distribution within the team or organization
+    
+    Custom materials are useful for proprietary alloys or uncataloged materials.
+  </Accordion>
+</AccordionGroup>
+
+### Cutting Parameters
+
+<AccordionGroup>
+  <Accordion title="Cutting Speed" icon="gauge-high">
+    Setting optimal cutting speed based on material:
+    
+    - **Cutting Speed (Vc)**: Measured in m/min or ft/min
+    - **Spindle Speed (n)**: RPM calculated based on tool diameter
+    - **Machine Limits**: Adjustment to machine speed limits
+    - **Considerations on Material**: Optimal speeds for various materials
+    - **Corrective Factors**: Adjustments for specific conditions
+    - **Optimization Strategies**: Variation of speed for different phases
+
+    Correct cutting speed maximizes tool life and surface finish.
+  </Accordion>
+  <Accordion title="Feed Rate" icon="forward-step">
+    Defining feed rate per tooth/revolution:
+    
+    - **Feed per Tooth (fz)**: Measured in mm/tooth or in/tooth
+    - **Feed per Revolution (fn)**: Full feed for each rotation
+    - **Linear Feed (f)**: Speed of movement in mm/min or in/min
+    - **Adaptation to Conditions**: Variation based on depth, entry, etc.
+    - **Tool Limitations**: Respects tool capacity
+    - **Considerations on Finishing**: Balancing between speed and quality
+    
+    Correct feed rate balances productivity, surface finish, and tool life.
+  </Accordion>
+  <Accordion title="Depth of Cut" icon="arrow-down-to-line">
+    Setting axial and radial cutting depths:
+    
+    - **Axial Depth (ap)**: Cutting depth in the direction of the tool axis
+    - **Radial Depth (ae)**: Cutting width perpendicular to the axis
+    - **Width/Depth Ratio**: Optimal proportion for various tools
+    - **Multiple Passes**: Dividing deep cuts into incremental passes
+    - **Dynamic Adjustment**: Adjustment based on cutting conditions
+    - **Finishing Passes**: Reduced depths for better precision
+    
+    Depth of cut directly influences cutting forces and stability.
+  </Accordion>
+  <Accordion title="Coolant" icon="droplet">
+    Configuring coolant type and application mode:
+    
+    - **Coolant Types**: Emulsion, full oil, compressed air, cryogenic
+    - **Pressure and Flow**: Settings for volume and pressure
+    - **Application Strategy**: Continuous, pulsed, targeted
+    - **Specific Conditions**: For deep drilling, difficult materials, etc.
+    - **Chip Removal**: Efficient chip management
+    - **Environmental Considerations**: Eco-compatible options
+    
+    Proper coolant management is crucial for tool life and surface quality.
+  </Accordion>
+  <Accordion title="Automatic Optimization" icon="sparkles">
+    Suggestions based on selected material and tool:
+    
+    - **Technology Database**: Optimal parameters based on historical data
+    - **AI Algorithms**: Intelligent suggestions based on learning
+    - **Feedback from Previous Operations**: Adaptation based on historical results
+    - **Goal Balancing**: Optimization for speed, quality, or tool life
+    - **Context Adaptation**: Consideration of all relevant variables
+    - **Continuous Update**: Constant improvement of recommendations
+    
+    Automatic optimization simplifies the choice of complex parameters.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Maintain a personal library of proven cutting parameters for frequently used material-tool combinations. This speeds up programming and ensures consistent results.
+</Tip>
+
+## Toolpath Generation
+
+The CAM Editor offers various strategies for generating optimized toolpaths:
+
+<Frame>
+  <img src="/images/rightcam.png" alt="Toolpath Generation" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Milling Operations
+
+<CardGroup cols={2}>
+  <Card title="Contouring/Profiling" icon="route">
+    Machining along model contours. Ideal for:
+    - Cutting external or internal profiles
+    - Machining pockets with islands
+    - Perimeter finishing operations
+    
+    Offers precise control over approaches, exits, and tool compensation.
+  </Card>
+  <Card title="Pocket" icon="square">
+    Emptying internal areas with efficient strategies:
+    - Zigzag or spiral patterns
+    - Optimization to minimize tool load
+    - Automatic management of islands and obstacles
+    
+    Includes options for entry ramps and adaptive clearing.
+  </Card>
+  <Card title="Face Milling" icon="table">
+    Machining flat surfaces with maximum efficiency:
+    - Parallel passes with optimal overlap
+    - Management of multiple areas on the same plane
+    - Optimization of connecting movements
+    
+    Ideal for surface preparation or final flat finishing operations.
+  </Card>
+  <Card title="Ramp/Helix" icon="turn-down">
+    Gradual entry into material to reduce tool stress:
+    - Linear ramp entry for grooves
+    - Helical movement for pockets and holes
+    - Entry angle control
+    
+    Essential for difficult materials and delicate tools.
+  </Card>
+  <Card title="Scanline" icon="grip-lines">
+    Row by row machining for extended surfaces:
+    - Optimizable parallel directions
+    - Overlap control for uniform finish
+    - Efficient management of flat and curved areas
+    
+    Effective for 3D models and organic surfaces.
+  </Card>
+  <Card title="3D Machining" icon="cube">
+    Optimized paths for complex surfaces:
+    - Constant Z machining for steep walls
+    - Radial finishing for conical surfaces
+    - Pencil machining for corners and fillets
+    
+    Includes advanced strategies like spiral machining, patterns, morphing.
+  </Card>
+  <Card title="High-Speed Machining" icon="bolt">
+    Strategies to reduce tool load:
+    - Constant radial engagement control
+    - Avoids sharp direction changes
+    - Maintains constant tool loads
+    
+    Optimized for maximum productivity with modern machines.
+  </Card>
+</CardGroup>
+
+### Drilling Operations
+
+<CardGroup cols={2}>
+  <Card title="Simple Drilling" icon="circle-dot">
+    Creation of through or blind holes:
+    - Control of depth and overtravel
+    - Options for quick drilling in simple materials
+    - Management of hole families with same characteristics
+  </Card>
+  <Card title="Thread Milling" icon="screwdriver">
+    Creation of internal threads:
+    - Support for rigid tapping or with compensation
+    - Automatic calculation of parameters based on pitch
+    - Options for rotation reversal or special cycles
+  </Card>
+  <Card title="Boring" icon="rotate">
+    Precision finishing of holes:
+    - Advanced control of speed and feed rate
+    - Management of controlled entry and exit
+    - Options for tool orientation during exit
+  </Card>
+  <Card title="Reaming" icon="arrows-to-circle">
+    Enlargement of existing holes:
+    - Operations for greater dimensional precision
+    - Control over surface finish
+    - Options for non-concentric machining
+  </Card>
+  <Card title="Drilling Cycles" icon="layer-group">
+    Combined operations with retractions for chip evacuation:
+    - Deep drilling with complete or partial retractions
+    - Chip breaking cycles for deep holes
+    - Advanced control of incremental depth
+  </Card>
+</CardGroup>
+
+### Turning Operations
+
+<CardGroup cols={2}>
+  <Card title="Roughing" icon="scissors">
+    Rapid material removal:
+    - Cutting pattern parallel to axis or profile
+    - Control of chip thickness
+    - Management of uniform overtravel for finishing
+  </Card>
+  <Card title="Finishing" icon="wand-magic-sparkles">
+    Final pass for dimensional precision:
+    - Advanced feed control
+    - Optimization for surface quality
+    - Management of fillets and details
+  </Card>
+  <Card title="Threading" icon="notdef">
+    Creation of external threads:
+    - Support for various standards (metric, imperial, etc.)
+    - Entry and exit strategies
+    - Multi-pass cycles for deep threads
+  </Card>
+  <Card title="Grooving" icon="grip-lines-vertical">
+    Creation of grooves and channels:
+    - Cycles for simple or profiled grooves
+    - Control of width and depth
+    - Strategies for chip evacuation
+  </Card>
+  <Card title="Parting" icon="arrow-down-to-line">
+    Separation of the piece from the bar:
+    - Control of feed rate
+    - Management of separation
+    - Options for piece support
+  </Card>
+</CardGroup>
+
+### Special Operations
+
+<AccordionGroup>
+  <Accordion title="Engraving" icon="pen-fancy">
+    Creation of text and decorations:
+    
+    - **Text and Symbols**: Engraving of characters and logos
+    - **Depth Control**: Variation for 3D effects
+    - **Optimized Paths**: Minimization of rapid movements
+    - **Fonts and Styles**: Support for various text styles
+    - **Precision Control**: Adaptation to different sizes
+    - **Specific Strategies**: For difficult or delicate materials
+  </Accordion>
+  <Accordion title="4/5 Axis Machining" icon="cube">
+    Advanced paths for multi-axis machines:
+    
+    - **Multi-face Machining**: Single setup for multiple sides
+    - **Tool Tilt**: Optimization of angle for better results
+    - **Wrapping Paths**: Follow geometry continuously
+    - **Synchronized Rotations**: Smooth movements of all axes
+    - **Advanced Strategies**: Machining of blades, propellers, organic shapes
+    - **Collision Control**: Automatic interference prevention
+  </Accordion>
+  <Accordion title="Wire/EDM" icon="bolt">
+    Specific paths for EDM:
+    
+    - **Wire Cutting**: 2D and 4-axis paths for wire EDM
+    - **Plunge EDM**: Strategies for plunge EDM
+    - **Taper Control**: For inclined cuts
+    - **Multi-pass**: Roughing and finishing strategies
+    - **Wire Compensation**: Adaptation to wire diameter
+    - **Management of Notches and Corners**: Specific techniques for details
+  </Accordion>
+  <Accordion title="Laser/Plasma/Waterjet" icon="rectangle-xmark">
+    Strategies for 2D cutting machines:
+    
+    - **Path Optimization**: Reduction of cutting times
+    - **Lead-in/Lead-out Management**: Optimized entry and exit
+    - **Nesting**: Efficient arrangement of multiple parts
+    - **Quality Control**: Parameter adjustment for precise edges
+    - **Material Management**: Adaptation to different thicknesses and types
+    - **Waste Minimization**: Optimization of material usage
+  </Accordion>
+</AccordionGroup>
+
+### Path Optimization
+
+<AccordionGroup>
+  <Accordion title="Minimizing Rapid Movements" icon="minimize">
+    Reduction of non-productive times:
+    
+    - **Optimal Path Calculation**: Algorithms to minimize distances
+    - **Operation Grouping**: Completion of similar operations
+    - **Intelligent Links**: Choice of most efficient path
+    - **Automatic Ordering**: Operation sequence to reduce movements
+    - **Adaptive Safety Heights**: Variation based on obstacles
+    - **Multi-tool Optimization**: Reduction of tool changes
+  </Accordion>
+  <Accordion title="Optimized Entries and Exits" icon="arrow-right-arrow-left">
+    Configuration of smooth approaches and retractions:
+    
+    - **Ramp or Helical Entries**: Reduction of initial stress
+    - **Tangential Exits**: Prevention of marks on the piece
+    - **Controlled Approach**: Management of approach speed
+    - **Overlap Strategies**: Eliminate entry/exit marks
+    - **Context Adaptation**: Different strategies for different situations
+    - **Mark Minimization**: Techniques to reduce visibility of entry/exit
+  </Accordion>
+  <Accordion title="Corner Control" icon="turn-up">
+    Management of direction changes:
+    
+    - **Corner Rounding**: Smooths direction changes
+    - **Adaptive Speed**: Automatic reduction at corners
+    - **Arc Insertion**: Replaces sharp angles with fillet arcs
+    - **Movement Division**: Breakdown of complex movements
+    - **Acceleration Control**: Advanced management of accelerations
+    - **Curve Anticipation**: Early preparation for direction changes
+  </Accordion>
+  <Accordion title="Pass Overlap" icon="objects-align-left">
+    Setting optimal overlap:
+    
+    - **Optimal Percentage**: Balance between efficiency and quality
+    - **Adaptive Variation**: Adaptation to different geometries
+    - **Residual Ridge Control**: Minimization of marks between passes
+    - **Final Pass Techniques**: Uniform removal of residual material
+    - **Alternating Patterns**: Direction alternation for better finish
+    - **Diameter Compensation**: Adaptation to effective tool diameter
+  </Accordion>
+</AccordionGroup>
+
+## Simulation and Verification
+
+Before sending the G-code to the CNC machine, it's essential to simulate and verify the operations:
+
+<Frame>
+  <img src="/images/simulation.png" alt="Toolpath Simulation" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Toolpath Simulation
+
+<AccordionGroup>
+  <Accordion title="3D Visualization" icon="cube">
+    Realistic representation of the toolpath:
+    
+    - **Complete Tool Model**: Visualization of the entire assembly
+    - **Color Coding**: Visual identification of different operations
+    - **Speed Indicators**: Color variation based on speed
+    - **Selective Display**: Filtering of operations to display
+    - **Model Overlay**: Comparison with final model
+    - **Wireframe/Shaded Mode**: Different display options
+    
+    3D visualization offers immediate visual control of the entire process.
+  </Accordion>
+  <Accordion title="Collision Detection" icon="triangle-exclamation">
+    Detection of potential collisions with fixtures or machine parts:
+    
+    - **Automatic Verification**: Identification of interferences
+    - **Collision Analysis**: Between tool, holder, workpiece, fixtures
+    - **Interference Display**: Highlighting of problem areas
+    - **Real-time Alerts**: Notifications during simulation
+    - **Safety Heights**: Verification of minimum distances
+    - **Collision Report**: Documentation of potential problems
+    
+    Collision detection is fundamental to prevent costly damage to the machine or workpiece.
+  </Accordion>
+  <Accordion title="Step-by-Step Simulation" icon="list-ol">
+    Step-by-step analysis of the path:
+    
+    - **Movement Control**: Analysis of each single movement
+    - **Block Navigation**: Moving between specific G-code blocks
+    - **Critical Points**: Identification of problem areas
+    - **Automatic Zoom**: Focus on active area
+    - **Real-time Data**: Display of current parameters
+    - **Original Comparison**: Continuous verification with target model
+    
+    Step-by-step simulation allows detailed control of critical points.
+  </Accordion>
+  <Accordion title="Real-time Simulation" icon="stopwatch">
+    Visualization at actual machining speed:
+    
+    - **Realistic Time**: Movement at programmed speed
+    - **Accelerations**: Simulation of machine accelerations
+    - **Tool Change**: Realistic timing for changes
+    - **Speed Control**: Ability to speed up or slow down
+    - **Programmed Stop**: Pause at points of interest
+    - **Real-time Statistics**: Continuous update of data
+    
+    Useful for realistic estimation of machining times.
+  </Accordion>
+  <Accordion title="Material Removal Simulation" icon="trowel">
+    Realistic visualization of material removal:
+    
+    - **Volumetric Model**: 3D representation of stock
+    - **Progressive Removal**: Real-time material removal
+    - **Result Display**: Final model after all operations
+    - **Residual Material**: Highlighting of unremoved material
+    - **Sections**: Analysis of internal geometry
+    - **Target Comparison**: Verify differences with target model
+    
+    Allows verification of final result before actual machining.
+  </Accordion>
+</AccordionGroup>
+
+### Machining Analysis
+
+<AccordionGroup>
+  <Accordion title="Machining Times" icon="clock">
+    Calculation of total and per-operation time:
+    
+    - **Total Time**: Estimate of total machining time
+    - **Operation Times**: Breakdown for each operation
+    - **Tool Time**: Analysis of usage time per tool
+    - **Rapid vs. Machining**: Distinction between productive and non-productive times
+    - **Tool Change**: Time dedicated to tool changes
+    - **Optimization**: Suggestions for reducing times
+    
+    Fundamental for production planning and cost estimation.
+  </Accordion>
+  <Accordion title="Residual Material" icon="mountain">
+    Visualization of unremoved material:
+    
+    - **Color Map**: Graphical visualization of residual material
+    - **Quantitative Analysis**: Calculation of residual volume
+    - **Critical Areas**: Where too much or too little material remains
+    - **Tolerance Comparison**: Verification against requirements
+    - **Operation Suggestions**: Proposals for improving removal
+    - **Additional Pass Simulation**: Test of supplementary operations
+    
+    Useful for evaluating completeness and precision of machining.
+  </Accordion>
+  <Accordion title="Surface Roughness" icon="water">
+    Estimation of resulting surface finish:
+    
+    - **Theoretical Calculation**: Estimate based on machining parameters
+    - **Color Map**: Graphical visualization of expected roughness
+    - **Requirements Comparison**: Verification against specifications
+    - **Area Analysis**: Breakdown for different surfaces
+    - **Improvement Suggestions**: Indications for optimization
+    - **Alternative Simulation**: Test of alternative strategies
+    
+    Important for components with specific finish requirements.
+  </Accordion>
+  <Accordion title="Tool Load" icon="weight-hanging">
+    Analysis of tool load during machining:
+    
+    - **Load Graph**: Visualization of variations over time
+    - **Load Peaks**: Identification of critical points
+    - **Axis Analysis**: Breakdown of forces on different axes
+    - **Limit Comparison**: Verification within safe parameters
+    - **Optimization Suggestions**: Modification of critical parameters
+    - **Tool Life Estimate**: Wear prediction based on load
+    
+    Crucial for preventing tool breakage and ensuring consistent quality.
+  </Accordion>
+  <Accordion title="Critical Points" icon="diamond-exclamation">
+    Identification of problematic areas in machining:
+    
+    - **Excessive Accelerations**: Too sharp direction changes
+    - **Problematic Entries**: Non-optimal material engagement
+    - **Variable Loads**: Rapid changes in tool load
+    - **Difficult Geometries**: Areas with complex geometry or undercuts
+    - **Irregular Stock**: Non-uniform distribution
+    - **Undercut**: Areas where tool removes too much material
+    
+    Preventive identification allows correction of problems before production.
+  </Accordion>
+</AccordionGroup>
+
+### Optimization and Correction
+
+<AccordionGroup>
+  <Accordion title="Interactive Modification" icon="hand">
+    Parameter adjustment during simulation:
+    
+    - **On-the-fly Modification**: Change parameters during simulation
+    - **Immediate Effect**: Instant visualization of changes
+    - **Save Changes**: Preservation of optimizations
+    - **Comparative Test**: Comparison between different configurations
+    - **Incremental Verification**: Progressive testing of changes
+    - **Rollback**: Return to previous configurations
+    
+    Allows rapid experimentation with different configurations.
+  </Accordion>
+  <Accordion title="Path Editing" icon="pen-to-square">
+    Manual modification of specific path parts:
+    
+    - **Movement Selection**: Identification of specific segments
+    - **Direct Modification**: Manual alteration of path
+    - **Movement Insertion**: Addition of supplementary passes
+    - **Movement Removal**: Elimination of unnecessary passes
+    - **Parameter Modification**: Change speed or other parameters
+    - **Change Validation**: Automatic verification of consistency
+    
+    Useful for special cases requiring manual intervention.
+  </Accordion>
+  <Accordion title="Automatic Correction Generation" icon="magic-wand-sparkles">
+    Automatic suggestions for detected problems:
+    
+    - **Automatic Analysis**: Identification of potential problems
+    - **Suggested Corrections**: Proposals for specific changes
+    - **Prioritization**: Ordering by criticality
+    - **Selective Application**: Selection of corrections to apply
+    - **Effect Preview**: Visualization of expected result
+    - **Learning**: Continuous improvement of suggestions
+    
+    Uses artificial intelligence to identify and solve problems.
+  </Accordion>
+  <Accordion title="Change Validation" icon="clipboard-check">
+    Re-simulation after changes to verify effectiveness:
+    
+    - **Before/After Comparison**: Visualization of differences
+    - **Time Impact**: Evaluation of effect on times
+    - **Quality Check**: Control of result on quality
+    - **Collision Analysis**: New verification of potential interferences
+    - **Change Report**: Documentation of all variations
+    - **Final Approval**: Confirmation of definitive version
+    
+    Essential to ensure changes have solved problems without creating new ones.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Don't underestimate the importance of simulation: it's much more economical and faster to identify problems in the simulation phase rather than during actual machining. Dedicate sufficient time to this phase, especially for complex or expensive components.
+</Tip>
+
+## Post-Processing and G-code Generation
+
+The post-processing module converts generic toolpaths into specific code for your CNC machine:
+
+<Frame>
+  <img src="/images/postp1.png" alt="G-code Generation" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Post-Processor Selection
+
+<AccordionGroup>
+  <Accordion title="Supported Controllers" icon="microchip">
+    The application supports a wide range of CNC controllers:
+    
+    - **Fanuc**: 0i, 16i, 18i, 21i, 30i, 31i, 32i series
+    - **Heidenhain**: TNC 320, 620, 640, iTNC 530
+    - **Siemens**: Sinumerik 802, 808, 828, 840D
+    - **Haas**: Standard and NGC controllers
+    - **Mazak**: Mazatrol and EIA/ISO
+    - **Okuma**: OSP-P300, OSP-P200
+    - **Mitsubishi**: M700, M800
+    - **Fagor**: 8055, 8060, 8065, 8070
+    - **Selca**: 3000, 4000
+    - **Others**: Extensive library of less common controllers
+    
+    Each controller supports multiple firmware versions.
+  </Accordion>
+  <Accordion title="Custom Configuration" icon="sliders">
+    Adaptation to your machine's exact specifications:
+    
+    - **Command Customization**: Adaptation to specific syntax
+    - **Fixed Cycles**: Configuration of available cycles
+    - **Machine Limits**: Definition of physical limits
+    - **Hardware Options**: Configuration according to installed options
+    - **Specific Commands**: Support for proprietary features
+    - **Custom Macros**: Integration of machine macros
+    
+    Custom configuration ensures compatibility with any machine.
+  </Accordion>
+  <Accordion title="Controller Version" icon="code-branch">
+    Selection of specific firmware version:
+    
+    - **Multiple Versions**: Support for different firmware releases
+    - **Specific Features**: Optimization for available functions
+    - **Backward Compatibility**: Support for older versions
+    - **Advanced Features**: Utilization of features of newer versions
+    - **Regular Updates**: Support for new versions
+    - **Compatibility Testing**: Verification of compatibility
+    
+    Important to select the correct version to fully leverage available features.
+  </Accordion>
+  <Accordion title="Machine Options" icon="gears">
+    Configuration based on installed machine options:
+    
+    - **Rotary Axes**: Configuration of 4th and 5th axes
+    - **Tool Changer**: Type of tool changer system
+    - **Probe**: Presence and type of probing system
+    - **Coolant**: Available coolant options
+    - **Tool Length Compensation**: Tool length compensation system
+    - **Advanced Options**: Installed special features
+    
+    Machine options directly influence the generated code and available features.
+  </Accordion>
+</AccordionGroup>
+
+### Post-Processing Options
+
+<AccordionGroup>
+  <Accordion title="Numeric Format" icon="calculator">
+    Setting precision and decimal separators:
+    
+    - **Coordinate Precision**: Number of decimal places for positional values
+    - **Feed Precision**: Number of decimal places for feed rates
+    - **Numeric Format**: With/without leading or trailing zeros
+    - **Decimal Separator**: Dot or comma depending on configuration
+    - **Scientific Notation**: Enable for very large or small numbers
+    - **Rounding**: Value rounding mode
+    
+    Correct numeric format is essential for machining precision.
+  </Accordion>
+  <Accordion title="Header and Footer" icon="file-lines">
+    Customization of program start and end:
+    
+    - **Initialization Commands**: Machine setup at the beginning
+    - **Identifying Information**: Program name, date, operator
+    - **Initial Setup**: Zeroing of workpiece, tools, etc.
+    - **Closing Commands**: Safe positioning at the end of the program
+    - **Operator Instructions**: Instructions for machine operator
+    - **Custom Parameters**: Controller-specific variables
+    
+    Header and footer contain crucial commands for safety and proper setup.
+  </Accordion>
+  <Accordion title="Macros and Subroutines" icon="code">
+    Generation of advanced program structures:
+    
+    - **Subroutines**: Creation of callable routines
+    - **Parametric Macros**: Generation of variable macros
+    - **Repeated Calls**: Code optimization for repetitive tasks
+    - **Conditional Logic**: IF-THEN structure generation
+    - **Loops**: Creation of loops for repetitive operations
+    - **Local/Global Variables**: Management of variable scope
+    
+    Macros and subroutines make the code more compact, readable, and easy to modify.
+  </Accordion>
+  <Accordion title="Comments" icon="message">
+    Inclusion of descriptive comments in the code:
+    
+    - **Operation Comments**: Description of each operation
+    - **Tool Comments**: Details about the current tool
+    - **Parameter Comments**: Explanation of used parameters
+    - **Section Delimiters**: Logical division of the program
+    - **Operator Notes**: Instructions for the operator
+    - **Comment Syntax**: Adaptation to controller syntax
+    
+    Comments improve readability and facilitate understanding and modification of the code.
+  </Accordion>
+  <Accordion title="Block Labeling" icon="tag">
+    Addition of numbers or labels to code blocks:
+    
+    - **Sequential Numbering**: Progressive numbering of blocks
+    - **Customizable Increment**: Configurable numbering step
+    - **Operation Labels**: Identifiers for different operations
+    - **Resume Points**: Labels for specific resume points
+    - **Cross-references**: Links between main program and subroutines
+    - **Formatting**: Alignment and presentation style
+    
+    Block numbering facilitates debugging and reference to specific program points.
+  </Accordion>
+</AccordionGroup>
+
+### G-code Validation
+
+<AccordionGroup>
+  <Accordion title="Syntax Check" icon="spell-check">
+    Automatic check of syntactic correctness:
+    
+    - **Error Checking**: Verification of syntax errors
+    - **Unsupported Commands**: Identification of incompatible commands
+    - **Missing Parameters**: Verification of required parameters
+    - **Out-of-Range Values**: Check of parameter and coordinate limits
+    - **Structural Errors**: Verification of routine and macro balance
+    - **Warnings and Suggestions**: Notification of potential issues
+    
+    Syntax check prevents errors that would cause alarms on the machine.
+  </Accordion>
+  <Accordion title="Code Analysis" icon="magnifying-glass-chart">
+    Highlighting of potential problems or inefficiencies:
+    
+    - **Path Optimization**: Identification of non-optimal movements
+    - **Frequent Tool Changes**: Notification of excessive tool changes
+    - **Redundant Movements**: Identification of duplicate paths
+    - **Axis Utilization**: Analysis of available axis usage
+    - **Critical Parameters**: Verification of feed rates, speeds, and accelerations
+    - **Improvement Suggestions**: Proposals for optimization
+    
+    Code analysis helps identify areas for efficiency and quality improvement.
+  </Accordion>
+  <Accordion title="Code-Based Simulation" icon="play">
+    Verification of actual code execution:
+    
+    - **Direct Simulation**: Virtual execution of generated G-code
+    - **Movement Verification**: Control of actual machine movement
+    - **Parameter Verification**: Actual application of parameter values
+    - **Expanded Cycles**: Detailed view of fixed cycles
+    - **Step-by-Step Execution**: Analysis of each block
+    - **Special Command Verification**: Verification of advanced commands
+    
+    Code-based simulation verifies the actual behavior of the program on the machine.
+  </Accordion>
+  <Accordion title="G-code Optimization" icon="wand-magic-sparkles">
+    Automatic improvement of code efficiency:
+    
+    - **Compaction**: Reduction of program size
+    - **Redundancy Removal**: Elimination of unnecessary commands
+    - **Path Optimization**: Improvement of connections
+    - **Angle and Fillet Handling**: Optimal management of angles and transitions
+    - **Controller Adaptation**: Optimization for specific characteristics
+    - **Performance/Quality Balance**: Configuration based on priorities
+    
+    Optimization can significantly reduce execution times while maintaining quality.
+  </Accordion>
+</AccordionGroup>
+
+### Export and Documentation
+
+<AccordionGroup>
+  <Accordion title="NC File Export" icon="floppy-disk">
+    Export to machine-ready files:
+    
+    - **Machine Formats**: Generation in required controller formats
+    - **Appropriate Extensions**: Use of appropriate file extensions (nc, cnc, pim, h, etc.)
+    - **Character Encoding**: Support for specific encodings
+    - **File Splitting**: Creation of multiple files for long programs
+    - **Interface Compatibility**: Adaptation to data transfer systems
+    - **Final Check**: Automatic verification before saving
+    
+    Correct export ensures compatibility with the machine controller.
+  </Accordion>
+  <Accordion title="Documentation Generation" icon="file-lines">
+    Creation of machining sheets:
+    
+    - **Setup Sheets**: Information for preparing the machine
+    - **Tool List**: Details of required tools
+    - **Parameter Tables**: Summary of machining parameters
+    - **Drawings and Schematics**: Visualizations of the piece and setup
+    - **Operative Notes**: Specific instructions for the operator
+    - **Quality Control**: Instructions for checks during machining
+    
+    Documentation facilitates machine setup and reduces operational errors.
+  </Accordion>
+  <Accordion title="Machining Reports" icon="chart-line">
+    Production of detailed time and parameter reports:
+    
+    - **Time Analysis**: Estimated times for operation and totals
+    - **Tool Utilization**: Tool usage and remaining life
+    - **Material Usage**: Estimated material removed and residual
+    - **Actual Parameters**: Values actually used in the program
+    - **Comparison with Estimates**: Verification of initial estimates
+    - **Graphical Representations**: Visualization of statistics and paths
+    
+    Reports are valuable for production planning and quotes.
+  </Accordion>
+  <Accordion title="Multiple Program Management" icon="folder-tree">
+    Organization of multiple programs for complex machining:
+    
+    - **Multiple Programs**: Management of related program sets
+    - **Execution Sequence**: Definition of execution order
+    - **Links between Programs**: References to related programs
+    - **Programs for Different Setups**: Organization for machining phases
+    - **Versioning**: Management of different versions of the same program
+    - **Program Library**: Organization of program libraries
+    
+    Efficient management of multiple programs is crucial for machining that requires multiple phases or setups.
+  </Accordion>
+</AccordionGroup>
+
+
+## AI Toolpath Optimizer Integration
+
+The AI Toolpath Optimizer uses artificial intelligence algorithms to improve toolpaths:
+
+<Frame>
+  <img src="/images/aicam.png" alt="AI Toolpath Optimizer" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### AI Optimizer Features
+
+<AccordionGroup>
+  <Accordion title="Automatic Analysis" icon="magnifying-glass-chart">
+    Evaluation of manually generated toolpaths:
+    
+    - **Path Scanning**: Analysis of the entire toolpath
+    - **Pattern Recognition**: Recognition of patterns and schemes
+    - **Efficiency Evaluation**: Analysis of efficiency and quality
+    - **Critical Points**: Identification of problem areas
+    - **Advanced Analysis**: Evaluation of speeds, feeds, accelerations
+    - **Diagnostics**: Identification of potential improvements
+    
+    Automatic analysis identifies areas for improvement that might not be evident manually.
+  </Accordion>
+  <Accordion title="Multi-parameter Optimization" icon="code-branch">
+    Balance between time, quality, and tool wear:
+    
+    - **Multiple Objective Optimization**: Balance of different objectives
+    - **Priority Weighting**: Configuration of relative importance
+    - **Scenario Simulation**: Test of alternative configurations
+    - **Compromise Solution**: Identification of best balance
+    - **Impact Assessment**: Measure of effect on different parameters
+    - **Result Prediction**: Estimation of final result
+    
+    Multi-parameter optimization considers all relevant aspects simultaneously.
+  </Accordion>
+  <Accordion title="Adaptive Learning" icon="brain">
+    Continuous improvement based on feedback:
+    
+    - **Learning from Results**: Improvement from past experiences
+    - **Historical Database**: Use of data from previous machining
+    - **Continuous Refinement**: Progressive improvement over time
+    - **User Customization**: Adaptation to specific preferences
+    - **Contextual Learning**: Understanding of machining context
+    - **Collective Improvement**: Benefit from all users' experience
+    
+    The system becomes increasingly effective with use, learning from past experiences.
+  </Accordion>
+  <Accordion title="Custom Strategy" icon="user-gear">
+    Adaptation to machining specifics:
+    
+    - **Machining Profiles**: Configurations for different types of machining
+    - **Specific Goals**: Optimization targeted to specific results
+    - **Custom Constraints**: Consideration of specific limitations
+    - **Machine Adaptation**: Optimization for machine characteristics
+    - **User Preferences**: Respect for preferred approaches
+    - **Use Cases**: Configurations for specific sectors and applications
+    
+    Customization ensures that optimization is relevant to specific needs.
+  </Accordion>
+</AccordionGroup>
+
+### Optimization Goals
+
+<CardGroup cols={2}>
+  <Card title="Machining Time Reduction" icon="stopwatch">
+    Minimization of cycle times through:
+    - Optimization of connecting movements
+    - Reduction of redundant movements
+    - Configuration of optimal speeds and accelerations
+    - Grouping of similar operations
+    - Minimization of tool changes
+  </Card>
+  <Card title="Surface Finish Improvement" icon="brush">
+    Optimization for superior quality through:
+    - Uniformity of passes and stock
+    - Speed control in curves and details
+    - Optimization of entry and exit angles
+    - Uniformity of tool load for stability
+    - Minimization of vibrations and deflections
+  </Card>
+  <Card title="Tool Life Extension" icon="hourglass-half">
+    Reduction of wear and stress:
+    - Control of constant loads
+    - Progressive entries and exits
+    - Uniform load distribution
+    - Coolant optimization
+    - Prevention of overheating
+  </Card>
+  <Card title="Energy Efficiency" icon="bolt">
+    Reduction of energy consumption:
+    - Minimization of power peaks
+    - Optimization of accelerations and braking
+    - Reduction of unnecessary movements
+    - Axis usage balancing
+    - Reduction of idle times
+  </Card>
+  <Card title="Goal Combination" icon="object-group">
+    Customization based on priorities:
+    - Configuration of goal balance
+    - Predefined profiles for typical cases
+    - Contextual optimization (roughing vs. finishing)
+    - Adaptation to specific project requirements
+    - Consideration of production constraints
+  </Card>
+  <Card title="Speed/Quality Balance" icon="scale-balanced">
+    Find the right balance between speed and machining quality:
+    
+    - **Requirements analysis**: Understand real tolerance and finish needs
+    - **Differentiated strategies**: Use different approaches for roughing and finishing
+    - **Selective finishing**: Apply high quality only where necessary
+    - **Progressive testing**: Incrementally verify results
+    - **Operator feedback**: Gather input from machine operators
+    - **Continuous improvement**: Constantly refine programs
+    
+    An optimal balance maximizes efficiency while maintaining required quality.
+  </Card>
+</CardGroup>
+
+### Using the Optimizer
+
+<Steps>
+  <Step title="Starting Optimization">
+    Select the path to optimize:
+    - Choose one or more operations to optimize
+    - Access optimizer from context menu or AI panel
+    - Verify path is valid and ready for optimization
+  </Step>
+  <Step title="Setting Goals">
+    Define optimization priorities:
+    - Configure relative importance of different goals
+    - Set specific constraints to respect
+    - Choose predefined profile or create custom configuration
+    - Define relevant machine parameters
+  </Step>
+  <Step title="Comparative Analysis">
+    Compare original and optimized paths:
+    - View paths side by side for visual comparison
+    - Examine comparative statistics (time, quality, etc.)
+    - Verify expected improvement for each goal
+    - Explore specific changes made
+  </Step>
+  <Step title="Selective Application">
+    Ability to apply optimization only to specific parts:
+    - Choose whether to apply all changes or only some
+    - Select specific areas or features to optimize
+    - Ignore changes in areas where you prefer manual control
+    - Combine AI optimization with manual adjustments
+  </Step>
+</Steps>
+
+<Frame>
+  <img src="/images/postp2.png" alt="AI Optimization Comparison" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Feedback and Improvement
+
+<AccordionGroup>
+  <Accordion title="Results Evaluation" icon="clipboard-check">
+    Analysis of optimization effectiveness:
+    
+    - **Quantitative Metrics**: Measurement of improvement in time, quality, etc.
+    - **Visual Comparison**: Visualization of differences
+    - **Comparative Simulation**: Test of performance
+    - **Path Evaluation**: Analysis of modified paths
+    - **Detailed Statistics**: Data on various optimization aspects
+    - **Change Report**: Documentation of changes made
+    
+    Evaluation allows understanding exactly what has been improved and how.
+  </Accordion>
+  <Accordion title="AI Parameter Adjustment" icon="sliders">
+    Customization of optimization algorithm:
+    
+    - **Goal Weighting**: Modification of relative importance
+    - **Change Aggressiveness**: Control over degree of intervention
+    - **Specific Constraints**: Definition of particular limitations
+    - **Custom Profiles**: Saving of preferred configurations
+    - **Advanced Parameters**: Access to detailed settings
+    - **Default Reset**: Restoration of standard configuration
+    
+    Adjustment allows adapting AI to user-specific preferences.
+  </Accordion>
+  <Accordion title="Learning from Previous Cases" icon="graduation-cap">
+    Use of history for future improvements:
+    
+    - **Results Database**: Archive of previous optimizations
+    - **Pattern Analysis**: Identification of recurring patterns
+    - **Failure Prediction**: Estimation of component remaining life
+    - **Scheduled Maintenance**: Planning of interventions
+    - **Cycle Optimization**: Adaptation to reduce stress
+    - **Preventive Alerts**: Warnings before failures
+    
+    Continuous learning makes the system increasingly effective with use.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  The AI Toolpath Optimizer does not replace operator expertise but amplifies it. Consider its suggestions as a starting point that can be further refined based on your specific experience.
+</Note>
+
+## Machine Cycles and Automation
+
+Machine cycles simplify the programming of common operations:
+
+### Available Cycle Types
+
+<CardGroup cols={2}>
+  <Card title="Drilling Cycles" icon="bullseye-arrow">
+    Simple drilling, deep drilling, chip breaking:
+    - Cycles for through or blind holes
+    - Deep drilling with incremental retracts
+    - Peck cycles for chip evacuation
+    - Tapping cycles with or without compensation
+    - Precision boring and reaming
+    - Specific cycles for different controllers
+  </Card>
+  <Card title="Tapping Cycles" icon="screwdriver">
+    Rigid or compensated tapping:
+    - Synchronized cycles for rigid tapping
+    - Compensated tapping for floating holders
+    - Cycles for right or left-hand threads
+    - Variable pitch tapping
+    - Multi-pass tapping cycles
+    - Optimized entry and exit strategies
+  </Card>
+  <Card title="Milling Cycles" icon="shapes">
+    Pockets, islands, grooves:
+    - Pocket clearing with or without islands
+    - Groove and slot milling
+    - Circular milling cycles
+    - Inclined bottom pocket machining
+    - Plunge milling for difficult materials
+    - Optimized milling patterns
+  </Card>
+  <Card title="Turning Cycles" icon="rotate">
+    Roughing, finishing, threading:
+    - Parallel or profile roughing cycles
+    - External and internal surface finishing
+    - Constant pitch external and internal threading
+    - Tapered or variable pitch threading
+    - Grooving and parting cycles
+    - Advanced turning strategies
+  </Card>
+  <Card title="Custom Cycles" icon="user-gear">
+    Definition of specific cycles for particular needs:
+    - Creation of combined custom cycles
+    - Parameterization of existing cycles
+    - Specific cycles for special processes
+    - Incorporation of proprietary strategies
+    - Cycles optimized for specific materials
+    - Solutions for complex geometries
+  </Card>
+</CardGroup>
+
+### Cycle Parameters
+
+<AccordionGroup>
+  <Accordion title="Geometry" icon="shapes">
+    Definition of shape and dimensions:
+    
+    - **Main Dimensions**: Diameters, depths, widths
+    - **Positioning**: Reference coordinates and orientation
+    - **Profiles**: Definition of contours for profiling cycles
+    - **Patterns**: Arrangement for groups of similar features
+    - **Reference Geometry**: Elements for relative positioning
+    - **Tolerances**: Specification of required precision
+    
+    Geometric parameters define the shape and position of the operation.
+  </Accordion>
+  <Accordion title="Depth" icon="ruler-vertical">
+    Setting machining depths:
+    
+    - **Total Depth**: Overall machining distance
+    - **Incremental Depth**: Value of each increment
+    - **First Depth**: Specific value for first increment
+    - **Return**: Return height between increments
+    - **Bottom Stock**: Material left on bottom
+    - **Variable Increment**: Progression of increments
+    
+    Proper depth management is crucial for efficiency and tool life.
+  </Accordion>
+  <Accordion title="Feed Rate" icon="forward-step">
+    Feed rates for different phases:
+    
+    - **Working Feed**: Speed during cutting
+    - **Entry Feed**: Speed during material entry
+    - **Exit Feed**: Speed during material exit
+    - **Rapid Feed**: Quick movements outside material
+    - **Feed Override**: Modifiers for specific cases
+    - **Different Phase Feeds**: Different values for roughing/finishing
+    
+    Correct feed rates balance speed, quality, and safety.
+  </Accordion>
+  <Accordion title="Coolant" icon="droplet">
+    Coolant control during cycle:
+    
+    - **On/Off Control**: Control in specific phases
+    - **Coolant Type**: Selection of cooling channel
+    - **Pressure**: Control of pressure for specific operations
+    - **Timing**: Early activation for pre-cooling
+    - **Chip Evacuation**: Programmed cleaning cycles
+    - **Targeted Cooling**: Control of specific nozzles
+    
+    Precise coolant control improves quality and tool life.
+  </Accordion>
+  <Accordion title="Ritorno" icon="arrow-up">
+    Definizione dei punti e modalità di ritorno:
+    
+    - **Piano di ritorno**: Altezza di sicurezza per movimenti
+    - **Ritorno incrementale**: Ritiro parziale tra incrementi
+    - **Ritorno completo**: Ritorno al piano di sicurezza
+    - **Comportamento fine ciclo**: Posizione finale dopo il ciclo
+    - **Velocità di ritorno**: Controllo velocità movimenti di ritorno
+    - **Pattern di ritorno**: Traiettoria di uscita dal materiale
+    
+    Il controllo del ritorno influisce significativamente sui tempi di ciclo.
+  </Accordion>
+</AccordionGroup>
+
+### Parametric Programming
+
+<AccordionGroup>
+  <Accordion title="Variables" icon="square-root-variable">
+    Use of variables for dimensions and parameters:
+    
+    - **Global Variables**: Accessible throughout the program
+    - **Local Variables**: Limited to specific routines
+    - **System Parameters**: Controller predefined variables
+    - **Arrays**: Collections of related values
+    - **Tables**: Organized data structures
+    - **Persistence**: Value retention between executions
+    
+    The use of variables makes the program more flexible and easy to modify.
+  </Accordion>
+  <Accordion title="Mathematical Expressions" icon="calculator">
+    Calculations within the program:
+    
+    - **Arithmetic Operations**: Addition, subtraction, multiplication, division
+    - **Mathematical Functions**: Trigonometry, root, power, etc.
+    - **Conversions**: Between different units and systems
+    - **Rounding**: Control of precision
+    - **Advanced Functions**: Statistics, interpolations, etc.
+    - **Constants**: Predefined mathematical values (π, e, etc.)
+    
+    Mathematical expressions allow dynamic calculations during execution.
+  </Accordion>
+  <Accordion title="Flow Control" icon="code-branch">
+    Conditional instructions and loops:
+    
+    - **IF-THEN-ELSE Structures**: Conditional execution
+    - **WHILE Loops**: Repetitions based on condition
+    - **FOR Loops**: Repetitions with counter
+    - **Conditional Jumps**: GOTO based on conditions
+    - **Error Handling**: Response to abnormal conditions
+    - **Nesting**: Nested control structures
+    
+    Flow control makes the program capable of responding to variable conditions.
+  </Accordion>
+  <Accordion title="Subroutines" icon="square-code">
+    Creation and calling of subroutines:
+    
+    - **Routine Definition**: Creation of reusable blocks
+    - **Parameter Passing**: Data transfer to subroutine
+    - **Return Values**: Recovery of results from subroutine
+    - **Nested Calls**: Subroutines calling other subroutines
+    - **Recursion**: Subroutines calling themselves
+    - **Libraries**: Collections of reusable subroutines
+    
+    Subroutines allow organizing code in a modular and reusable way.
+  </Accordion>
+  <Accordion title="Custom Macros" icon="code">
+    Definition of macros for recurring operations:
+    
+    - **Macro Creation**: Definition of custom sequences
+    - **Parameterization**: Configuration through parameters
+    - **Compilation**: Conversion to optimized code
+    - **Macro Libraries**: Organization and reuse
+    - **Documentation**: Description of functionality and parameters
+    - **Versioning**: Management of different versions
+    
+    Custom macros extend controller capabilities with tailored functionality.
+  </Accordion>
+</AccordionGroup>
+
+### Process Automation
+
+<AccordionGroup>
+  <Accordion title="Operation Sequences" icon="list-check">
+    Definition of standard operation series:
+    
+    - **Predefined Workflows**: Sequences of typical operations
+    - **Cycle Concatenation**: Smooth linking between different cycles
+    - **Transition Optimization**: Efficient movements between operations
+    - **Tool Management**: Optimal sequence to minimize changes
+    - **Dependent Operations**: Sequences conditioned by results
+    - **Feedback Loop**: Adaptation based on measurements
+    
+    Predefined sequences standardize processes and reduce programming errors.
+  </Accordion>
+  <Accordion title="Machining Templates" icon="file-code">
+    Reuse of predefined configurations:
+    
+    - **Template Library**: Collection of optimized configurations
+    - **Customization**: Adaptation of templates to specific needs
+    - **Quick Application**: Fast implementation of best practices
+    - **Material-specific Configurations**: Templates optimized for materials
+    - **Industry Templates**: Configurations for specific industries
+    - **Sharing**: Exchange of templates between users
+    
+    Templates drastically reduce programming time for standard operations.
+  </Accordion>
+  <Accordion title="Automation Scripts" icon="file-code">
+    Programming of complex sequences:
+    
+    - **Scripting Language**: Creation of high-level programs
+    - **Machine API**: Access to advanced controller features
+    - **Sensor Integration**: Response to real-time sensor data
+    - **Automatic Decisions**: Advanced process logic
+    - **Exception Handling**: Response to non-standard events
+    - **Automatic Documentation**: Recording of executed operations
+    
+    Automation scripts enable complex processes with minimal manual intervention.
+  </Accordion>
+  <Accordion title="Production System Integration" icon="industry">
+    Connection with MES and ERP:
+    
+    - **Order Reception**: Program generation from production orders
+    - **Reporting**: Sending production data to management systems
+    - **Traceability**: Recording of actual parameters and times
+    - **Resource Management**: Coordination with tool and material availability
+    - **Planning**: Integration with scheduling systems
+    - **Quality**: Connection with quality control and metrology
+    
+    Integration with production systems creates a complete digital workflow.
+  </Accordion>
+</AccordionGroup>
+
+## Machine Control
+
+The machine control panel allows direct communication with the CNC machine:
+
+<Frame>
+  <img src="/images/visualizer.png" alt="Machine Control" style={{ borderRadius: '0.5rem' }} />
+</Frame>
+
+### Machine Connection
+
+<AccordionGroup>
+  <Accordion title="Supported Protocols" icon="network-wired">
+    Various methods to connect to the machine:
+    
+    - **Ethernet**: Standard network connection
+    - **USB**: Direct connection via USB port
+    - **Serial**: RS-232 connection for older machines
+    - **Wireless**: Wi-Fi or Bluetooth connection
+    - **Proprietary systems**: Manufacturer-specific protocols
+    - **Cloud connection**: Through industrial cloud solutions
+    
+    Connection flexibility allows integration with any machine.
+  </Accordion>
+  <Accordion title="DNC Control" icon="arrow-right-arrow-left">
+    Direct program transfer to the machine:
+    
+    - **Program sending**: Direct transfer to CNC control
+    - **Drip feeding**: Progressive transfer for large programs
+    - **Transfer verification**: Data integrity check
+    - **Feedback reception**: Transfer status monitoring
+    - **Library management**: Program storage on machine
+    - **Synchronization**: Maintaining consistency between CAM and machine
+    
+    DNC control eliminates the need for manual program transfer.
+  </Accordion>
+  <Accordion title="Status Monitoring" icon="gauge-high">
+    Real-time machine status visualization:
+    
+    - **Axis position**: Current coordinates of all axes
+    - **Operational status**: Running, paused, alarm
+    - **Active parameters**: Spindle speed, current feed rate
+    - **Axis load**: Monitoring of axis and spindle effort
+    - **Program progress**: Completion percentage
+    - **Times**: Elapsed and estimated completion time
+    
+    Real-time monitoring enables continuous process control.
+  </Accordion>
+  <Accordion title="Override" icon="sliders">
+    Remote control of feed rate and spindle speed:
+    
+    - **Feed override**: Feed rate adjustment
+    - **Spindle override**: Rotation speed control
+    - **Rapid override**: Rapid movement speed adjustment
+    - **Pause/Resume**: Program execution control
+    - **Single block**: One block at a time execution
+    - **Feed hold**: Temporary feed stop
+    
+    Overrides allow real-time adjustments during execution.
+  </Accordion>
+</AccordionGroup>
+
+### Origin and Reference Management
+
+<AccordionGroup>
+  <Accordion title="Workpiece Zero Setting" icon="bullseye">
+    Guided procedures to define the origin:
+    
+    - **Manual methods**: Guides for manual setup
+    - **Probing cycles**: Automatic procedures with probe
+    - **Feature recognition**: Automatic reference identification
+    - **Alignment**: Correction of workpiece misalignment
+    - **Multiple systems**: Management of multiple origins
+    - **Compensations**: Automatic offset application
+    
+    Correct origin definition is fundamental for precision.
+  </Accordion>
+  <Accordion title="Tool Preset Management" icon="pencil-ruler">
+    Setting and verification of tool lengths:
+    
+    - **Length measurement**: Precise length determination
+    - **Diameter measurement**: Actual diameter verification
+    - **Tool database**: Archive of measured tool data
+    - **Automatic compensations**: Corrective offset application
+    - **Wear monitoring**: Tracking of dimensional variations
+    - **Off-line presetting**: Integration with external systems
+    
+    Precise tool management ensures accurate and repeatable machining.
+  </Accordion>
+  <Accordion title="Probing Cycles" icon="microchip-ai">
+    Automation of origin detection:
+    
+    - **Point probing**: Single point detection
+    - **Edge probing**: Precise edge identification
+    - **Hole probing**: Center and diameter determination
+    - **Island probing**: Measurement of raised features
+    - **Surface probing**: Surface orientation determination
+    - **Automatic alignment**: Workpiece positioning correction
+    
+    Probing cycles automate and precision the workpiece setup.
+  </Accordion>
+  <Accordion title="Multiple Coordinate Systems" icon="object-group">
+    Management of multiple simultaneous coordinate systems:
+    
+    - **Multiple work offsets**: Definition of various reference systems
+    - **Machine coordinates**: Absolute machine reference
+    - **Fixture coordinates**: Specific fixture references
+    - **Programmable coordinates**: Systems defined in program
+    - **Transformations**: Conversions between different systems
+    - **Coordinate rotations**: Rotated systems for multi-axis machining
+    
+    Multiple systems facilitate complex machining and multiple setups.
+  </Accordion>
+</AccordionGroup>
+
+### Program Execution
+
+<AccordionGroup>
+  <Accordion title="Start/Stop" icon="play">
+    Control of program execution:
+    
+    - **Program start**: Begin execution
+    - **Programmed stop**: Orderly completion
+    - **Emergency stop**: Immediate interruption
+    - **Restart**: Resume from specific point
+    - **Block start**: Execution from selected block
+    - **Conditional execution**: Start based on conditions
+    
+    Basic execution control is essential for any operation.
+  </Accordion>
+  <Accordion title="Single Block Mode" icon="hand">
+    One block at a time execution:
+    
+    - **Step-by-step advance**: Granular control
+    - **Real-time verification**: Analysis of each operation
+    - **Block pause**: Time for checks
+    - **Block skip**: Possibility to skip specific steps
+    - **Block loop**: Repetition of specific sequences
+    - **Detailed analysis**: In-depth operation verification
+    
+    Single block mode is valuable for testing and debugging.
+  </Accordion>
+  <Accordion title="Feed Override" icon="gauge-simple-high">
+    Real-time speed adjustment:
+    
+    - **Percentage control**: Percentage adjustment
+    - **Dynamic variation**: Context-based adaptation
+    - **Safety limits**: Prevents dangerous values
+    - **Presets**: Default values for specific situations
+    - **Override profiles**: Pre-programmed variation sequences
+    - **Selective override**: Application to specific operations
+    
+    Override allows real-time speed optimization.
+  </Accordion>
+  <Accordion title="Auxiliary Functions" icon="gears">
+    Control of coolant, chip evacuation, etc.:
+    
+    - **Coolant on/off**: Cooling system control
+    - **Chip evacuation**: Cleaning system management
+    - **Workpiece clamping**: Fixturing system control
+    - **Pressure control**: Pneumatic/hydraulic system adjustment
+    - **Auxiliary systems**: Secondary equipment activation
+    - **Signaling**: Indicator and alarm control
+    
+    Auxiliary functions manage all secondary aspects of the machine.
+  </Accordion>
+</AccordionGroup>
+
+### Diagnostics and Monitoring
+
+<AccordionGroup>
+  <Accordion title="Error Display" icon="triangle-exclamation">
+    Reading and interpreting error messages:
+    
+    - **Error codes**: Machine error decoding
+    - **Detailed descriptions**: Cause explanation
+    - **Resolution suggestions**: Guides to solve problems
+    - **Error history**: Previous error log
+    - **Categorization**: Organization by type and severity
+    - **Contextual documentation**: Access to specific manuals
+    
+    Correct error interpretation speeds up problem resolution.
+  </Accordion>
+  <Accordion title="Load Monitoring" icon="chart-line">
+    Visualization of axis and spindle load:
+    
+    - **Axis load**: Effort visualization on each axis
+    - **Spindle load**: Power and torque monitoring
+    - **Real-time graphs**: Trend visualization
+    - **Alert thresholds**: Warnings for critical values
+    - **Data recording**: Storage for analysis
+    - **Path correlation**: Load association with geometry
+    
+    Load monitoring allows problem identification and process optimization.
+  </Accordion>
+  <Accordion title="Operation Log" icon="book">
+    Recording of events and operations:
+    
+    - **Detailed log**: Complete chronological record
+    - **Event filters**: Selective visualization
+    - **Export**: Save for external analysis
+    - **Annotations**: Adding notes to specific events
+    - **Search**: Quickly find specific events
+    - **Statistics**: Aggregate data analysis
+    
+    The log is fundamental for traceability, diagnosis, and continuous improvement.
+  </Accordion>
+  <Accordion title="Predictive Maintenance" icon="wrench">
+    Data analysis to prevent failures:
+    
+    - **Wear indicators**: Detection of deterioration signals
+    - **Trend analysis**: Problem pattern identification
+    - **Failure prediction**: Component life estimation
+    - **Scheduled maintenance**: Intervention planning
+    - **Cycle optimization**: Adaptation to reduce stress
+    - **Preventive alerts**: Warnings before failures
+    
+    Predictive maintenance reduces unexpected machine downtime and costs.
+  </Accordion>
+</AccordionGroup>
+
+## Tips and Best Practices for the CAM Editor
+
+### Process Optimization
+
+<AccordionGroup>
+  <Accordion title="Machining Strategy" icon="chess">
+    Choose the most suitable strategy for the part type:
+    
+    - **Preliminary analysis**: Evaluate part characteristics and requirements
+    - **Strategy selection**: Identify optimal approach for each feature
+    - **Prioritization**: Determine logical operation sequence
+    - **Balancing**: Find balance between time and quality
+    - **Material adaptation**: Customize based on material to be machined
+    - **Tool optimization**: Choose specific tools for each strategy
+    
+    The right strategy is fundamental for efficiency and quality.
+  </Accordion>
+  <Accordion title="Operation Sequence" icon="list-ol">
+    Organize operations logically and efficiently:
+    
+    - **General roughing**: Initial removal of excess material
+    - **Pre-finishing**: Preparation for finishing operations
+    - **Internal details**: Machining of pockets and internal features
+    - **Holes and threads**: Drilling/tapping operations
+    - **Contouring**: External edge profiling
+    - **Final finishing**: Operations for surface quality
+    
+    Logical order reduces times and improves overall quality.
+  </Accordion>
+  <Accordion title="Cutting Parameters" icon="gauge-high">
+    Use values appropriate for material and tool:
+    
+    - **Consult catalogs**: Use manufacturer recommendations
+    - **Consider machine**: Adapt parameters to available rigidity and power
+    - **Specific material**: Customize for material type and hardness
+    - **Finish optimization**: Adjust parameters for desired quality
+    - **Productivity/life balance**: Find balance between speed and tool life
+    - **Critical parameter verification**: Always check values before generating code
+    
+    Well-calibrated parameters improve quality, speed, and tool life.
+  </Accordion>
+  <Accordion title="Validation" icon="check-double">
+    Always simulate before sending to machine:
+    
+    - **Complete simulation**: Verify entire program before execution
+    - **Collision check**: Verify absence of interference with fixtures
+    - **Critical area analysis**: Carefully examine complex areas
+    - **Parameter verification**: Check speeds and feeds at critical points
+    - **Time estimation**: Evaluate total process duration
+    - **Residual material verification**: Check that all necessary material is removed
+    
+    Accurate validation prevents costly errors and machine damage.
+  </Accordion>
+</AccordionGroup>
+
+### Tool Management
+
+<AccordionGroup>
+  <Accordion title="Organized Library" icon="book">
+    Maintain a well-organized and updated tool library:
+    
+    - **Logical categorization**: Organize by type, size, use
+    - **Consistent naming**: Use clear naming system
+    - **Complete data**: Enter all relevant parameters
+    - **Documentation**: Add notes on performance and applications
+    - **Regular update**: Keep library current with new purchases
+    - **Backup**: Create library backup copies
+    
+    A well-organized library speeds up programming and prevents errors.
+  </Accordion>
+  <Accordion title="Tool Life" icon="hourglass-half">
+    Monitor and manage tool life:
+    
+    - **Usage tracking**: Record operating times and wear
+    - **Replacement planning**: Schedule changes before failure
+    - **Regular inspection**: Visual wear check
+    - **Sharpening**: Plan restoration interventions
+    - **Performance analysis**: Evaluate effectiveness of different tools
+    - **History**: Maintain data on duration in different conditions
+    
+    Good management extends tool life and improves quality.
+  </Accordion>
+  <Accordion title="Standardization" icon="filter">
+    Use standard tools when possible:
+    
+    - **Inventory reduction**: Limit variety of tools to manage
+    - **Interchangeability**: Simplify replacement when needed
+    - **Cost optimization**: Improve economies of scale in purchases
+    - **Programming simplification**: Reduce program complexity
+    - **Focused inventory**: Concentrate resources on fundamental tools
+    - **Consolidation**: Eliminate similar and redundant tools
+    
+    Standardization simplifies management, purchasing, and programming.
+  </Accordion>
+  <Accordion title="Path Optimization" icon="route">
+    Minimize unnecessary tool changes:
+    
+    - **Operation grouping**: Execute all operations per tool
+    - **Multifunction tools**: Use versatile tools for different operations
+    - **Setup analysis**: Evaluate impact of tool changes on times
+    - **Prioritization**: Organize operations to minimize changes
+    - **Balancing**: Consider both efficiency and tool wear
+    - **Comparative testing**: Evaluate different sequences to find optimal
+    
+    Tool change optimization can drastically reduce cycle times.
+  </Accordion>
+</AccordionGroup>
+
+### Safety and Reliability
+
+<AccordionGroup>
+  <Accordion title="Collision Check" icon="shield-check">
+    Always verify potential collisions:
+    
+    - **Complete simulation**: Analyze entire tool path
+    - **Tool holder consideration**: Include entire assembly in verification
+    - **Fixturing**: Accurately model clamps and fixtures
+    - **Full stroke consideration**: Verify entire work volume
+    - **Adequate safety heights**: Use margins appropriate to setup
+    - **Manual verification**: Visually examine critical areas
+    
+    Collision prevention is fundamental to avoid costly damage.
+  </Accordion>
+  <Accordion title="Safe Approaches" icon="arrow-down-to-bracket">
+    Use safe approaches and retracts to avoid collisions:
+    
+    - **Gradual entry**: Progressive approach to material
+    - **Adequate safety heights**: Maintain sufficient distances
+    - **Intermediate points**: Use safe transition points between operations
+    - **Complete retracts**: Fully extract tool from risky areas
+    - **Controlled movements**: Avoid sudden direction changes
+    - **Path verification**: Carefully simulate entries and exits
+    
+    Well-designed approaches prevent incidents during setup and machining.
+  </Accordion>
+  <Accordion title="Program Backup" icon="hard-drive">
+    Maintain backups of important programs:
+    
+    - **Versioned archive**: Keep different versions with clear identifiers
+    - **Change documentation**: Note what changes between versions
+    - **Multiple backups**: Keep copies on different media
+    - **Logical organization**: Clear structure of archiving system
+    - **Complete metadata**: Add information about setup, required tools, etc.
+    - **Periodic testing**: Regularly verify backup accessibility
+    
+    Systematic backups prevent loss of time and knowledge.
+  </Accordion>
+  <Accordion title="Incremental Testing" icon="flask">
+    Test new programs carefully, gradually increasing speed and depth:
+    
+    - **Single block**: First execution in single block mode
+    - **Reduced speed**: Start with low feed override
+    - **Visual verification**: Check first steps carefully
+    - **Programmed interruptions**: Insert pauses for inspections
+    - **Intermediate measurements**: Verify dimensions during process
+    - **Progressive increase**: Gradually increase to full regime
+    
+    A gradual approach allows intercepting problems before they become critical.
+  </Accordion>
+</AccordionGroup>
+
+### Productivity
+
+<AccordionGroup>
+  <Accordion title="Machining Templates" icon="copy">
+    Create templates for recurring operations:
+    
+    - **Standard operations**: Save optimized configurations for common operations
+    - **Material-specific setup**: Templates dedicated to different materials
+    - **Predefined sequences**: Series of pre-ordered operations
+    - **Tested parameters**: Values already verified in the field
+    - **Integrated documentation**: Notes and explanations included in template
+    - **Organized catalog**: Accessible library of templates for different cases
+    
+    Templates drastically reduce programming time for repetitive operations.
+  </Accordion>
+  <Accordion title="Automation" icon="robot">
+    Automate repetitive sequences:
+    
+    - **Custom scripts**: Create automations for recurring operations
+    - **Feature recognition**: Use automatic geometry recognition
+    - **Predefined rules**: Define standard behaviors for common situations
+    - **Batch processing**: Process groups of operations simultaneously
+    - **Machine cycles**: Leverage machine fixed cycles
+    - **Flow integration**: Connect CAD, CAM, and machine seamlessly
+    
+    Automation improves consistency and reduces programming errors.
+  </Accordion>
+  <Accordion title="Combined Operations" icon="object-ungroup">
+    Reduce number of setups by combining operations:
+    
+    - **Multi-axis machining**: Use 4/5 axes to access multiple faces
+    - **Multiple fixtures**: Configure multiple parts simultaneously
+    - **Optimized sequences**: Organize to minimize setup changes
+    - **Universal tools**: Use versatile tools for different operations
+    - **Consolidation**: Combine similar operations when possible
+    - **Assisted setup**: Use probes to speed up setup changes
+    
+    Setup reduction can drastically improve overall productivity.
+  </Accordion>
+  <Accordion title="Speed/Quality Balance" icon="scale-balanced">
+    Find the right balance between speed and machining quality:
+    
+    - **Requirements analysis**: Understand real tolerance and finish needs
+    - **Differentiated strategies**: Use different approaches for roughing and finishing
+    - **Selective finishing**: Apply high quality only where necessary
+    - **Progressive testing**: Incrementally verify results
+    - **Operator feedback**: Gather input from machine operators
+    - **Continuous improvement**: Constantly refine programs
+    
+    An optimal balance maximizes efficiency while maintaining required quality.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Dedicate time to the programming and simulation phase. Every minute invested in this phase can save many minutes of machine time, reduce scrap, and prevent costly damage. Careful programming is the most profitable investment in the CNC machining process.
+</Tip>
+
+---
+
+The CAM Editor provides you with all the necessary tools to transform your CAD projects into optimized toolpaths and production-ready G-code. In the next section, we will explore project management in more detail.

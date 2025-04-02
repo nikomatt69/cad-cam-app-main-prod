@@ -44,7 +44,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="absolute z-50 mt-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-lg py-1 focus:outline-none"
+            className="absolute z-50 mt-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-lg py-1 focus:outline-none"
             style={{ 
               width, 
               [align === 'left' ? 'left' : 'right']: 0 

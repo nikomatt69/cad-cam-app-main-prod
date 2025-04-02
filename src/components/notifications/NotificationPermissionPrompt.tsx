@@ -105,7 +105,7 @@ const NotificationPermissionPrompt: React.FC<NotificationPermissionPromptProps> 
         >
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+              <div className="p-2 bg-blue-100 dark:bg-blue-800/30 rounded-full">
                 <Bell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>

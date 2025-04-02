@@ -417,7 +417,7 @@ const GCodeViewer: React.FC<GCodeViewerProps> = ({
         
         {!gcode && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-50 bg-opacity-80">
-            <div className="text-center p-6 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-lg shadow-md">
+            <div className="text-center p-6 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-lg shadow-md">
               <h3 className="text-lg font-medium text-gray-900 mb-2">Nessun G-Code caricato</h3>
               <p className="text-gray-600">
                 Importa un file G-Code o generane uno con il generatore di percorsi per visualizzare qui.
@@ -426,7 +426,7 @@ const GCodeViewer: React.FC<GCodeViewerProps> = ({
           </div>
         )}
         
-        <div className="absolute top-4 left-4 p-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white bg-opacity-80 rounded-md shadow-sm">
+        <div className="absolute top-4 left-4 p-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white bg-opacity-80 rounded-md shadow-sm">
           {toolPath.length > 0 && (
             <>
               <p className="text-sm font-medium">Posizione corrente:</p>
@@ -446,7 +446,7 @@ const GCodeViewer: React.FC<GCodeViewerProps> = ({
         
         <div className="absolute top-4 right-4 space-y-2">
           <button 
-            className="p-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm hover:bg-gray-100 block"
+            className="p-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm hover:bg-gray-100 block"
             onClick={resetView}
             title="Reset View"
           >
@@ -457,7 +457,7 @@ const GCodeViewer: React.FC<GCodeViewerProps> = ({
           </button>
 
           <button 
-            className="p-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm hover:bg-gray-100 block"
+            className="p-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm hover:bg-gray-100 block"
             onClick={toggleAdditionalInfo}
             title={additionalInfoVisible ? "Nascondi dettagli" : "Mostra dettagli"}
           >
@@ -470,7 +470,7 @@ const GCodeViewer: React.FC<GCodeViewerProps> = ({
         </div>
         
         {toolPath.length > 0 && additionalInfoVisible && (
-          <div className="absolute bottom-4 left-4 right-4 p-3 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white bg-opacity-90 rounded-md shadow-sm text-xs">
+          <div className="absolute bottom-4 left-4 right-4 p-3 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white bg-opacity-90 rounded-md shadow-sm text-xs">
             <div className="flex justify-between items-center">
               <div>
                 <span className="font-medium">Dimensioni:</span> X: {stats.boundaries.minX.toFixed(2)} - {stats.boundaries.maxX.toFixed(2)}, 
@@ -500,7 +500,7 @@ const GCodeViewer: React.FC<GCodeViewerProps> = ({
 
       {/* Dettagli statistici avanzati */}
       {toolPath.length > 0 && (
-        <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-md p-4 mt-4 mx-2 mb-2">
+        <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-md p-4 mt-4 mx-2 mb-2">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Analisi dettagliata</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-3 bg-gray-50 rounded-md">

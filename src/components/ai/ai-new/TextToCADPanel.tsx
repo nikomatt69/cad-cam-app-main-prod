@@ -230,7 +230,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
           <div className="flex justify-end mb-2">
             <button
               onClick={toggleContextPanel}
-              className="flex items-center justify-center p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-md transition-colors"
+              className="flex items-center justify-center p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-800/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-md transition-colors"
             >
               <File size={16} className="mr-2" />
               <span className="text-sm font-medium">Context</span>
@@ -293,7 +293,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
                 onClick={() => setSelectedPreset(selectedPreset === preset.id ? null : preset.id)}
                 className={`p-2 border rounded-md cursor-pointer transition-colors ${
                   selectedPreset === preset.id 
-                    ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700' 
+                    ? 'bg-blue-50 border-blue-300 dark:bg-blue-800/30 dark:border-blue-700' 
                     : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600'
                 }`}
               >
@@ -349,7 +349,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
               disabled={isGenerateDisabled}
               className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${
                 isGenerateDisabled
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400'
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
@@ -422,7 +422,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
                     </span>
                     <button
                       onClick={() => handleAddFromHistory(item)}
-                      className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded text-xs hover:bg-blue-100 dark:hover:bg-blue-800/50"
+                      className="px-2 py-1 bg-blue-50 dark:bg-blue-800/30 text-blue-600 dark:text-blue-300 rounded text-xs hover:bg-blue-100 dark:hover:bg-blue-800/50"
                     >
                       Add
                     </button>

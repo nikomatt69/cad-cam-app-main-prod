@@ -3,46 +3,18 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { ChevronUp, AlertTriangle } from 'react-feather';
 import { Toaster } from 'react-hot-toast';
-import dynamic from 'next/dynamic';
+import EnhancedSidebar from './Sidebar';
 import Link from 'next/link';
+import Navbar from './Navbar';
+import Footer from '../ui/Footer';
 import useRefreshToken from '@/src/hooks/useRefreshToken';
+import BottomNavigation from '../components/BottomNavigation';
+import CookieConsentBanner from '../components/CookieConsentBanner';
 import { disconnectWebSocket, initializeWebSocket } from '@/src/lib/websocket';
+import { AIAssistant, AIAssistantButton } from '../ai/ai-new';
 import ToastContainer from '../ui/ToastContainer';
+import NotificationPermissionPrompt from '../notifications/NotificationPermissionPrompt';
 
-// Dynamic imports for components that don't need to be loaded immediately
-const EnhancedSidebar = dynamic(() => import('./Sidebar'), {
-  ssr: true,
-  loading: () => <div className="w-64 bg-gray-100 dark:bg-gray-800 animate-pulse" />
-});
-
-const Navbar = dynamic(() => import('./Navbar'), {
-  ssr: true,
-  loading: () => <div className="h-16 bg-gray-100 dark:bg-gray-800 animate-pulse" />
-});
-
-const Footer = dynamic(() => import('../ui/Footer'), {
-  ssr: true
-});
-
-const BottomNavigation = dynamic(() => import('../components/BottomNavigation'), {
-  ssr: true
-});
-
-const CookieConsentBanner = dynamic(() => import('../components/CookieConsentBanner'), {
-  ssr: false // Client-side only as it depends on localStorage
-});
-
-const AIAssistant = dynamic(() => import('../ai/ai-new').then(mod => mod.AIAssistant), {
-  ssr: false
-});
-
-const AIAssistantButton = dynamic(() => import('../ai/ai-new').then(mod => mod.AIAssistantButton), {
-  ssr: false
-});
-
-const NotificationPermissionPrompt = dynamic(() => import('../notifications/NotificationPermissionPrompt'), {
-  ssr: false // Client-side only as it depends on browser APIs
-});
 
 type EnhancedLayoutProps = {
   children: ReactNode;
@@ -219,7 +191,7 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
           
           {/* Breadcrumbs - Hide on very small screens */}
           {showBreadcrumbs && breadcrumbs.length > 0 && (
-            <nav className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-sm px-3 py-2 sm:px-4 sm:py-3 flex-shrink-0 hidden sm:block">
+            <nav className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-sm px-3 py-2 sm:px-4 sm:py-3 flex-shrink-0 hidden sm:block">
               <ol className="flex text-xs sm:text-sm overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pb-1">
                 {breadcrumbs.map((breadcrumb, index) => (
                   <li key={breadcrumb.href} className="flex items-center whitespace-nowrap">
@@ -269,7 +241,7 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
             />
             <ToastContainer />
             {/* Footer */}
-            <footer className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-inner mt-6 sm:mt-8 pb-16 sm:pb-0">
+            <footer className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-inner mt-6 sm:mt-8 pb-16 sm:pb-0">
               <div className="max-w-7xl mx-auto px-3 py-4 sm:px-6 sm:py-6 text-center sm:text-left">
                 <div className="flex flex-col md:flex-row justify-between items-center">
                   <div className="mb-3 md:mb-0">

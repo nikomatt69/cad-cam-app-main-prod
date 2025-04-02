@@ -123,7 +123,7 @@ export const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({
       </div>
       
       {/* Activity by Type - Responsive card */}
-      <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow rounded-lg p-3 sm:p-4">
+      <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow rounded-lg p-3 sm:p-4">
         <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">Activity by Type</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {Object.entries(activityByType)
@@ -141,7 +141,7 @@ export const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({
       </div>
       
       {/* Recent Activity - Scrollable table container */}
-      <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow rounded-lg p-3 sm:p-4">
+      <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow rounded-lg p-3 sm:p-4">
         <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">Recent Activity</h3>
         <div className="overflow-x-auto -mx-3 sm:mx-0">
           <div className="inline-block min-w-full align-middle px-3 sm:px-0">
@@ -164,7 +164,7 @@ export const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white divide-y divide-gray-200 dark:divide-gray-600">
+              <tbody className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white divide-y divide-gray-200 dark:divide-gray-600">
                 {data.recentActivity && data.recentActivity.length > 0 ? (
                   data.recentActivity.slice(0, 5).map((activity: any) => (
                     <tr key={activity.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">

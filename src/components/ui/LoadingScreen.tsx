@@ -10,7 +10,7 @@ interface LoadingScreenProps {
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = 'Loading...' }) => {
   return (
     <motion.div
-      className="fixed inset-0 flex flex-col items-center justify-center z-50 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white bg-opacity-80"
+      className="fixed inset-0 flex flex-col items-center justify-center z-50 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white bg-opacity-80"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

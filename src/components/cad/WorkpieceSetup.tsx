@@ -164,7 +164,7 @@ const WorkpieceSetup: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-4 space-y-4">
+    <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg p-4 space-y-4">
       <h3 className="text-lg font-medium text-gray-900">Configurazione Pezzo Grezzo</h3>
       
       {/* Selezione della macchina */}
@@ -176,7 +176,7 @@ const WorkpieceSetup: React.FC = () => {
           name="machine"
           value={selectedMachineId}
           onChange={handleMachineChange}
-          className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         >
           <option value="">Seleziona una macchina</option>
           {machineConfigs.map((config) => (
@@ -199,7 +199,7 @@ const WorkpieceSetup: React.FC = () => {
               name="width"
               value={formState.width}
               onChange={handleInputChange}
-              className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <span className="text-gray-500 sm:text-sm">{formState.units}</span>
@@ -216,7 +216,7 @@ const WorkpieceSetup: React.FC = () => {
               name="height"
               value={formState.height}
               onChange={handleInputChange}
-              className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <span className="text-gray-500 sm:text-sm">{formState.units}</span>
@@ -234,7 +234,7 @@ const WorkpieceSetup: React.FC = () => {
               value={formState.depth}
               onChange={handleInputChange}
               // src/components/cad/WorkpieceSetup.tsx (continuazione)
-              className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <span className="text-gray-500 sm:text-sm">{formState.units}</span>
@@ -254,7 +254,7 @@ const WorkpieceSetup: React.FC = () => {
             name="positionX"
             value={formState.positionX}
             onChange={handleInputChange}
-            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
         <div>
@@ -266,7 +266,7 @@ const WorkpieceSetup: React.FC = () => {
             name="positionY"
             value={formState.positionY}
             onChange={handleInputChange}
-            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
         <div>
@@ -278,7 +278,7 @@ const WorkpieceSetup: React.FC = () => {
             name="positionZ"
             value={formState.positionZ}
             onChange={handleInputChange}
-            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
       </div>
@@ -293,7 +293,7 @@ const WorkpieceSetup: React.FC = () => {
             name="material"
             value={formState.material}
             onChange={handleInputChange}
-            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="aluminum">Alluminio</option>
             <option value="steel">Acciaio</option>
@@ -314,7 +314,7 @@ const WorkpieceSetup: React.FC = () => {
             name="units"
             value={formState.units}
             onChange={handleInputChange}
-            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="mm">Millimetri (mm)</option>
             <option value="inch">Pollici (inch)</option>

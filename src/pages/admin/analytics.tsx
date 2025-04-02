@@ -253,7 +253,7 @@ export default function AdminAnalyticsDashboardPage() {
           </div>
           
           {/* Active Users Table */}
-          <div className="mt-6 bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow rounded-lg p-4">
+          <div className="mt-6 bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow rounded-lg p-4">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Most Active Users</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
@@ -276,7 +276,7 @@ export default function AdminAnalyticsDashboardPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white divide-y divide-gray-200 dark:divide-gray-600">
+                <tbody className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white divide-y divide-gray-200 dark:divide-gray-600">
                   {/* Sample data - replace with actual data from API */}
                   {[1, 2, 3, 4, 5].map((_, index) => (
                     <tr key={index}>

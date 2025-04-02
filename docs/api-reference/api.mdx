@@ -1,0 +1,188 @@
+# Integrated API Documentation
+
+Welcome to the CAD/CAM Application Integrated API documentation. This documentation provides comprehensive guidance for developers who want to integrate with or extend the functionality of the CAD/CAM application.
+
+## Introduction
+
+The CAD/CAM application provides a powerful set of integrated APIs that allow you to interact with all aspects of the software's functionality. These APIs are designed to be intuitive, consistent, and well-documented to enable both internal development and third-party integrations.
+
+This documentation focuses on the APIs that are integrated directly into the application, rather than external APIs. The integrated APIs provide direct access to application features and data, allowing for seamless integration and extension.
+
+## Key API Categories
+
+The integrated API is organized into several key categories:
+
+1. **[CAD API](./cad-api.md)**: Interact with CAD models, geometric operations, and design features
+2. **[AI Text-to-CAD](./text-to-cad.md)**: Convert text descriptions into 3D models using AI
+3. **[Project Management](./project-management.md)**: Create, manage, and organize projects
+4. **[Component Library](./component-library.md)**: Access and manage reusable components
+5. **[Import/Export](./import-export.md)**: Convert between different file formats
+6. **[Toolpath Generation](./toolpath-generation.md)**: Generate and optimize toolpaths for CNC machining
+7. **[Machine Configuration](./machine-configuration.md)**: Configure and manage machine settings
+8. **[Materials Library](./materials.md)**: Access and manage material properties
+9. **[Tools Library](./tools.md)**: Access and manage cutting tools
+10. **[User Management](./user-management.md)**: Manage users, roles, and permissions
+
+## Getting Started
+
+To start using the integrated API:
+
+1. **Configure Access**: Ensure your user account has the necessary permissions for API access
+2. **Import Required Modules**: Import the specific API modules you need in your code
+3. **Initialize Connections**: Initialize any required services or connections
+4. **Make API Calls**: Start making calls to the API functions you need
+
+### Basic Usage Example
+
+```typescript
+// Import necessary API modules
+import { cadApi } from '@/lib/api/cad-api';
+import { projectService } from '@/lib/api/projectService';
+
+// Example function to create a new project with a basic model
+async function createProjectWithModel(projectName: string, modelName: string) {
+  try {
+    // Create a new project
+    const project = await projectService.createProject({
+      name: projectName,
+      description: 'Created via Integrated API',
+    });
+
+    // Create a new CAD model in the project
+    const model = await cadApi.createModel({
+      projectId: project.id,
+      name: modelName,
+      type: '3d',
+    });
+
+    // Add a basic shape to the model
+    const boxFeature = await cadApi.addPrimitive(model.id, {
+      type: 'box',
+      width: 100,
+      height: 50,
+      depth: 25,
+      position: [0, 0, 0],
+    });
+
+    return {
+      project,
+      model,
+      feature: boxFeature,
+    };
+  } catch (error) {
+    console.error('Error creating project with model:', error);
+    throw error;
+  }
+}
+```
+
+## Authentication and Authorization
+
+The integrated API leverages the application's existing authentication and authorization systems. When using the API from within the application, you will automatically inherit the current user's permissions and access rights.
+
+For programmatic access to the API, you may need to:
+
+1. **Initialize a Session**: Ensure a valid user session exists
+2. **Check Permissions**: Verify the user has appropriate permissions for the operations you're attempting
+3. **Handle Authorization Errors**: Properly handle cases where operations are not permitted
+
+See the [Authentication & Authorization](./authentication.md) section for more details.
+
+## Error Handling
+
+All API functions follow a consistent error handling pattern:
+
+```typescript
+try {
+  const result = await someApiFunction();
+  // Handle success case
+} catch (error) {
+  if (error.code === 'NOT_AUTHORIZED') {
+    // Handle authorization error
+  } else if (error.code === 'VALIDATION_ERROR') {
+    // Handle validation error
+    console.error('Validation errors:', error.details);
+  } else {
+    // Handle other errors
+    console.error('API error:', error.message);
+  }
+}
+```
+
+Standard error codes are documented in each API section and in the [Error Handling](./error-handling.md) guide.
+
+## Advanced Usage
+
+### Event System
+
+The application provides an event system that allows you to subscribe to various events:
+
+```typescript
+import { events } from '@/lib/utils/events';
+
+// Subscribe to model changes
+const unsubscribe = events.subscribe('model.changed', (data) => {
+  console.log('Model changed:', data.modelId);
+});
+
+// Later, when you're done listening:
+unsubscribe();
+```
+
+See the [Events System](./events.md) documentation for available events and usage patterns.
+
+### Batch Operations
+
+For performance-critical operations, many APIs support batch operations:
+
+```typescript
+import { cadApi } from '@/lib/api/cad-api';
+
+// Add multiple features at once
+const features = await cadApi.addFeaturesBatch(modelId, [
+  { type: 'box', width: 100, height: 50, depth: 25, position: [0, 0, 0] },
+  { type: 'cylinder', radius: 25, height: 100, position: [150, 0, 0] },
+  { type: 'sphere', radius: 30, position: [0, 100, 0] },
+]);
+```
+
+## API Reference
+
+For detailed information about specific API functions, parameters, and return values, see the individual API reference documents:
+
+- [CAD API Reference](./reference/cad-api.md)
+- [AI Text-to-CAD Reference](./reference/text-to-cad.md)
+- [Project API Reference](./reference/project-api.md)
+- [Component API Reference](./reference/component-api.md)
+- [Toolpath API Reference](./reference/toolpath-api.md)
+
+## Best Practices
+
+- **Use Batch Operations**: When performing multiple related operations, use batch APIs when available
+- **Handle Errors Properly**: Always implement proper error handling for all API calls
+- **Cache When Appropriate**: Cache frequently accessed data to improve performance
+- **Clean Up Resources**: Unsubscribe from events and dispose of resources when they're no longer needed
+- **Follow Rate Limits**: Be aware of rate limits for resource-intensive operations
+
+For more detailed best practices, see the [API Best Practices](./best-practices.md) guide.
+
+## Examples and Tutorials
+
+We provide several examples and tutorials to help you get started with the integrated API:
+
+- [Creating a Basic CAD Model](./examples/basic-cad-model.md)
+- [Generating a Model from Text](./examples/text-to-cad.md)
+- [Creating a Custom Component](./examples/custom-component.md)
+- [Generating and Optimizing Toolpaths](./examples/toolpath-generation.md)
+- [Building a Custom Extension](./examples/custom-extension.md)
+
+## Support and Feedback
+
+If you encounter issues or have questions about the integrated API:
+
+- Check the [Troubleshooting](./troubleshooting.md) guide
+- Review the [Frequently Asked Questions](./faq.md)
+- Contact support at support@cadcam-app.example.com
+- Join our [Developer Community](https://community.cadcam-app.example.com/developers)
+
+We welcome your feedback on how we can improve the integrated API and its documentation.

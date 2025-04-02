@@ -59,7 +59,7 @@ const PWAInstallPrompt: React.FC = () => {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white dark:bg-gray-600 shadow-lg rounded-lg p-4 max-w-xs z-50 border border-gray-200 dark:border-gray-700">
+    <div className="fixed bottom-4 right-4 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white dark:bg-gray-800 shadow-lg rounded-lg p-4 max-w-xs z-50 border border-gray-200 dark:border-gray-700">
       <div className="flex justify-between items-start">
         <div className="flex items-center">
           <img src="/icon.png" alt="Logo" className="w-10 h-10 mr-3" />

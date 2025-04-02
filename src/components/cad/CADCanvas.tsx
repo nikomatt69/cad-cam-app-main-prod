@@ -189,7 +189,7 @@ const screenToWorld = useCallback((screenX: number, screenY: number) => {
         window.cadCanvasCamera = undefined;
       };
     }
-  }, []);
+  }, [sceneRef.current, cameraRef.current, window.exposeCADCanvasAPI]);
 
   const [showSelectionModal, setShowSelectionModal] = useState(false);
   const selectionData = selection.createSelectionData();

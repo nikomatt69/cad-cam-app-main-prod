@@ -214,10 +214,10 @@ export default function ProfilePage() {
                           <img
                             src={profileImage} 
                             alt="Profile" 
-                            className="h-24 w-24 object-cover"
+                            className="h-24 w-24 rounded-full object-cover"
                           />
                         ) : (
-                          <svg className="h-20 w-20 text-gray-300 dark:text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                          <svg className="h-20 w-20 rounded-full text-gray-300 dark:text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
                           </svg>
                         )}

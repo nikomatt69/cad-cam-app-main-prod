@@ -20,7 +20,7 @@ const Tool: React.FC<ToolProps> = ({ name, icon, onClick, active }) => {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       className={`p-2 rounded flex flex-col items-center justify-center text-xs ${
-        active ? 'bg-blue-500 text-white' : 'bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white text-gray-700 hover:bg-gray-100'
+        active ? 'bg-blue-500 text-white' : 'bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white text-gray-700 hover:bg-gray-100'
       }`}
       onClick={onClick}
       title={name}
@@ -45,7 +45,7 @@ const ToolSelector: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md p-2 rounded-md">
+    <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md p-2 rounded-md">
       <motion.div 
         className="grid grid-cols-3 gap-2"
         initial="hidden"

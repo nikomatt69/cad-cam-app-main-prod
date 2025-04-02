@@ -188,7 +188,7 @@ const TransformToolbar: React.FC = () => {
       case 'move':
         return (
           <motion.div 
-            className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-md p-3 mt-2"
+            className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-md p-3 mt-2"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -274,7 +274,7 @@ const TransformToolbar: React.FC = () => {
       case 'rotate':
         return (
           <motion.div 
-            className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-md p-3 mt-2"
+            className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-md p-3 mt-2"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -359,7 +359,7 @@ const TransformToolbar: React.FC = () => {
       case 'scale':
         return (
           <motion.div 
-            className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-md p-3 mt-2"
+            className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-md p-3 mt-2"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -432,7 +432,7 @@ const TransformToolbar: React.FC = () => {
       case 'precise':
         return (
           <motion.div 
-            className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-md p-3 mt-2"
+            className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-md p-3 mt-2"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -577,7 +577,7 @@ const TransformToolbar: React.FC = () => {
 
   return (
     <motion.div 
-      className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-md p-4 mb-4"
+      className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-md p-4 mb-4"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}

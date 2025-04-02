@@ -88,7 +88,7 @@ class CADaiService {
   constructor() {
     this.apiKey = process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
     this.apiUrl = 'https://api.anthropic.com/v1/messages';
-    this.defaultModel = 'claude-3-5-haiku-20241022';
+    this.defaultModel = 'claude-3-7-sonnet-20250219';
     
     // Check if we're in browser environment and handle accordingly
     if (typeof window !== 'undefined' && !this.apiKey) {
@@ -424,7 +424,7 @@ class CADaiService {
             'Access-Control-Allow-Origin': '*',
             'Content-Type': 'application/json',
             'x-api-key': this.apiKey,
-            'anthropic-version': '2023-06-01'
+            'anthropic-version': '2025-02-19'
           }
         }
       );

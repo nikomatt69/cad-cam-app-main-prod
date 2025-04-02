@@ -42,7 +42,7 @@ const AIOptimizer: React.FC<AIOptimizerProps> = ({ gcode, onApplyOptimized }) =>
   };
   
   return (
-    <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-md p-4 mt-6">
+    <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-md p-4 mt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium text-gray-900">Ottimizzazione AI per Fanuc</h2>
         

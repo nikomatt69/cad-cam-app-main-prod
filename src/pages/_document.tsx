@@ -16,7 +16,7 @@ class MyDocument extends Document {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
         {/* Add preload hints for critical resources */}
-        <link rel="preload" href="/fonts/custom-font.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+       
      
           <link rel="apple-touch-icon" href="/icon.png" />
           <meta name="mobile-web-app-capable" content="yes" />

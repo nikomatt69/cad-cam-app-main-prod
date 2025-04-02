@@ -155,7 +155,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           <span className="ml-2 mr-1 truncate max-w-[150px]">{selectedFile.name}</span>
           
           {isUploading ? (
-            <div className="w-16 h-4 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden ml-1">
+            <div className="w-16 h-4 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden ml-1">
               <div 
                 className="h-full bg-blue-500" 
                 style={{ width: `${uploadProgress}%` }}

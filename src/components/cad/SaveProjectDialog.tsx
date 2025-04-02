@@ -192,7 +192,7 @@ export default function SaveProjectDialog({
   
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+      <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
         <div className="px-6 py-4 border-b flex justify-between items-center">
           <h3 className="text-lg font-medium text-gray-900">
             Save Drawing to Project

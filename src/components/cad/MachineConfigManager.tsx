@@ -162,7 +162,7 @@ const MachineConfigManager: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-4 space-y-4">
+    <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg p-4 space-y-4">
       <h3 className="text-lg font-medium text-gray-900">Configurazioni Macchina</h3>
       
       {/* Form per aggiungere/modificare configurazioni */}

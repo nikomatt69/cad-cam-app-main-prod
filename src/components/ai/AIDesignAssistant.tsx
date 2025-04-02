@@ -55,10 +55,10 @@ const AIDesignAssistant: React.FC = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-col">
         <div className="flex items-center space-x-3">
           <Cpu className="text-blue-500" size={24} />
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white">AI Design Assistant</h2>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-white">AI Design Assistant</h1>
         </div>
         
         <motion.button
@@ -67,7 +67,7 @@ const AIDesignAssistant: React.FC = () => {
           onClick={performAIAnalysis}
           disabled={isAnalyzing || elements.length === 0}
           className={`
-            flex items-center space-x-2 px-4 py-2 rounded-lg font-medium
+            flex items-center space-x-2 px-1 py-1 rounded-lg font-medium 
             ${isAnalyzing 
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700'
               : 'bg-blue-500 text-white hover:bg-blue-600 dark:hover:bg-blue-400'
@@ -84,7 +84,7 @@ const AIDesignAssistant: React.FC = () => {
           ) : (
             <>
               <Zap size={18} />
-              <span>Analyze Design</span>
+              <span>Analyze</span>
             </>
           )}
         </motion.button>

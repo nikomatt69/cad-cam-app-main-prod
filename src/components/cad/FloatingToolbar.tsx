@@ -54,10 +54,77 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   initialPosition = { x: 100, y: 100 },
   onClose
 }) => {
+  const [mode, setMode] = useState<ToolbarMode>('create');
   const [position, setPosition] = useState<Position>(initialPosition);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
   const [isExpanded, setIsExpanded] = useState(true);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
+  // Animation variants for the toolbar
+  const toolbarVariants = {
+    hidden: { 
+      opacity: 0,
+      scale: 0.8,
+      y: 20
+    },
+    visible: { 
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30
+      }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      y: -20,
+      transition: {
+        duration: 0.2
+      }
+    }
+  };
+
+  // Animation variants for buttons
+  const buttonVariants = {
+    hover: { 
+      scale: 1.05,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    },
+    tap: { 
+      scale: 0.95 
+    }
+  };
+
+  // Animation variants for mode switching
+  const modeContentVariants = {
+    enter: {
+      x: -20,
+      opacity: 0
+    },
+    center: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        x: { type: "spring", stiffness: 300, damping: 30 },
+        opacity: { duration: 0.2 }
+      }
+    },
+    exit: {
+      x: 20,
+      opacity: 0,
+      transition: {
+        duration: 0.2
+      }
+    }
+  };
+
   const [selectedMode, setSelectedMode] = useState<ToolbarMode>('create');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,7 +133,6 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   const [showLibraryView, setShowLibraryView] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState<'tools' | 'layers' | 'settings' >('tools');
   const [showUnifiedLibrary, setShowUnifiedLibrary] = useState(false);
-  const toolbarRef = useRef<HTMLDivElement>(null);
   const { addElement, selectedElement, duplicateElement, deleteElement, addElements } = useElementsStore();
   const { toggleGrid, toggleAxis, viewMode, setViewMode } = useCADStore();
   const { activeLayer, layers } = useLayerStore();
@@ -86,10 +152,10 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
     
     setIsDragging(true);
     const rect = toolbarRef.current.getBoundingClientRect();
-    setDragOffset({
+    const dragOffset = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
-    });
+    };
   };
 
   // Handle dragging
@@ -97,8 +163,8 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   const handleDrag = (e: MouseEvent) => {
     if (isDragging) {
       setPosition({
-        x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y
+        x: e.clientX - 100,
+        y: e.clientY - 20
       });
     }
   };
@@ -502,7 +568,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
 
   // Render the appropriate tool panel based on selected mode
   const renderToolPanel = () => {
-    switch (selectedMode) {
+    switch (mode) {
       case 'create':
         return (
           <div className="p-2 grid  gap-2">
@@ -513,7 +579,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
         return (
           <div className="p-2 flex flex-col gap-2">
             <button 
-              className="p-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
+              className="p-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
               disabled={!selectedElement || isLayerLocked}
               title={!selectedElement ? "No element selected" : isLayerLocked ? "Layer is locked" : "Move Element"}
             >
@@ -521,7 +587,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
               <span>Move</span>
             </button>
             <button 
-              className="p-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
+              className="p-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
               disabled={!selectedElement || isLayerLocked}
               title={!selectedElement ? "No element selected" : isLayerLocked ? "Layer is locked" : "Rotate Element"}
             >
@@ -529,7 +595,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
               <span>Rotate</span>
             </button>
             <button 
-              className="p-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
+              className="p-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
               disabled={!selectedElement || isLayerLocked}
               title={!selectedElement ? "No element selected" : isLayerLocked ? "Layer is locked" : "Scale Element"}
             >
@@ -538,7 +604,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
             </button>
             <button 
               onClick={() => selectedElement && duplicateElement(selectedElement.id)}
-              className="p-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
+              className="p-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
               disabled={!selectedElement || isLayerLocked}
               title={!selectedElement ? "No element selected" : isLayerLocked ? "Layer is locked" : "Duplicate Element"}
             >
@@ -547,7 +613,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
             </button>
             <button 
               onClick={() => selectedElement && deleteElement(selectedElement.id)}
-              className="p-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
+              className="p-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
               disabled={!selectedElement || isLayerLocked}
               title={!selectedElement ? "No element selected" : isLayerLocked ? "Layer is locked" : "Delete Element"}
             >
@@ -556,7 +622,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
             </button>
             <button 
               onClick={() => setViewMode(viewMode === '2d' ? '3d' : '2d')}
-              className="p-2 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
+              className="p-2 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white hover:bg-gray-100 rounded-md shadow-sm flex flex-col items-center justify-center text-xs"
               title={`Switch to ${viewMode === '2d' ? '3D' : '2D'} View`}
             >
               <Sliders size={16} className="mb-1" />
@@ -612,120 +678,86 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   return (
     <motion.div
       ref={toolbarRef}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      style={{ 
-        position: 'absolute', 
-        left: position.x, 
-        top: position.y, 
-        zIndex: 1000 
+      style={{
+        position: 'fixed',
+        left: position.x,
+        top: position.y,
+        touchAction: 'none',
+        zIndex: 1000
       }}
-      className="bg-gray-50 rounded-lg shadow-lg overflow-hidden w-80"
+      drag
+      dragMomentum={false}
+      dragConstraints={{ left: 0, right: window.innerWidth - 300, top: 0, bottom: window.innerHeight - 100 }}
+      onDragStart={() => setIsDragging(true)}
+      onDragEnd={() => setIsDragging(false)}
+      variants={toolbarVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg backdrop-blur-lg bg-opacity-90 dark:bg-opacity-90 border border-gray-200 dark:border-gray-700"
     >
-      {/* Toolbar header - draggable area */}
-      <div 
-        className="bg-gray-800 text-white h-8 flex items-center justify-between px-3 cursor-move"
-        onMouseDown={handleDragStart}
+      {/* Toolbar Header */}
+      <motion.div 
+        className="p-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700"
+        whileHover={{ backgroundColor: "rgba(0,0,0,0.02)" }}
       >
-        <div className="flex items-center text-xs">
-          <Menu size={12} className="mr-1" />
-          <span>CAD Toolbar</span>
-        </div>
-        <div className="flex items-center">
-          <button 
+        <div className="flex items-center space-x-2">
+          <motion.button
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-300 hover:text-white p-1"
+            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-          <button 
-            className="text-gray-300 hover:text-white p-1"
-            onClick={onClose}
-          >
-            <X size={14} />
-          </button>
+            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </motion.button>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">CAD Tools</span>
         </div>
-      </div>
-      
-      {/* Toolbar content */}
-      <AnimatePresence>
+        <motion.button
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
+          onClick={onClose}
+          className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+        >
+          <X size={16} />
+        </motion.button>
+      </motion.div>
+
+      {/* Toolbar Content */}
+      <AnimatePresence mode="wait">
         {isExpanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            key={mode}
+            variants={modeContentVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            className="p-3"
           >
-            {/* Mode selector tabs */}
-            <div className="flex border-b border-gray-200">
-              <button
-                className={`flex-1 py-2 text-xs font-medium ${
-                  selectedMode === 'create' 
-                    ? 'text-blue-600 border-b-2 border-blue-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                onClick={() => setSelectedMode('create')}
-              >
-                <div className="flex items-center justify-center">
-                  <Plus size={12} className="mr-1" />
-                  Create
-                </div>
-              </button>
-              <button
-                className={`flex-1 py-2 text-xs font-medium ${
-                  selectedMode === 'transform' 
-                    ? 'text-blue-600 border-b-2 border-blue-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                onClick={() => setSelectedMode('transform')}
-              >
-                <div className="flex items-center justify-center">
-                  <Edit3 size={12} className="mr-1" />
-                  Transform
-                </div>
-              </button>
-              <button
-                className={`flex-1 py-2 text-xs font-medium ${
-                  selectedMode === 'library' 
-                    ? 'text-blue-600 border-b-2 border-blue-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                onClick={() => setSelectedMode('library')}
-              >
-                <div className="flex items-center justify-center">
-                  <Package size={12} className="mr-1" />
-                  Library
-                </div>
-              </button>
-              <button
-                className={`flex-1 py-2 text-xs font-medium ${
-                  selectedMode === 'ai' 
-                    ? 'text-blue-600 border-b-2 border-blue-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                onClick={() => setSelectedMode('ai')}
-              >
-                <div className="flex items-center justify-center">
-                  <Cpu size={12} className="mr-1" />
-                  AI
-                </div>
-              </button>
-              <button
-                className={`flex-1 py-2 text-xs font-medium ${
-                  selectedMode === 'drawing' 
-                    ? 'text-blue-600 border-b-2 border-blue-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                onClick={() => setSelectedMode('drawing')}
-              >
-                <div className="flex items-center justify-center">
-                  <PenTool size={12} className="mr-1" />
-                  Drawing
-                </div>
-              </button>
+            {/* Mode Tabs */}
+            <div className="flex space-x-1 mb-4 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+              {TOOLBAR_MODES.map((tabMode) => (
+                <motion.button
+                  key={tabMode}
+                  onClick={() => setMode(tabMode)}
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  className={`
+                    flex-1 px-3 py-1.5 text-xs font-medium rounded-md
+                    ${mode === tabMode 
+                      ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' 
+                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
+                    }
+                  `}
+                >
+                  {tabMode.charAt(0).toUpperCase() + tabMode.slice(1)}
+                </motion.button>
+              ))}
             </div>
-            
-            {/* Dynamic tool panel based on selected mode */}
+
+            {/* Mode Content */}
             {renderToolPanel()}
           </motion.div>
         )}

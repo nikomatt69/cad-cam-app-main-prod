@@ -108,7 +108,7 @@ export default function OrganizationsList() {
       </div>
       
       {organizations.length === 0 ? (
-        <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-6 text-center">
+        <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg p-6 text-center">
           <Users size={64} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No organizations yet</h3>
           <p className="text-gray-600 mb-4">
@@ -125,7 +125,7 @@ export default function OrganizationsList() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {organizations.map((org) => (
             <Link key={org.id} href={`/organizations/${org.id}`} passHref>
-              <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
+              <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
                 <div className="h-16 bg-blue-600 flex items-center justify-center">
                   <Cloud size={32} className="text-white" />
                 </div>
@@ -168,7 +168,7 @@ export default function OrganizationsList() {
           </div>
           
           <div className="max-w-3xl mx-auto">
-            <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden">
+            <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden">
               <div className="p-6">
                 <div className="flex items-center mb-6">
                   <div className="mr-4 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -228,7 +228,7 @@ export default function OrganizationsList() {
                         <button
                           type="button"
                           onClick={() => router.back()}
-                          className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           Cancel
                         </button>

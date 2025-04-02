@@ -58,7 +58,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white border-0 dark:bg-gray-600 rounded-b-xl shadow-sm">
+    <header className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white border-0 dark:bg-gray-800 rounded-b-xl shadow-sm">
       <div className="px-3 sm:px-6 lg:px-8 rounded-b-xl border-2 border-gray-200">
         <div className="flex rounded-b-xl items-center  justify-between h-14 sm:h-16">
           {/* Left section */}
@@ -142,7 +142,7 @@ const Navbar = () => {
               {profileDropdownOpen && (
                 <div
                   ref={dropdownRef}
-                  className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-600 ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                  className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
                   role="menu"
                   aria-orientation="vertical"
                   aria-labelledby="user-menu"

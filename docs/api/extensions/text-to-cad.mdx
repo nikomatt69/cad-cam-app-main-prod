@@ -1,0 +1,144 @@
+# Text-to-CAD Generation
+
+The Text-to-CAD generation system allows you to convert natural language descriptions into 3D CAD models. This functionality is powered by AI text processing and parametric CAD generation.
+
+## How It Works
+
+The Text-to-CAD generation process involves several steps:
+
+1. **Text Processing**: The natural language description is analyzed to extract parameters, constraints, and intent
+2. **Parameter Extraction**: Dimensions, materials, and other specifications are identified
+3. **Geometric Interpretation**: The system determines what kind of 3D geometry to create
+4. **Model Generation**: A parametric 3D model is created based on the interpreted specifications
+5. **Extension Enhancement**: Any registered extensions are applied to enhance the model
+6. **Export**: The model is exported to the requested file format
+
+## Using the API
+
+To generate a CAD model from text, you can use the `handleCadGenerationRequest` method:
+
+```typescript
+const result = await extensionManager.handleCadGenerationRequest({
+  textDescription: 'A rectangular box with width 10cm, height 5cm, and depth 8cm',
+  format: 'stl', // Supported formats: stl, obj, step, iges, json
+  options: {
+    resolution: 'high', // Options: low, medium, high
+    units: 'mm',        // Options: mm, cm, m, in
+    scale: 1.0,         // Scaling factor
+    tolerance: 0.01     // Tolerance for curved surfaces
+  }
+}, user);
+```
+
+### Request Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| textDescription | string | Natural language description of the model to create |
+| format | string | Output file format (stl, obj, step, iges, json) |
+| options | object | Additional options for generation and export |
+
+### Response Structure
+
+```typescript
+{
+  model: {
+    id: string,       // Unique identifier for the generated model
+    name: string,     // Generated name for the model
+    format: string    // Format of the exported file
+  },
+  file: {
+    fileName: string, // Name of the exported file
+    format: string,   // Format of the exported file
+    data: string,     // Base64-encoded file data
+    size: number,     // Size of the file in bytes
+    metadata: object  // Additional information about the file
+  }
+}
+```
+
+## Writing Effective Text Descriptions
+
+To get the best results when using the Text-to-CAD system, follow these guidelines:
+
+### Be Specific About Dimensions
+
+Include specific measurements with units:
+
+```
+Create a cylinder with a diameter of 30mm and height of 50mm
+```
+
+### Specify Shapes Clearly
+
+Reference common geometric shapes:
+
+```
+Make a rectangular prism with length 10cm, width 5cm, and height 3cm
+```
+
+### Define Relationships
+
+Describe how parts relate to each other:
+
+```
+Create a box with a centered cylindrical hole through the top face
+```
+
+### Specify Materials
+
+Include material information when relevant:
+
+```
+Design a metal bracket with thickness 2mm
+```
+
+### Include Purpose
+
+Mentioning the purpose can help with interpretation:
+
+```
+Create a mounting bracket for a 24mm diameter pipe
+```
+
+## Example Descriptions and Results
+
+Here are some examples of text descriptions and the resulting models:
+
+### Basic Shapes
+
+```
+"Create a cube with 10cm sides"
+```
+
+Produces a 10cm×10cm×10cm cube.
+
+```
+"Make a cylinder with 5cm diameter and 12cm height"
+```
+
+Produces a cylinder with the specified dimensions.
+
+### Complex Descriptions
+
+```
+"Design a cup with a cylindrical body (8cm diameter, 10cm height) with a handle on the side"
+```
+
+Produces a cylindrical cup with a handle.
+
+```
+"Create a rectangular box (10cm×5cm×3cm) with rounded corners (1cm radius)"
+```
+
+Produces a rounded-corner box with the specified dimensions.
+
+## Extending Text-to-CAD Functionality
+
+You can enhance the Text-to-CAD system by creating custom extensions. For example:
+
+- Add support for specialized shapes or features
+- Implement domain-specific interpretation for fields like architecture or mechanical engineering
+- Add post-processing steps for optimization or validation
+
+See [Creating Extensions](./creating-extensions.md) for more information.

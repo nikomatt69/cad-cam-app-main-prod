@@ -114,13 +114,14 @@ const AISettingsPanel: React.FC = () => {
     if (!state.settings.mcpEnabled) return 0;
     
     // Stima basata sulla strategia MCP
-    const strategyEfficiency = {
+    const strategyEfficiency: Record<'aggressive' | 'balanced' | 'conservative', number> = {
       'aggressive': 0.5, // Risparmio del 50%
       'balanced': 0.35,  // Risparmio del 35%
       'conservative': 0.2 // Risparmio del 20%
     };
     
-    const efficiency = strategyEfficiency[state.settings.mcpStrategy || 'balanced'];
+    const mcpStrategy = (state.settings.mcpStrategy || 'balanced') as 'aggressive' | 'balanced' | 'conservative';
+    const efficiency = strategyEfficiency[mcpStrategy];
     const modelCost = parseFloat(calculateCost(state.currentModel));
     
     return (modelCost * efficiency).toFixed(3);
@@ -229,7 +230,7 @@ const AISettingsPanel: React.FC = () => {
               />
               <label
                 className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                  state.settings.mcpEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                  state.settings.mcpEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                 }`}
               ></label>
             </div>
@@ -381,7 +382,7 @@ const AISettingsPanel: React.FC = () => {
                 />
                 <label
                   className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    state.settings.autoSuggest ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    state.settings.autoSuggest ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                   }`}
                 ></label>
               </div>
@@ -404,7 +405,7 @@ const AISettingsPanel: React.FC = () => {
                 />
                 <label
                   className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    state.settings.cacheEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    state.settings.cacheEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                   }`}
                 ></label>
               </div>
@@ -427,7 +428,7 @@ const AISettingsPanel: React.FC = () => {
                 />
                 <label
                   className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    state.settings.analyticsEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    state.settings.analyticsEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                   }`}
                 ></label>
               </div>
@@ -452,7 +453,7 @@ const AISettingsPanel: React.FC = () => {
                 />
                 <label
                   className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    state.settings.autoModelSelection ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    state.settings.autoModelSelection ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                   }`}
                 ></label>
               </div>
@@ -475,7 +476,7 @@ const AISettingsPanel: React.FC = () => {
                 />
                 <label
                   className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    state.settings.costOptimization ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    state.settings.costOptimization ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                   }`}
                 ></label>
               </div>

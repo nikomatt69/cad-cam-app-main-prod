@@ -1641,7 +1641,7 @@ const ToolpathVisualizer: FC<ToolpathVisualizerProps> = ({
   
 
   useEffect(() => {
-    if (!isSimulating || toolpathRef.current || !toolRef.current || !toolpathPointsRef.current || toolpathPointsRef.current.length <= 1) return;
+    if (!isSimulating || !toolRef.current || toolpathPointsRef.current.length <= 1) return;
     
     let startTime = 0;
     const animationDuration = (point: ToolpathPoint) => {

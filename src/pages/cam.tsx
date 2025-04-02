@@ -197,7 +197,7 @@ export default function CAMPage() {
      
       <div className="flex flex-col rounded-xl h-full w-full">
         {/* Top toolbar */}
-        <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-b rounded-xl w-full px-4 py-2 flex items-center justify-between">
+        <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-b rounded-xl w-full px-4 py-2 flex items-center justify-between">
           <div className="flex rounded-xl w-max items-center">
             <button
               className="mr-2 p-2 rounded-md hover:bg-gray-100 focus:outline-none"
@@ -366,7 +366,7 @@ export default function CAMPage() {
             {activeTab === 'post-processor' && (
               <div className="h-full rounded-xl overflow-y-auto">
                 {/* Selettore del tipo di post-processor */}
-                <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-b p-4 flex items-center justify-between">
+                <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-b p-4 flex items-center justify-between">
                   <h2 className="text-lg font-medium text-gray-900">Post-Processor</h2>
                   <div className="flex items-center space-x-2">
                     <label htmlFor="post-processor-type" className="text-sm font-medium text-gray-700">
@@ -421,7 +421,7 @@ export default function CAMPage() {
           <div 
             className={`${
               rightSidebarOpen ? 'w-80' : 'w-0'
-            } flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-xl border-2 border-l ml-0.5 transition-all duration-300 ease-in-out overflow-y-auto`}
+            } flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-xl border-2 border-l ml-0.5 transition-all duration-300 ease-in-out overflow-y-auto`}
           >
             {/* Tabs for right sidebar */}
             <div className="px-2 pt-1 pb-1 border-b">
@@ -486,7 +486,7 @@ export default function CAMPage() {
           
           {/* Toggle right sidebar button */}
           <button
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white p-2 rounded-l-md shadow-md"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white p-2 rounded-l-md shadow-md"
             onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
           >
             {rightSidebarOpen ? <ChevronRight size={20} className="text-gray-600" /> : <ChevronLeft size={20} className="text-gray-600" />}
