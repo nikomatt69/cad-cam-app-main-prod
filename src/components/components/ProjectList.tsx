@@ -86,7 +86,7 @@ export default function ProjectsList() {
       </div>
       
       {projects.length === 0 ? (
-        <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-6 text-center">
+        <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg p-6 text-center">
           <Folder size={64} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
           <p className="text-gray-600 mb-4">
@@ -122,7 +122,7 @@ export default function ProjectsList() {
               }}
               transition={{ type: "spring", stiffness: 300, damping: 24 }}
               whileHover={{ y: -5, scale: 1.02 }}
-              className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+              className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => router.push(`/projects/${project.id}`)}
             >
               <div className="p-6">

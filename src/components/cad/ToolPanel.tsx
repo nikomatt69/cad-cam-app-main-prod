@@ -887,7 +887,7 @@ const ElementForm: React.FC<ElementFormProps> = ({ onAdd, onCancel, type }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-sm rounded-md p-4 mt-4"
+      className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-sm rounded-md p-4 mt-4"
     >
       <h4 className="text-sm font-medium text-gray-900 mb-2">
         Add {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -1330,7 +1330,7 @@ const ToolPanel: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-md p-4">
+    <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-md p-4">
       <h3 className="text-md font-medium text-gray-900 mb-3">Add Elements</h3>
       
       {!activeLayerInfo && (
@@ -1349,7 +1349,7 @@ const ToolPanel: React.FC = () => {
             className={`p-1.5 rounded-md flex flex-col items-center justify-center text-xs ${
               selectedTool === tool.action
                 ? 'bg-blue-500 text-white'
-                : 'bg-[#F8FBFF] dark:bg-gray-600 dark:text-white text-gray-700 hover:bg-gray-100'
+                : 'bg-[#F8FBFF] dark:bg-gray-800 dark:text-white text-gray-700 hover:bg-gray-100'
             } ${!activeLayerInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={!activeLayerInfo}
             title={tool.name}

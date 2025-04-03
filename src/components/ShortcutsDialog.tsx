@@ -162,7 +162,7 @@ export const ShortcutsDialog: React.FC<ShortcutsDialogProps> = ({
                     {getFormattedShortcut(shortcut).map((formattedKey, keyIdx) => (
                       <kbd
                         key={keyIdx}
-                        className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500"
+                        className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-800 dark:text-gray-100 dark:border-gray-500"
                       >
                         {formattedKey}
                       </kbd>
@@ -177,9 +177,9 @@ export const ShortcutsDialog: React.FC<ShortcutsDialogProps> = ({
         {/* Footer */}
         <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-3 text-right">
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            Press <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">
+            Press <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-800 dark:text-gray-100 dark:border-gray-500">
               {isMac ? '?' : 'Shift + ?'}
-            </kbd> or <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">
+            </kbd> or <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-800 dark:text-gray-100 dark:border-gray-500">
               F2
             </kbd> to open this dialog
           </span>

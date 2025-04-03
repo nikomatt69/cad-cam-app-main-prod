@@ -43,7 +43,7 @@ export default function UserHistoryPage() {
             </h1>
           </div>
           
-          <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow rounded-lg p-6">
+          <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow rounded-lg p-6">
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
               This page shows all your activity across the platform. Use the filters to narrow down specific actions or time periods.
             </p>

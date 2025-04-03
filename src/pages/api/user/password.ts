@@ -8,11 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const userId = await requireAuth(req, res);
   if (!userId) return;
   
-  const { id } = req.query;
   
-  if (!id || typeof id !== 'string') {
-    return res.status(400).json({ message: 'Drawing ID is required' });
-  }
   
   
   // Supportiamo solo le richieste PUT per l'aggiornamento della password

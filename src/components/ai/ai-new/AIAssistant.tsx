@@ -194,9 +194,9 @@ const AIAssistant: React.FC = () => {
             <div className="flex items-center">
               <Cpu size={20} className="mr-2" />
               <div>
-                <h3 className="font-medium">Assistente AI</h3>
+                <h3 className="font-medium">AI Assistant</h3> 
                 <div className="text-xs text-blue-100">
-                  Modalità: {mode.toUpperCase()} | {getModelBadge(currentModel)}
+                  Mode: {mode.toUpperCase()} | {getModelBadge(currentModel)}
                 </div>
               </div>
             </div>
@@ -204,21 +204,21 @@ const AIAssistant: React.FC = () => {
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 className="p-1.5 rounded-full hover:bg-blue-500 transition-colors"
-                title="Impostazioni"
+                title="Settings"
               >
                 <Settings size={16} />
               </button>
               <button
                 onClick={() => toggleAssistantPanel()}
                 className="p-1.5 rounded-full hover:bg-blue-500 transition-colors"
-                title="Minimizza"
+                title="Minimize"
               >
                 <Minimize2 size={16} />
               </button>
               <button
                 onClick={() => hideAssistant()}
                 className="p-1.5 rounded-full hover:bg-blue-500 transition-colors"
-                title="Chiudi"
+                title="Close"
               >
                 <X size={16} />
               </button>
@@ -237,22 +237,22 @@ const AIAssistant: React.FC = () => {
                 <div className="p-3 space-y-2 text-sm bg-gray-50">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Modello AI
+                      AI Model
                     </label>
                     <select
                       value={currentModel}
                       onChange={(e) => dispatch({ type: 'SET_MODEL', payload: e.target.value as AIModelType })}
                       className="w-full p-1.5 border border-gray-300 rounded-md shadow-sm text-sm"
                     >
-                      <option value={AI_MODELS.CLAUDE_HAIKU}>Claude Haiku (Veloce)</option>
-                      <option value={AI_MODELS.CLAUDE_SONNET}>Claude Sonnet (Equilibrato)</option>
-                      <option value={AI_MODELS.CLAUDE_OPUS}>Claude Opus (Potente)</option>
-                      <option value={AI_MODELS.CLAUDE_SONNET_7}>Claude 3.7 Sonnet (Avanzato)</option>
+                      <option value={AI_MODELS.CLAUDE_HAIKU}>Claude Haiku (Fast)</option>
+                      <option value={AI_MODELS.CLAUDE_SONNET}>Claude Sonnet (Balanced)</option>
+                      <option value={AI_MODELS.CLAUDE_OPUS}>Claude Opus (Powerful)</option>
+                      <option value={AI_MODELS.CLAUDE_SONNET_7}>Claude 3.7 Sonnet (Advanced)</option>
                     </select>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <label className="text-sm text-gray-700">Suggerimenti automatici</label>
+                    <label className="text-sm text-gray-700">Automatic Suggestions</label>
                     <div className="relative inline-block w-10 align-middle select-none">
                       <input
                         type="checkbox"
@@ -272,7 +272,7 @@ const AIAssistant: React.FC = () => {
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <label className="text-sm text-gray-700">Cache risposte</label>
+                    <label className="text-sm text-gray-700">Cache Responses</label>
                     <div className="relative inline-block w-10 align-middle select-none">
                       <input
                         type="checkbox"
@@ -296,7 +296,7 @@ const AIAssistant: React.FC = () => {
                     className="flex items-center text-xs text-red-600 hover:text-red-800"
                   >
                     <RefreshCw size={12} className="mr-1" />
-                    Cancella cronologia
+                    Clear History
                   </button>
                 </div>
               </motion.div>
@@ -383,15 +383,15 @@ const AIAssistant: React.FC = () => {
           <button
             onClick={() => toggleAssistantPanel()}
             className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700"
-            title="Espandi assistente"
+            title="Expand Assistant"
           >
             <Maximize2 size={16} />
           </button>
-          <span className="text-sm font-medium">Assistente AI</span>
+          <span className="text-sm font-medium">AI Assistant</span>
           <button
             onClick={() => hideAssistant()}
             className="p-1 text-gray-500 hover:text-gray-700 rounded-full"
-            title="Chiudi"
+            title="Close"
           >
             <X size={16} />
           </button>

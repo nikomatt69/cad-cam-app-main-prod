@@ -155,7 +155,7 @@ export default function SignUp() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white py-8 px-4 shadow sm:rounded-lg sm:px-10"
+            className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white py-8 px-4 shadow sm:rounded-lg sm:px-10"
           >
             {serverError && (
               <div className="mb-4 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">

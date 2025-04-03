@@ -12,7 +12,7 @@ const LibraryItemList: React.FC<LibraryItemListProps> = ({ items, onItemClick })
     return (
       <tr
         key={item.id}
-        className="hover:bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white p-2 m-1 items-center rounded-xl outline-bottom outline-blue-500 flex  cursor-pointer"
+        className="hover:bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white p-2 m-1 items-center rounded-xl outline-bottom outline-blue-500 flex  cursor-pointer"
         onClick={() => onItemClick(item)}
       >
         <td className="px-4 py-2">{item.name}</td>

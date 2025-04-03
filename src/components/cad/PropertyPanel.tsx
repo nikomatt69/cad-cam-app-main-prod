@@ -289,7 +289,7 @@ const PropertyPanel: React.FC = () => {
   if (!selectedElement) {
     return (
       <motion.div 
-        className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-md p-4"
+        className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-md p-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -302,7 +302,7 @@ const PropertyPanel: React.FC = () => {
 
   return (
     <motion.div 
-      className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-xl rounded-md p-4"
+      className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-xl rounded-md p-4"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -501,7 +501,7 @@ const PropertyPanel: React.FC = () => {
                     setProperties({ ...selectedElement });
                     setIsEditing(false);
                   }}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

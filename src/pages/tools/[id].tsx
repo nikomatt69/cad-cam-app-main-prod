@@ -221,7 +221,7 @@ export default function ToolDetailPage() {
       <Layout>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-b px-6 py-4">
+          <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-b px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <button
@@ -304,7 +304,7 @@ export default function ToolDetailPage() {
           {tool && (
             <div className="flex-1 overflow-auto p-6">
               <div className="max-w-3xl mx-auto">
-                <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow rounded-lg overflow-hidden">
+                <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow rounded-lg overflow-hidden">
                   <div className="p-6">
                     <div className="mb-4">
                       <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">

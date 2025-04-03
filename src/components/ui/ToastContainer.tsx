@@ -39,12 +39,22 @@ const ToastContainer: React.FC = () => {
   }, [addToast]);
   
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
-      <AnimatePresence>
-        {toasts.map((toast) => (
-          <Toast key={toast.id} toast={toast} onClose={removeToast} />
-        ))}
-      </AnimatePresence>
+    <div className="fixed top-0 inset-x-0 z-50 pointer-events-none">
+      <div className="max-w-md mx-auto px-4 pt-6">
+        <AnimatePresence>
+          {toasts.map((toast, index) => (
+            <div 
+              key={toast.id} 
+              className="mb-4 pointer-events-auto"
+              style={{
+                marginTop: index === 0 ? 'env(safe-area-inset-top, 0px)' : '0'
+              }}
+            >
+              <Toast toast={toast} onClose={removeToast} />
+            </div>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

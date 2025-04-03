@@ -144,7 +144,7 @@ export default function Settings() {
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-600 shadow rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
         {/* Tabs - Desktop */}
         <div className="hidden sm:block bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -196,7 +196,7 @@ export default function Settings() {
                   <span className="mb-1">•••</span>
                   Altro
                 </button>
-                <div className="hidden group-hover:block absolute right-0 mt-1 w-48 bg-white dark:bg-gray-600 rounded-md shadow-lg z-10">
+                <div className="hidden group-hover:block absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-10">
                   {tabs.slice(4).map((tab) => (
                     <button
                       key={tab.id}
@@ -235,7 +235,7 @@ export default function Settings() {
                       name="name"
                       id="name"
                       defaultValue={session?.user?.name || ''}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-600 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 rounded-md"
                     />
                   </div>
                 </div>
@@ -250,7 +250,7 @@ export default function Settings() {
                       name="email"
                       id="email"
                       defaultValue={session?.user?.email || ''}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-600 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 rounded-md"
                       disabled
                     />
                   </div>
@@ -266,7 +266,7 @@ export default function Settings() {
                       id="about"
                       name="about"
                       rows={4}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-600 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 rounded-md"
                       placeholder="Descrivi brevemente te stesso e la tua esperienza"
                     ></textarea>
                   </div>
@@ -319,7 +319,7 @@ export default function Settings() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="bg-white dark:bg-gray-600 py-2 px-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto"
+                        className="bg-white dark:bg-gray-800 py-2 px-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto"
                       >
                         Carica nuova foto
                       </button>
@@ -365,7 +365,7 @@ export default function Settings() {
                       }
                       toast.success('Modifiche annullate');
                     }}
-                    className="w-full sm:w-auto bg-white dark:bg-gray-600 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="w-full sm:w-auto bg-white dark:bg-gray-800 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     Annulla
                   </button>
@@ -612,7 +612,7 @@ export default function Settings() {
           {/* Tab placeholder per le altre sezioni */}
           {['appearance', 'security', 'billing', 'help'].includes(activeTab) && (
             <div className="text-center py-8 sm:py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-800/30 text-blue-600 dark:text-blue-400 mb-4">
                 {tabs.find(tab => tab.id === activeTab)?.icon}
               </div>
               <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">

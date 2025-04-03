@@ -35,6 +35,8 @@ import BoxSelection from './new-cad/BoxSelection';
 import { useCADShortcuts } from 'src/hooks/useCADShortcuts';
 import router from 'next/router';
 import toast from 'react-hot-toast';
+import SmartRenderer from '@/src/lib/canvas/SmartRenderer';
+import CanvasPool from '@/src/lib/canvas/CanvasPool';
 
 interface CADCanvasProps {
   width?: string | number;
@@ -114,7 +116,7 @@ const CADCanvas: React.FC<CADCanvasProps> = ({
   const [showElementsList, setShowElementsList] = useState(false);
 const [showComponentModal, setShowComponentModal] = useState(false);
 const [showElementInfo, setShowElementInfo] = useState(false);
-
+const [isModifying, setIsModifying] = useState<boolean>(false);
 // Usa i selector dallo store
 const { 
   selectedElementIds, 
@@ -445,10 +447,10 @@ const screenToWorld = useCallback((screenX: number, screenY: number) => {
     // Crea un oggetto Three.js basato sul componente
     const threeObject = createComponentPreview(component);
     if (threeObject) {
+     
       // Imposta l'oggetto come trasparente per indicare che è in anteprima
       if (threeObject instanceof THREE.Mesh) {
         const material = threeObject.material as THREE.MeshStandardMaterial;
-        material.transparent = true;
         material.opacity = 0.7;
         material.color.set(0x4a90e2); // Colore blu per l'anteprima
       }
@@ -1502,10 +1504,20 @@ const screenToWorld = useCallback((screenX: number, screenY: number) => {
       
       if (rendererRef.current && cameraRef.current && sceneRef.current) {
         sceneRef.current.updateMatrixWorld(true);
-        rendererRef.current.render(sceneRef.current, cameraRef.current);
+        SmartRenderer.smartRender(
+          sceneRef.current,
+          cameraRef.current,
+          rendererRef.current,
+          {
+            cullDistance: 1000,
+            updateThreshold: 16,
+            forceUpdate: isModifying // true durante trasformazioni attive
+          }
+        );
       }
       
       return animationId;
+      
     };
     
     // Store the returned animation ID
@@ -1548,7 +1560,7 @@ const screenToWorld = useCallback((screenX: number, screenY: number) => {
         rendererRef.current.dispose();
       }
     };
-  }, [axisVisible, gridVisible]);
+  }, [axisVisible, gridVisible, isModifying]);
 
   // Handle fullscreen change
   const handleFullscreenChange = () => {
@@ -4456,7 +4468,7 @@ useEffect(() => {
     } catch (error) {
       console.error("Error during drag over:", error);
     }
-  }, [allowDragDrop, snapSettings.enabled, snapToPoint, originOffset]);
+  }, [allowDragDrop, snapSettings.enabled, originOffset.x, originOffset.y, originOffset.z, worldToScreen, snapToPoint]);
 
   const handleComponentDrop = useCallback((event: React.DragEvent) => {
     if (!allowDragDrop) return;
@@ -4682,6 +4694,9 @@ useEffect(() => {
     sceneRef.current.add(transformControls);
     transformControlsRef.current = transformControls;
     
+    transformControlsRef.current?.addEventListener('mouseDown', () => setIsModifying(true));
+    transformControlsRef.current?.addEventListener('mouseUp', () => setIsModifying(false));
+    
     return () => {
       if (transformControls && sceneRef.current) {
         sceneRef.current.remove(transformControls);
@@ -4763,7 +4778,7 @@ useEffect(() => {
         toast.error('Dati componente non trovati');
       }
     }
-  }, [router.query.loadComponent, layers, addElement, router]);
+  }, [layers, addElement]);
   
   // Aggiorna transform controls quando cambia l'elemento selezionato
   useEffect(() => {
@@ -5010,7 +5025,21 @@ useEffect(() => {
   ];
 
 
+  const getTemporaryCanvas = (key: string, width: number, height: number) => {
+    return CanvasPool.getCanvas(`temp-${key}`, width, height);
+  };
   
+  const getTextureFromPool = (key: string, width: number, height: number) => {
+    return CanvasPool.getTexture(`texture-${key}`, width, height);
+  };
+  
+  // Cleanup function per il componente
+  useEffect(() => {
+    return () => {
+      // Pulisci il pool quando il componente viene smontato
+      CanvasPool.clearPool();
+    };
+  }, []);
 
   return (
     <div 
@@ -5029,7 +5058,7 @@ useEffect(() => {
     >
       <SnapIndicator 
         x={snapIndicator.x} 
-        y={snapIndicator.y} 
+        y={snapIndicator.y}
         type={snapIndicator.type} 
         visible={snapIndicator.visible} 
       />

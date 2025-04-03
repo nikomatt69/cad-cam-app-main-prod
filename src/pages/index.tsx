@@ -5,7 +5,7 @@ import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import Layout from '../components/layout/Layout';
+
 import { 
   Grid, 
   Tool, 
@@ -16,12 +16,15 @@ import {
   Users, 
   Clock, 
   AlertTriangle,
-  ChevronUp
+  ChevronUp,
+  BarChart2
 } from 'react-feather';
 import Loading from '../components/ui/Loading';
 import MetaTags from '../components/layout/Metatags';
 import { UserHistory } from '@/src/components/analytics/UserHistory';
 import { AnalyticsOverview } from '../components/analytics/AnalyticsOverview';
+import ActivityChart from '../components/analytics/ActivityChart';
+import dynamic from 'next/dynamic';
 
 interface DashboardStats {
   totalProjects: number;
@@ -41,6 +44,11 @@ interface Activity {
   userName: string;
 }
 
+const Layout = dynamic(
+  () => import('@/src/components/layout/Layout'),
+  { ssr: false }
+);
+
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -48,6 +56,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   
   // Handle scroll to show/hide "back to top" button
   useEffect(() => {
@@ -184,7 +193,10 @@ export default function Home() {
       router.push('/auth/signin');
     }
   }, [status, router]);
-
+  const toggleChartType = () => {
+    setChartType(prev => prev === 'line' ? 'bar' : 'line');
+  };
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -247,7 +259,7 @@ export default function Home() {
           {/* Main application modules - Fixed grid for mobile */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
             {/* CAD Card */}
-            <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
               <div className="h-3 bg-blue-600"></div>
               <div className="p-4 sm:p-6">
                 <div className="flex items-center mb-4">
@@ -272,7 +284,7 @@ export default function Home() {
             </div>
 
             {/* CAM Card */}
-            <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
               <div className="h-3 bg-green-600"></div>
               <div className="p-4 sm:p-6">
                 <div className="flex items-center mb-4">
@@ -297,7 +309,7 @@ export default function Home() {
             </div>
 
             {/* Projects Card */}
-            <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
               <div className="h-3 bg-purple-600"></div>
               <div className="p-4 sm:p-6">
                 <div className="flex items-center mb-4">
@@ -326,7 +338,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
             {/* Resources section - Full width on mobile, 2/3 width on large screens */}
             <div className="lg:col-span-2">
-              <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden">
+              <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden">
                 
                 <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {/* Materials */}
@@ -382,7 +394,7 @@ export default function Home() {
             
             {/* Tools section - Full width on mobile, 1/3 width on large screens */}
             <div>
-              <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden">
+              <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden">
                 <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex justify-between items-center">
                   <h2 className="text-base sm:text-lg font-semibold text-gray-900">Tools</h2>
                   <Link href={`/tools`} className="text-xs sm:text-sm text-blue-600 hover:text-blue-800">
@@ -425,21 +437,33 @@ export default function Home() {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-md rounded-lg flex flex-col overflow-hidden">
+          <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-md rounded-lg flex flex-col overflow-hidden">
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
               <h2 className="text-base sm:text-lg font-semibold text-gray-900">Recent Activity</h2>
             </div>
             <div className="divide-y divide-gray-200 max-h-72 sm:max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-              <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow rounded-lg p-4 sm:p-6">
+              <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow rounded-lg p-4 sm:p-6">
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-4 sm:mb-6">
                   This page shows all your activity across the platform. 
                 </p>
                 
-                <AnalyticsOverview 
-                  startDate={dateRange.startDate} 
-                  endDate={dateRange.endDate}
-                  isAdmin={isAdmin}
-                />
+                <div className="mt-6">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">Activity Trends</h2>
+              <button
+                onClick={toggleChartType}
+                className="flex items-center text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              >
+                <BarChart2 className="h-4 w-4 mr-1" />
+                {chartType === 'line' ? 'Show Bar Chart' : 'Show Line Chart'}
+              </button>
+            </div>
+            <ActivityChart 
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              chartType={chartType}
+            />
+          </div>
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Grid, Home, Tool, User, FileText, Menu } from 'react-feather';
 import { useState, useEffect } from 'react';
+import ResourcesBottomSheet from './ResourcesBottomSheet';
 
 const BottomNavigation = () => {
   const router = useRouter();
@@ -56,20 +57,17 @@ const BottomNavigation = () => {
             Home
           </span>
         </Link>
-        
-        <Link href="/projects" className="flex flex-col items-center justify-center">
-          <FileText className={`h-5 w-5 ${isActivePath('/projects') ? 'text-blue-600' : 'text-gray-500'}`} />
-          <span className={`mt-1 text-xs ${isActivePath('/projects') ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
-            Projects
-          </span>
-        </Link>
-        
+
         <Link href="/cad" className="flex flex-col items-center justify-center">
           <Grid className={`h-5 w-5 ${isActivePath('/cad') ? 'text-blue-600' : 'text-gray-500'}`} />
           <span className={`mt-1 text-xs ${isActivePath('/cad') ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
             CAD
           </span>
         </Link>
+        
+        <ResourcesBottomSheet />
+        
+        
         
         <Link href="/cam" className="flex flex-col items-center justify-center">
           <Tool className={`h-5 w-5 ${isActivePath('/cam') ? 'text-blue-600' : 'text-gray-500'}`} />

@@ -335,7 +335,7 @@ const AIEnhancedEditor: React.FC<AIEnhancedEditorProps> = ({
       {isAIThinking && (
         <div className="absolute bottom-4 right-4 flex items-center bg-blue-50 px-3 py-1.5 rounded-md border border-blue-200">
           <div className="animate-pulse h-2 w-2 mr-2 rounded-full bg-blue-500"></div>
-          <span className="text-xs text-blue-700">AI sta analizzando...</span>
+          <span className="text-xs text-blue-700">AI is analyzing...</span>
         </div>
       )}
       
@@ -343,12 +343,12 @@ const AIEnhancedEditor: React.FC<AIEnhancedEditorProps> = ({
       
       <div className="mt-2 px-3 py-1.5 bg-gray-50 rounded border border-gray-200 text-xs text-gray-500 flex justify-between">
         <span>
-          <kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Tab</kbd> per indentare o accettare suggerimenti, 
-          <kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono ml-1">Ctrl+Enter</kbd> per accettare i suggerimenti
+          <kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Tab</kbd> to indent or accept suggestions, 
+          <kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono ml-1">Ctrl+Enter</kbd> to accept suggestions
         </span>
         <span className="flex items-center">
           <Cpu size={10} className="mr-1 text-blue-500" />
-          AI assistita powered by Claude
+          AI assisted powered by Claude
         </span>
       </div>
     </div>

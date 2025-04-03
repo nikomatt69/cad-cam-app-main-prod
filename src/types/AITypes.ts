@@ -1,15 +1,24 @@
-// src/types/ai.ts
+// src/types/AITypes.ts
 /**
  * Tipi AI unificati per l'intera applicazione
  * Centralizza tutte le definizioni di tipo AI per garantire coerenza e tipo-sicurezza
  */
 
+
 // === MODELLI AI ===
 export type AIModelType = 
+  // Claude models
   | 'claude-3-5-sonnet-20240229'
   | 'claude-3-opus-20240229'
   | 'claude-3-haiku-20240229'
-  | 'claude-3-7-sonnet-20250219';
+  | 'claude-3-7-sonnet-20250219'
+  // OpenAI models
+  | 'gpt-4'
+  | 'gpt-4-turbo-preview'
+  | 'gpt-3.5-turbo';
+
+// === PROVIDER AI ===
+export type AIProviderType = 'claude' | 'openai' | 'CLAUDE' | 'OPENAI';
 
 // === MODALITÀ AI ===
 export type AIMode = 'cad' | 'cam' | 'gcode' | 'toolpath' | 'analysis' | 'general';
@@ -30,7 +39,20 @@ export interface AIServiceConfig {
   mcpApiKey?: string;   // API key per il servizio MCP
   mcpStrategy?: 'aggressive' | 'balanced' | 'conservative'; // Strategia MCP
   mcpCacheLifetime?: number; // Durata cache in millisecondi
-  autoModelSelection?: { enabled: boolean; [key: string]: any }; // Auto model selection settings
+  autoModelSelection?: { enabled: boolean; preferredProvider?: AIProviderType; [key: string]: any }; // Auto model selection settings
+  openaiApiKey?: string; // Chiave API specifica per OpenAI
+  openaiOrgId?: string;  // ID organizzazione per OpenAI
+}
+
+// === MCP REQUEST PARAMS ===
+export interface MCPRequestParams {
+  cacheStrategy: 'exact' | 'semantic' | 'hybrid';
+  minSimilarity?: number; // Per ricerche semantiche, 0-1
+  cacheTTL?: number; // Time-to-live in ms
+  priority?: 'speed' | 'quality' | 'cost';
+  storeResult?: boolean;
+  multiProviderEnabled?: boolean;
+  preferredProvider?: AIProviderType;
 }
 
 // === RICHIESTE AI ===
@@ -46,6 +68,17 @@ export interface AIRequest {
   metadata?: Record<string, any>;
   useMCP?: boolean; // Flag per utilizzare MCP per questa richiesta
   mcpParams?: MCPRequestParams; // Parametri specifici per MCP
+  // Parametri specifici per OpenAI
+  provider?: AIProviderType;
+  openaiOptions?: {
+    functions?: any[];
+    function_call?: string;
+    presence_penalty?: number;
+    frequency_penalty?: number;
+    top_p?: number;
+    stop?: string[];
+    logit_bias?: Record<string, number>;
+  };
 }
 
 // === RISPOSTE AI ===
@@ -56,6 +89,7 @@ export interface AIResponse<T = any> {
   parsingError?: Error | null;
   processingTime?: number;
   model?: AIModelType;
+  provider?: AIProviderType;
   success: boolean;
   fromCache?: boolean;
   fromMCP?: boolean; // Indica se la risposta proviene dal servizio MCP
@@ -70,21 +104,15 @@ export interface AIResponse<T = any> {
   metadata?: Record<string, any>;
 }
 
-// === ANALISI DELLE PRESTAZIONI AI ===
-export interface AIPerformanceMetrics {
-  averageResponseTime: number;
-  successRate: number;
-  tokenUsage: number;
-  costEfficiency: number;
-  modelUsage: Record<AIModelType, number>;
-  mcpStats?: {
-    cacheHits: number;
-    totalRequests: number;
-    averageSavings: number;
-  };
-  errors: {
-    count: number;
-    types: Record<string, number>;
+// === MCP (Model-Completions-Protocol) ===
+export interface MCPResponse<T = any> {
+  cacheHit: boolean;
+  similarity?: number;
+  response: AIResponse<T>;
+  savingsEstimate?: {
+    tokens: number;
+    cost: number;
+    timeMs: number;
   };
 }
 
@@ -103,24 +131,11 @@ export interface AIAnalyticsEvent {
   metadata?: Record<string, any>;
 }
 
-// === MCP (Model-Completions-Protocol) ===
-export interface MCPRequestParams {
-  cacheStrategy: 'exact' | 'semantic' | 'hybrid';
-  minSimilarity?: number; // Per ricerche semantiche, 0-1
-  cacheTTL?: number; // Time-to-live in ms
-  priority?: 'speed' | 'quality' | 'cost';
-  storeResult?: boolean;
-}
-
-export interface MCPResponse<T = any> {
-  cacheHit: boolean;
-  similarity?: number;
-  response: AIResponse<T>;
-  savingsEstimate?: {
-    tokens: number;
-    cost: number;
-    timeMs: number;
-  };
+// === TOKEN USAGE ===
+export interface TokenUsage {
+  prompt: number;
+  completion: number;
+  total: number;
 }
 
 // === RICHIESTE SPECIFICHE ===
@@ -222,6 +237,24 @@ export interface ToolpathModification {
   };
 }
 
+// === PERFORMANCE METRICS ===
+export interface AIPerformanceMetrics {
+  averageResponseTime: number;
+  successRate: number;
+  tokenUsage: number;
+  costEfficiency: number;
+  modelUsage: Record<AIModelType, number>;
+  mcpStats?: {
+    cacheHits: number;
+    totalRequests: number;
+    averageSavings: number;
+  };
+  errors: {
+    count: number;
+    types: Record<string, number>;
+  };
+}
+
 // === STATO AI DELL'APPLICAZIONE ===
 export interface AIState {
   isEnabled: boolean;
@@ -277,7 +310,11 @@ export interface AISettings {
   costOptimization: boolean;
   mcpEnabled: boolean;
   mcpStrategy: 'aggressive' | 'balanced' | 'conservative';
-  mcpCacheLifetime: number; // in milliseconds
-  mcpEndpoint?: string; // Endpoint for MCP service
-  mcpApiKey?: string;   // API key for MCP service
+  mcpCacheLifetime: number;
+  mcpEndpoint?: string;
+  mcpApiKey?: string;
+  multiProviderEnabled?: boolean;
+  preferredProvider?: AIProviderType;
+  openaiApiKey?: string;
+  openaiOrgId?: string;
 }

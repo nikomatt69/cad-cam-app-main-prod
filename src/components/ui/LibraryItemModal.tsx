@@ -22,7 +22,7 @@ const LibraryItemModal: React.FC<LibraryItemModalProps> = ({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="fixed inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-lg shadow-lg p-6 max-w-4xl w-full z-10">
+      <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-lg shadow-lg p-6 max-w-4xl w-full z-10">
         <div className="flex">
           {/* Anteprima 3D */}
           <div className="w-1/2 pr-4">

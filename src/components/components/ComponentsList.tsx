@@ -123,7 +123,7 @@ export default function ComponentsList() {
       </div>
       
       {/* Filters and View Options */}
-      <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-md p-4 mb-6">
+      <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-md p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
             <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
@@ -185,7 +185,7 @@ export default function ComponentsList() {
       
       {/* Components Display */}
       {components.length === 0 ? (
-        <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-6 text-center">
+        <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg p-6 text-center">
           <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
             <Package size={32} className="text-gray-400" />
           </div>
@@ -227,7 +227,7 @@ export default function ComponentsList() {
           {components.map((component) => (
             <div
               key={component.id}
-              className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow"
+              className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow"
             >
               <div className="h-40 bg-gray-100 flex items-center justify-center relative">
                 {component.thumbnail ? (
@@ -285,7 +285,7 @@ export default function ComponentsList() {
         </div>
       ) : (
         // List View
-        <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden border border-gray-200">
+        <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -306,7 +306,7 @@ export default function ComponentsList() {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white divide-y divide-gray-200">
+            <tbody className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white divide-y divide-gray-200">
               {components.map((component) => (
                 <tr 
                   key={component.id}

@@ -114,13 +114,14 @@ const AISettingsPanel: React.FC = () => {
     if (!state.settings.mcpEnabled) return 0;
     
     // Stima basata sulla strategia MCP
-    const strategyEfficiency = {
+    const strategyEfficiency: Record<'aggressive' | 'balanced' | 'conservative', number> = {
       'aggressive': 0.5, // Risparmio del 50%
       'balanced': 0.35,  // Risparmio del 35%
       'conservative': 0.2 // Risparmio del 20%
     };
     
-    const efficiency = strategyEfficiency[state.settings.mcpStrategy || 'balanced'];
+    const mcpStrategy = (state.settings.mcpStrategy || 'balanced') as 'aggressive' | 'balanced' | 'conservative';
+    const efficiency = strategyEfficiency[mcpStrategy];
     const modelCost = parseFloat(calculateCost(state.currentModel));
     
     return (modelCost * efficiency).toFixed(3);
@@ -131,7 +132,7 @@ const AISettingsPanel: React.FC = () => {
       <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-semibold flex items-center">
           <Sliders className="mr-2 text-blue-500" size={20} />
-          Impostazioni AI
+          AI Settings
         </h2>
         
         <div className="flex space-x-2">
@@ -145,7 +146,7 @@ const AISettingsPanel: React.FC = () => {
             ) : (
               <Save size={14} className="mr-1.5" />
             )}
-            Salva Impostazioni
+            Save Settings
           </button>
         </div>
       </div>
@@ -153,14 +154,14 @@ const AISettingsPanel: React.FC = () => {
       {saveSuccess && (
         <div className="p-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-sm rounded flex items-center">
           <Cpu size={14} className="mr-2" />
-          Impostazioni salvate con successo!
+          Settings saved successfully!
         </div>
       )}
       
       <div className="space-y-4">
         <div>
           <label htmlFor="ai-model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Modello AI
+            AI Model
           </label>
           <select
             id="ai-model"
@@ -168,19 +169,19 @@ const AISettingsPanel: React.FC = () => {
             onChange={(e) => dispatch({ type: 'SET_MODEL', payload: e.target.value as AIModelType })}
             className="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
           >
-            <option value={AI_MODELS.CLAUDE_HAIKU}>Claude Haiku (Veloce, ${calculateCost(AI_MODELS.CLAUDE_HAIKU)}$/1K token)</option>
-            <option value={AI_MODELS.CLAUDE_SONNET}>Claude Sonnet (Equilibrato, ${calculateCost(AI_MODELS.CLAUDE_SONNET)}$/1K token)</option>
-            <option value={AI_MODELS.CLAUDE_OPUS}>Claude Opus (Potente, ${calculateCost(AI_MODELS.CLAUDE_OPUS)}$/1K token)</option>
-            <option value={AI_MODELS.CLAUDE_SONNET_7}>Claude 3.7 Sonnet (Avanzato, ${calculateCost(AI_MODELS.CLAUDE_SONNET_7)}$/1K token)</option>
+            <option value={AI_MODELS.CLAUDE_HAIKU}>Claude Haiku (Fast, ${calculateCost(AI_MODELS.CLAUDE_HAIKU)}$/1K token)</option> 
+            <option value={AI_MODELS.CLAUDE_SONNET}>Claude Sonnet (Balanced, ${calculateCost(AI_MODELS.CLAUDE_SONNET)}$/1K token)</option>
+            <option value={AI_MODELS.CLAUDE_OPUS}>Claude Opus (Powerful, ${calculateCost(AI_MODELS.CLAUDE_OPUS)}$/1K token)</option>
+            <option value={AI_MODELS.CLAUDE_SONNET_7}>Claude 3.7 Sonnet (Advanced, ${calculateCost(AI_MODELS.CLAUDE_SONNET_7)}$/1K token)</option>
           </select>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Seleziona il modello AI più adatto alle tue esigenze. I modelli più potenti offrono risultati migliori ma a costi maggiori.
+            Select the AI model most suitable for your needs. More powerful models offer better results but at higher costs.
           </p>
         </div>
         
         <div>
           <label htmlFor="ai-temperature" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Temperatura: {state.temperature.toFixed(1)}
+            Temperature: {state.temperature.toFixed(1)}
           </label>
           <input
             id="ai-temperature"
@@ -201,11 +202,11 @@ const AISettingsPanel: React.FC = () => {
             <span>Creativo (1.0)</span>
           </div>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Controlla il livello di casualità delle risposte. Valori bassi producono risultati più coerenti, valori alti più creativi.
+            Control the randomness of responses. Lower values produce more consistent results, higher values more creative.
           </p>
         </div>
         
-        {/* Sezione MCP (Model-Completions-Protocol) */}
+        {/* MCP (Model-Completions-Protocol) Section */}
         <div className="pt-4 pb-2 border-t border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center">
             <div>
@@ -214,7 +215,7 @@ const AISettingsPanel: React.FC = () => {
                 Model-Completions-Protocol (MCP)
               </label>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Ottimizza le richieste AI con caching semantico avanzato
+                Optimize AI requests with advanced semantic caching
               </p>
             </div>
             <div className="relative inline-block w-12 align-middle select-none">
@@ -229,7 +230,7 @@ const AISettingsPanel: React.FC = () => {
               />
               <label
                 className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                  state.settings.mcpEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                  state.settings.mcpEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                 }`}
               ></label>
             </div>
@@ -241,7 +242,7 @@ const AISettingsPanel: React.FC = () => {
                 onClick={() => setShowMCPSettings(!showMCPSettings)}
                 className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center"
               >
-                {showMCPSettings ? 'Nascondi' : 'Mostra'} impostazioni MCP
+                {showMCPSettings ? 'Hide' : 'Show'} MCP settings
                 <svg className={`ml-1 w-4 h-4 transform transition-transform ${showMCPSettings ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -251,7 +252,7 @@ const AISettingsPanel: React.FC = () => {
                 <div className="mt-3 space-y-3 pl-2 border-l-2 border-blue-200 dark:border-blue-800">
                   <div>
                     <label htmlFor="mcp-endpoint" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Endpoint MCP
+                      MCP Endpoint
                     </label>
                     <input
                       type="text"
@@ -265,7 +266,7 @@ const AISettingsPanel: React.FC = () => {
                       className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      Predefinito: utilizza l&apos;endpoint locale dell&apos;applicazione.
+                      Default: uses the application&apos;s local endpoint.
                     </p>
                   </div>
                   
@@ -276,7 +277,7 @@ const AISettingsPanel: React.FC = () => {
                     <input
                       type="password"
                       id="mcp-api-key"
-                      placeholder="Inserisci la tua API key MCP"
+                      placeholder="Enter your MCP API key"
                       value={state.settings.mcpApiKey || ''}
                       onChange={(e) => dispatch({
                         type: 'UPDATE_SETTINGS',
@@ -288,7 +289,7 @@ const AISettingsPanel: React.FC = () => {
                   
                   <div>
                     <label htmlFor="mcp-strategy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Strategia MCP
+                      MCP Strategy
                     </label>
                     <select
                       id="mcp-strategy"
@@ -304,13 +305,13 @@ const AISettingsPanel: React.FC = () => {
                       <option value="conservative">Conservativa (massima precisione)</option>
                     </select>
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      La strategia determina quando riutilizzare risposte simili dalle richieste precedenti.
+                      The strategy determines when to reuse similar responses from previous requests.
                     </p>
                   </div>
                   
                   <div>
                     <label htmlFor="mcp-cache-lifetime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Durata cache MCP: {(state.settings.mcpCacheLifetime || 86400000) / (1000 * 60 * 60)} ore
+                      MCP Cache Lifetime: {(state.settings.mcpCacheLifetime || 86400000) / (1000 * 60 * 60)} hours
                     </label>
                     <input
                       id="mcp-cache-lifetime"
@@ -326,9 +327,9 @@ const AISettingsPanel: React.FC = () => {
                       className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
                     />
                     <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      <span>1 ora</span>
-                      <span>1 giorno</span>
-                      <span>1 settimana</span>
+                      <span>1 hour</span>
+                      <span>1 day</span>
+                      <span>1 week</span>
                     </div>
                   </div>
                   
@@ -343,7 +344,7 @@ const AISettingsPanel: React.FC = () => {
                       ) : (
                         <Server size={14} className="mr-1.5" />
                       )}
-                      Testa connessione MCP
+                      Test MCP connection
                     </button>
                     
                     {mcpTestStatus !== 'idle' && mcpTestResult && (
@@ -366,8 +367,8 @@ const AISettingsPanel: React.FC = () => {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Suggerimenti automatici</label>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Mostra suggerimenti basati sul contesto</p>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Automatic suggestions</label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Show suggestions based on context</p>
               </div>
               <div className="relative inline-block w-12 align-middle select-none">
                 <input
@@ -381,7 +382,7 @@ const AISettingsPanel: React.FC = () => {
                 />
                 <label
                   className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    state.settings.autoSuggest ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    state.settings.autoSuggest ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                   }`}
                 ></label>
               </div>
@@ -389,8 +390,8 @@ const AISettingsPanel: React.FC = () => {
             
             <div className="flex justify-between items-center">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Cache AI</label>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Memorizza le risposte per riutilizzarle</p>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">AI Cache</label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Cache AI responses for reuse</p>
               </div>
               <div className="relative inline-block w-12 align-middle select-none">
                 <input
@@ -404,7 +405,7 @@ const AISettingsPanel: React.FC = () => {
                 />
                 <label
                   className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    state.settings.cacheEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    state.settings.cacheEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                   }`}
                 ></label>
               </div>
@@ -412,8 +413,8 @@ const AISettingsPanel: React.FC = () => {
             
             <div className="flex justify-between items-center">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Analytics AI</label>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Traccia utilizzo e prestazioni</p>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">AI Analytics</label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Track usage and performance</p>
               </div>
               <div className="relative inline-block w-12 align-middle select-none">
                 <input
@@ -427,7 +428,7 @@ const AISettingsPanel: React.FC = () => {
                 />
                 <label
                   className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    state.settings.analyticsEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    state.settings.analyticsEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                   }`}
                 ></label>
               </div>
@@ -437,8 +438,8 @@ const AISettingsPanel: React.FC = () => {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Selezione Automatica Modello</label>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Usa il modello migliore per ogni task</p>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Automatic Model Selection</label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Use the best model for each task</p>
               </div>
               <div className="relative inline-block w-12 align-middle select-none">
                 <input
@@ -452,7 +453,7 @@ const AISettingsPanel: React.FC = () => {
                 />
                 <label
                   className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    state.settings.autoModelSelection ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    state.settings.autoModelSelection ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                   }`}
                 ></label>
               </div>
@@ -460,8 +461,8 @@ const AISettingsPanel: React.FC = () => {
             
             <div className="flex justify-between items-center">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Ottimizzazione Costi</label>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Bilancia prestazioni e costi</p>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Cost Optimization</label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Balance performance and costs</p>
               </div>
               <div className="relative inline-block w-12 align-middle select-none">
                 <input
@@ -475,7 +476,7 @@ const AISettingsPanel: React.FC = () => {
                 />
                 <label
                   className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                    state.settings.costOptimization ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    state.settings.costOptimization ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-800'
                   }`}
                 ></label>
               </div>
@@ -487,7 +488,7 @@ const AISettingsPanel: React.FC = () => {
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center"
         >
-          {showAdvanced ? 'Nascondi' : 'Mostra'} impostazioni avanzate
+          {showAdvanced ? 'Hide' : 'Show'} advanced settings
           <svg className={`ml-1 w-4 h-4 transform transition-transform ${showAdvanced ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -497,7 +498,7 @@ const AISettingsPanel: React.FC = () => {
           <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
             <div>
               <label htmlFor="ai-max-tokens" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Token massimi: {state.settings.maxTokens}
+                Max Tokens: {state.settings.maxTokens}
               </label>
               <input
                 id="ai-max-tokens"
@@ -521,7 +522,7 @@ const AISettingsPanel: React.FC = () => {
             
             <div>
               <label htmlFor="ai-suggestion-threshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Soglia suggerimenti: {state.settings.suggestThreshold}
+                Suggestion Threshold: {state.settings.suggestThreshold}
               </label>
               <input
                 id="ai-suggestion-threshold"
@@ -537,9 +538,9 @@ const AISettingsPanel: React.FC = () => {
                 className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
               />
               <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                <span>Più suggerimenti (0.1)</span>
-                <span>Bilanciato (0.5)</span>
-                <span>Solo rilevanti (0.9)</span>
+                <span>More suggestions (0.1)</span>
+                <span>Balanced (0.5)</span>
+                <span>Only relevant (0.9)</span>
               </div>
             </div>
             
@@ -549,7 +550,7 @@ const AISettingsPanel: React.FC = () => {
                 className="flex items-center text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
               >
                 <Database size={14} className="mr-1" />
-                Cancella cache AI
+                Clear AI cache
               </button>
               
               <button
@@ -557,7 +558,7 @@ const AISettingsPanel: React.FC = () => {
                 className="flex items-center text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
               >
                 <RefreshCw size={14} className="mr-1" />
-                Cancella cronologia
+                Clear AI history
               </button>
             </div>
           </div>
@@ -568,17 +569,17 @@ const AISettingsPanel: React.FC = () => {
       <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 mt-4">
         <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
           <Zap size={16} className="mr-1 text-yellow-500" />
-          Stats AI
+          AI Stats
         </h3>
         
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Tempo di risposta medio</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Average response time</p>
             <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{Math.round(state.performance.averageResponseTime)} ms</p>
           </div>
           
           <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Tasso di successo</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Success rate</p>
             <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{Math.round(state.performance.successRate)}%</p>
           </div>
         </div>
@@ -587,15 +588,15 @@ const AISettingsPanel: React.FC = () => {
           <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
             <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
               <Server size={12} className="mr-1 text-blue-500" />
-              Statistiche MCP
+              MCP Statistics
             </h4>
             <div className="flex space-x-4">
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Risparmio stimato</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Estimated savings</p>
                 <p className="text-sm font-medium text-green-600 dark:text-green-400">${calculateMCPSavings()}/1K token</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Strategia</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Strategy</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{state.settings.mcpStrategy || 'balanced'}</p>
               </div>
               <div>
@@ -612,11 +613,11 @@ const AISettingsPanel: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
               <DollarSign size={12} className="mr-1" />
-              Costo stimato per 1K token: ${calculateCost(state.currentModel)}
+              Estimated cost per 1K token: ${calculateCost(state.currentModel)}
             </div>
             <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
               <Clock size={12} className="mr-1" />
-              Ultimo aggiornamento: {new Date(state.performance.lastSync).toLocaleTimeString()}
+                Last update: {new Date(state.performance.lastSync).toLocaleTimeString()}
             </div>
           </div>
         </div>
@@ -625,8 +626,8 @@ const AISettingsPanel: React.FC = () => {
       <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 text-xs rounded-lg flex items-start">
         <AlertTriangle size={14} className="mr-2 flex-shrink-0 mt-0.5" />
         <p>
-          Le impostazioni avanzate possono influire sulle prestazioni e sui costi dell AI. 
-          Il protocollo MCP aiuta a ridurre i costi e migliorare le prestazioni ottimizzando le richieste tramite caching semantico.
+          Advanced settings can affect performance and costs. 
+          The MCP protocol helps reduce costs and improve performance by optimizing requests through semantic caching.
         </p>
       </div>
       
@@ -634,10 +635,10 @@ const AISettingsPanel: React.FC = () => {
         <div className="p-3 mt-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300 text-xs rounded-lg flex items-start">
           <Shield size={14} className="mr-2 flex-shrink-0 mt-0.5" />
           <p>
-            Il protocollo MCP (Model-Completions-Protocol) è attivo. Le richieste AI saranno ottimizzate tramite caching semantico, 
-            risultando in risposte più rapide e costi ridotti. La strategia {state.settings.mcpStrategy || 'balanced'} è 
-            configurata per {state.settings.mcpStrategy === 'aggressive' ? 'massimizzare il risparmio' : 
-            state.settings.mcpStrategy === 'conservative' ? 'massimizzare la precisione' : 'bilanciare costi e precisione'}.
+            The MCP (Model-Completions-Protocol) is active. AI requests will be optimized through semantic caching, 
+            resulting in faster responses and reduced costs. The {state.settings.mcpStrategy || 'balanced'} strategy is 
+            configured to {state.settings.mcpStrategy === 'aggressive' ? 'maximize savings' : 
+            state.settings.mcpStrategy === 'conservative' ? 'maximize precision' : 'balance costs and precision'}.
           </p>
         </div>
       )}

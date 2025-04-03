@@ -1,8 +1,8 @@
+/* eslint-disable jsx-a11y/alt-text */
 // src/pages/components/[id].tsx
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Layout from '@/src/components/layout/Layout';
 import { 
   Save, 
   ArrowLeft, 
@@ -41,7 +41,7 @@ import {
 } from 'react-feather';
 import { fetchComponentById, updateComponent, deleteComponent } from '@/src/lib/api/components';
 import Loading from '@/src/components/ui/Loading';
-import { Component ,  ComponentVersion , ComponentComment , } from '@prisma/client';
+import { Component  } from 'src/types/component';
 import Metatags from '@/src/components/layout/Metatags';
 import { useLocalComponentsLibraryStore } from '@/src/store/localComponentsLibraryStore';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
@@ -58,8 +58,12 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import React from 'react';
 import { useProjectDrawings } from '@/src/hooks/useDrawings';
 import { useCADStore } from '@/src/store/cadStore';
+import { ComponentCadBridge } from '@/src/lib/componentCadBridge';
 
-
+const Layout = dynamic(
+  () => import('@/src/components/layout/Layout').then(mod => mod.default),
+  { ssr: false }
+);
 // Dynamically import Monaco Editor to reduce initial bundle size
 const MonacoEditor = dynamic(
   () => import('@monaco-editor/react').then(mod => mod.default),
@@ -215,6 +219,35 @@ const createObjectFromComponentData = (data: any) : THREE.Object3D | null => {
   
 
   switch (data.type) {
+    case 'custom':
+      // Create a group for custom components
+      const customGroup = new THREE.Group();
+      
+      // Add all child elements if they exist
+      if (data.elements && Array.isArray(data.elements)) {
+        data.elements.forEach((element: any) => {
+          const childObject = createObjectFromComponentData({
+            ...element,
+            x: (element.x || 0),
+            y: (element.y || 0),
+            z: (element.z || 0)
+          });
+          
+          if (childObject) {
+            customGroup.add(childObject);
+          }
+        });
+      }
+      
+      // Position the group
+      customGroup.position.set(
+        data.x + originOffset.x,
+        data.y + originOffset.y,
+        (data.z || 0) + originOffset.z
+      );
+      
+      return customGroup;
+      
     // ======= BASIC PRIMITIVES =======
     case 'cube':
       const cubeGeometry = new THREE.BoxGeometry(
@@ -2286,7 +2319,7 @@ const graphConfig = {
 };
 
 if (isLoading) {
-  return <div className="flex items-center justify-center h-64">Loading...</div>;
+  return <Loading/>;
 }
 
 return (
@@ -2557,9 +2590,11 @@ useEffect(() => {
       }
       
       const data = await response.json();
-      setComments(data);
+      // Handle the response data structure from the API
+      setComments(Array.isArray(data.data) ? data.data : []);
     } catch (error) {
       console.error('Error fetching comments:', error);
+      setComments([]);
     } finally {
       setIsLoading(false);
     }
@@ -2588,9 +2623,15 @@ const handleAddComment = async (e: React.FormEvent) => {
       throw new Error('Failed to add comment');
     }
     
-    const addedComment = await response.json();
-    setComments(prev => [addedComment, ...prev]);
-    setNewComment('');
+    const data = await response.json();
+    // Handle the response data structure from the API
+    const addedComment = data.data;
+    if (addedComment) {
+      setComments(prev => [addedComment, ...prev]);
+      setNewComment('');
+    } else {
+      throw new Error('Invalid comment data received');
+    }
   } catch (error) {
     console.error('Error adding comment:', error);
     toast.error('Failed to add comment');
@@ -2626,7 +2667,7 @@ return (
       </form>
       
       {isLoading ? (
-        <div className="flex items-center justify-center h-32">Loading...</div>
+        <div className="flex items-center justify-center h-32"><Loading/></div>
       ) : comments.length === 0 ? (
         <div className="text-center py-12">
           <MessageCircle size={48} className="mx-auto mb-4 text-gray-300" />
@@ -3400,47 +3441,26 @@ const handleSendToCAD = useCallback(() => {
   if (!component) return;
   
   try {
-    // Verifichiamo esplicitamente che l'ID sia una stringa e non undefined
-    const componentId = component.id?.toString();
+    const success = ComponentCadBridge.sendComponentToCAD(component as Component, {
+      validateBeforeSend: true
+    });
     
-    if (!componentId) {
-      toast.error('ID componente non valido');
-      return;
+    if (success) {
+      router.push({
+        pathname: '/cad',
+        query: { 
+          loadComponent: component.id,
+          ts: Date.now() // Add timestamp to force reload
+        }
+      });
+      
+      toast.success(`${component.name} opening in CAD editor`);
+    } else {
+      toast.error('Unable to send component to CAD editor');
     }
-    
-    // Log per debug
-    console.log('Invio componente all\'editor CAD:', {
-      id: componentId, 
-      name: component.name
-    });
-    
-    // Creo un oggetto specifico per localStorage che includa solo i dati necessari
-    const componentToLoad = {
-      id: componentId,  // Garantisci che sia una stringa
-      name: component.name,
-      data: component.data || {} // Assicura che data non sia null/undefined
-    };
-    
-    // Salva nel localStorage con formato fisso
-    localStorage.setItem('componentToLoadInCAD', JSON.stringify(componentToLoad));
-    
-    // Per garantire l'aggiornamento anche con componenti ripetuti
-    const timestamp = Date.now();
-    localStorage.setItem('componentToLoadInCAD_timestamp', timestamp.toString());
-    
-    // Naviga all'editor CAD con query params specifici
-    router.push({
-      pathname: '/cad',
-      query: { 
-        loadComponent: component.id,
-        ts: timestamp // Aggiungi timestamp per forzare un reload
-      }
-    });
-    
-    toast.success(`${component.name} in apertura nell'editor CAD`);
   } catch (err) {
-    console.error('Errore invio componente al CAD:', err);
-    toast.error('Impossibile inviare il componente al CAD');
+    console.error('Error sending component to CAD:', err);
+    toast.error('Unable to send component to CAD: ' + (err instanceof Error ? err.message : 'Unknown error'));
   }
 }, [component, router]);
 
@@ -3594,7 +3614,7 @@ return (
     description={component?.description || ''}
     ogImage={`/api/og-image/component/${component?.id}?title=${encodeURIComponent(component?.name || '')}`}/>
     <Layout>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col rounded-xl h-full">
         {/* Header */}
         <motion.div 
           className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 md:px-6"
@@ -3645,7 +3665,7 @@ return (
             </div>
             
             {component && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-2">
                 <motion.button
                   onClick={handleSendToCAD}
                   className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 flex items-center shadow-sm"
@@ -3741,8 +3761,8 @@ return (
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.4 }}
             >
-              <div className="flex px-4 md:px-6 overflow-x-auto justify-between">
-                  <div className="flex overflow-x-auto">
+              <div className="flex flex-col-2 px-4 md:px-6 overflow-x-auto justify-between">
+                  <div className=" overflow-x-auto">
                     <motion.button
                       className={cn(
                         "px-4 py-3 font-medium text-sm focus:outline-none relative whitespace-nowrap",

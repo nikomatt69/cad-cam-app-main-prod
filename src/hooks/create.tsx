@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Layout from 'src/components/layout/Layout';
+import { DynamicLayout } from 'src/components/dynamic-imports';
 import { Save, ArrowLeft, Upload, Code, Info } from 'react-feather';
 import Loading from '@/src/components/ui/Loading';
 import MetaTags from '../components/layout/Metatags';
@@ -88,10 +88,10 @@ export default function CreateComponentPage() {
         title="COMPONENTS" 
      
       />
-      <Layout>
+      <DynamicLayout>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-b px-6 py-4">
+          <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-b px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <button
@@ -119,7 +119,7 @@ export default function CreateComponentPage() {
           </div>
           
           {/* Tabs */}
-          <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-b">
+          <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-b">
             <div className="flex px-6">
               <button
                 className={`px-4 py-3 font-medium text-sm focus:outline-none ${
@@ -168,7 +168,7 @@ export default function CreateComponentPage() {
             <form id="component-form" onSubmit={handleSubmit}>
               {activeTab === 'properties' && (
                 <div className="max-w-3xl mx-auto">
-                  <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow rounded-lg overflow-hidden">
+                  <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow rounded-lg overflow-hidden">
                     <div className="p-6">
                       <div className="mb-4">
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -221,7 +221,7 @@ export default function CreateComponentPage() {
               
               {activeTab === 'editor' && (
                 <div className="max-w-4xl mx-auto">
-                  <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow rounded-lg overflow-hidden">
+                  <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow rounded-lg overflow-hidden">
                     <div className="p-6">
                       <div className="mb-4">
                         <label htmlFor="data" className="block text-sm font-medium text-gray-700 mb-1">
@@ -269,7 +269,7 @@ export default function CreateComponentPage() {
               
               {activeTab === 'import' && (
                 <div className="max-w-3xl mx-auto">
-                  <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow rounded-lg overflow-hidden">
+                  <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow rounded-lg overflow-hidden">
                     <div className="p-6">
                       <div className="mb-6">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -294,7 +294,7 @@ export default function CreateComponentPage() {
                             <div className="flex text-sm text-gray-600">
                               <label
                                 htmlFor="file-upload"
-                                className="relative cursor-pointer bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                className="relative cursor-pointer bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
                               >
                                 <span>Upload a file</span>
                                 <input 
@@ -329,7 +329,7 @@ export default function CreateComponentPage() {
             </form>
           </div>
         </div>
-      </Layout>
+      </DynamicLayout>
     </>
   );
 }

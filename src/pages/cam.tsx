@@ -4,7 +4,6 @@ import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 
-import ToolpathGenerator from 'src/components/cam/ToolpathGenerator';
 import GCodeViewer from 'src/components/cam/GCodeViewer';
 import GCodeEditor from 'src/components/cam/GCodeEditor';
 import MachineControl from 'src/components/cam/MachineControl';
@@ -33,11 +32,10 @@ import {
   X
 } from 'react-feather';
 import EnhancedSidebar from '../components/cad/EnanchedSidebar';
-import ToolpathVisualizer from '../components/cam/ToolpathVisualizer2';
+
 import AIToolpathOptimizer from '../components/ai/AIToolpathOptimizer';
 import Loading from '../components/ui/Loading';
-import FanucPostProcessor from '../components/cam/postprocessor/FanucPostProcessor';
-import HeidenhainPostProcessor from '../components/cam/postprocessor/HeidenhainPostProcessor';
+
 import MetaTags from '../components/layout/Metatags';
 import OriginControls from '../components/cad/OriginControls';
 
@@ -45,10 +43,28 @@ import Link from 'next/link';
 
 import GenericPostProcessor from '../components/cam/postprocessor/GenericPostProcessor';
 import { isMobile } from 'react-device-detect';
-
+import dynamic from 'next/dynamic';
+import Image from 'next/image';
+import FixedCyclesUIRenderer from '../components/cam/FixedCyclesUIRenderer';
+import EnhancedToolpathVisualizer from '../components/cam/EnhancedToolpathVisualizer';
+import ToolpathVisualizer from 'src/components/cam/ToolpathVisualizer2';
 
 // Tipi di post-processor supportati
 type PostProcessorType = 'fanuc' | 'heidenhain' | 'siemens' | 'haas' | 'mazak' | 'okuma' | 'generic';
+export const DynamicToolpathGenerator = dynamic(() => import('src/components/cam/ToolpathGenerator'), {
+  ssr: false, // Heavy Three.js component
+  loading: () => <div className="w-full h-full bg-gray-100 dark:bg-gray-800 animate-pulse" />
+
+});
+export const DynamicToolpathVisualizer = dynamic(() => import('src/components/cam/ToolpathVisualizer2'), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-gray-100 dark:bg-gray-800 animate-pulse" />
+});
+
+export const DynamicPostProcessors = {
+  Fanuc: dynamic(() => import('src/components/cam/postprocessor/FanucPostProcessor'), { ssr: true }),
+  Heidenhain: dynamic(() => import('src/components/cam/postprocessor/HeidenhainPostProcessor'), { ssr: true })
+};
 
 export default function CAMPage() {
   const { data: session, status } = useSession();
@@ -169,11 +185,7 @@ export default function CAMPage() {
   
 
   
-  if (status === 'unauthenticated') {
-    router.push('/auth/signin');
-    return null;
-  }
- 
+  
 
   return (
     <div className="h-screen w-screen flex bg-gradient-to-b from-[#2A2A2A] to-[#303030] flex-col rounded-xl overflow-hidden">
@@ -185,7 +197,7 @@ export default function CAMPage() {
      
       <div className="flex flex-col rounded-xl h-full w-full">
         {/* Top toolbar */}
-        <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-b rounded-xl w-full px-4 py-2 flex items-center justify-between">
+        <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-b rounded-xl w-full px-4 py-2 flex items-center justify-between">
           <div className="flex rounded-xl w-max items-center">
             <button
               className="mr-2 p-2 rounded-md hover:bg-gray-100 focus:outline-none"
@@ -204,6 +216,7 @@ export default function CAMPage() {
         className="h-14 w-auto"
         src="/logo.png"
         alt="CAD/CAM FUN"
+       
       />
     </div>
   </Link>
@@ -353,7 +366,7 @@ export default function CAMPage() {
             {activeTab === 'post-processor' && (
               <div className="h-full rounded-xl overflow-y-auto">
                 {/* Selettore del tipo di post-processor */}
-                <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-b p-4 flex items-center justify-between">
+                <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-b p-4 flex items-center justify-between">
                   <h2 className="text-lg font-medium text-gray-900">Post-Processor</h2>
                   <div className="flex items-center space-x-2">
                     <label htmlFor="post-processor-type" className="text-sm font-medium text-gray-700">
@@ -379,14 +392,14 @@ export default function CAMPage() {
                 {/* Componente post-processor in base alla selezione */}
                 <div className="p-4 rounded-b-xl bg-gray-50">
                   {selectedPostProcessor === 'fanuc' && (
-                    <FanucPostProcessor 
+                    <DynamicPostProcessors.Fanuc 
                       initialGcode={gcode}
                       onProcessedGcode={handleProcessedGcode}
                     />
                   )}
                   
                   {selectedPostProcessor === 'heidenhain' && (
-                    <HeidenhainPostProcessor 
+                    <DynamicPostProcessors.Heidenhain 
                       initialGcode={gcode}
                       onProcessedGcode={handleProcessedGcode}
                     />
@@ -408,7 +421,7 @@ export default function CAMPage() {
           <div 
             className={`${
               rightSidebarOpen ? 'w-80' : 'w-0'
-            } flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-xl border-2 border-l ml-0.5 transition-all duration-300 ease-in-out overflow-y-auto`}
+            } flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-xl border-2 border-l ml-0.5 transition-all duration-300 ease-in-out overflow-y-auto`}
           >
             {/* Tabs for right sidebar */}
             <div className="px-2 pt-1 pb-1 border-b">
@@ -451,7 +464,7 @@ export default function CAMPage() {
 
             <div className="p-4 space-y-6">
               {activeRightPanel === 'generator' && (
-                <ToolpathGenerator onGCodeGenerated={setGcode} />
+                <DynamicToolpathGenerator onGCodeGenerated={setGcode} />
               )}
               
               {activeRightPanel === 'cycles' && (
@@ -459,7 +472,8 @@ export default function CAMPage() {
                controllerType={selectedPostProcessor as 'fanuc' | 'heidenhain'}  
                   onCycleCodeGenerated={handleCycleCodeGenerated} 
                 />
-                
+                <FixedCyclesUIRenderer gCodeLine={gcode} />
+                <AIToolpathOptimizer  />
                 
                 </>
               )}
@@ -472,7 +486,7 @@ export default function CAMPage() {
           
           {/* Toggle right sidebar button */}
           <button
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white p-2 rounded-l-md shadow-md"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white p-2 rounded-l-md shadow-md"
             onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
           >
             {rightSidebarOpen ? <ChevronRight size={20} className="text-gray-600" /> : <ChevronLeft size={20} className="text-gray-600" />}

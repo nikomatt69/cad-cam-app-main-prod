@@ -41,25 +41,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Handle GET request to list all toolpaths for a drawing
   if (req.method === 'GET') {
     try {
-      const toolpaths = await prisma.toolPath.findMany({
+      const toolpaths = await prisma.toolpath.findMany({
         where: {
           drawingId
         },
         include: {
-          material: {
+          Material: {
             select: {
               id: true,
               name: true
             }
           },
-          machineConfig: {
+          MachineConfig: {
             select: {
               id: true,
               name: true,
               type: true
             }
           },
-          tool: {
+          Tool: {
             select: {
               id: true,
               name: true,
@@ -103,7 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ message: 'Toolpath data is required' });
       }
       
-      const toolpath = await prisma.toolPath.create({
+      const toolpath = await prisma.toolpath.create({
         data: {
           name,
           description,
@@ -112,7 +112,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           drawingId,
           materialId,
           machineConfigId,
-          toolId
+          toolId,
+          projectId: drawing.projectId,
+          createdBy: userId
         }
       });
       

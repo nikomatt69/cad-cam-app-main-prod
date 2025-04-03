@@ -9,6 +9,8 @@ export { default as AIAssistantButton } from './AIAssistantButton';
 export { default as AIHub } from './AIHub';
 export { default as TextToCADPanel } from './TextToCADPanel';
 export { default as AISettingsPanel } from './AISettingsPanel';
+export { default as MCPInsightsPanel } from './MCPSettingsPage';
+export { default as OpenAISetupPanel } from './OpenAISetupPanel';
 
 
 // Componenti di utilità

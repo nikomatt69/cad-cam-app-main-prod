@@ -58,7 +58,7 @@ export class AICore {
     model = this.config.defaultModel as AIModelType,
     systemPrompt,
     temperature = 0.7,
-    maxTokens = 4000,
+    maxTokens = 8000,
     parseResponse,
     onProgress,
     retryCount = 0
@@ -271,8 +271,8 @@ export class AICore {
 // Export a singleton instance
 export const aiCore = new AICore({
   allowBrowser: true,
-  defaultModel: 'claude-3-5-sonnet-20240229',
-  maxTokens: 4000,
+  defaultModel: 'claude-3-7-sonnet-20250219',
+  maxTokens: 6000,
   temperature: 0.7,
   cacheEnabled: true,
   analyticsEnabled: true

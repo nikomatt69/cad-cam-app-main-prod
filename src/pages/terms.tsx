@@ -2,7 +2,7 @@
 
 import Head from 'next/head';
 import Link from 'next/link';
-import Layout from 'src/components/layout/Layout';
+import { DynamicLayout } from 'src/components/dynamic-imports';
 import MetaTags from '../components/layout/Metatags';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -20,7 +20,7 @@ export default function TermsPage() {
         title="CAM/CAM FUN TERMS" 
      
       />
-      <Layout>
+      <DynamicLayout>
         <div className="py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto">
             <h1 className="text-3xl font-extrabold text-gray-900 mb-6">Terms of Service</h1>
@@ -88,7 +88,7 @@ export default function TermsPage() {
             </div>
           </div>
         </div>
-      </Layout>
+      </DynamicLayout>
     </>
   );
 }

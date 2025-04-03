@@ -106,6 +106,12 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({ isOpen, setIsOpen }) 
             current: router.pathname.startsWith('/library') 
           },
           { 
+            name: 'Toolpaths', 
+            href: '/toolpaths', 
+            icon: <Tool size={16} />, 
+            current: router.pathname.startsWith('/toolpaths') 
+          },
+          { 
             name: 'Components', 
             href: '/components', 
             icon: <Package size={16} />, 
@@ -137,6 +143,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({ isOpen, setIsOpen }) 
         icon: <Users size={20} />, 
         current: router.pathname.startsWith('/organizations')
       },
+      
       { 
         name: 'AI', 
         href: '/ai', 
@@ -162,6 +169,12 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({ isOpen, setIsOpen }) 
             current: router.pathname === '/analytics/history' 
           }
         ]
+      },
+      { 
+        name: 'Docs', 
+        href: 'https://docs.cadcamfun.xyz', 
+        icon: <BookOpen size={20} />, 
+        current: router.pathname.startsWith('https://docs.cadcamfun.xyz') 
       },
       {
         name: 'Settings',
@@ -372,10 +385,10 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({ isOpen, setIsOpen }) 
                     <img
                       src={profileImage || session?.user?.image || ''}
                       alt="Profile"
-                      className="h-10 w-10 object-cover"
+                      className="h-10 w-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="h-full w-full flex items-center justify-center bg-blue-100 dark:bg-blue-900">
+                    <div className="h-full w-full flex rounded-full items-center justify-center bg-blue-100 dark:bg-blue-900">
                       <span className="text-blue-800 dark:text-blue-300 font-medium text-lg">
                         {session?.user?.name?.charAt(0) || 'U'}
                       </span>

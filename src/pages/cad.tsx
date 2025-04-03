@@ -277,12 +277,12 @@ export default function CADPage() {
     );
   }
 
- 
-
   if (status === 'unauthenticated') {
     router.push('/auth/signin');
     return null;
   }
+
+  
  
   
   return (
@@ -358,7 +358,7 @@ export default function CADPage() {
              
                <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Strumenti AI</h1>
-      <TextToCADPanel />
+      <AIDesignAssistant />
     </div>
                </div>
               

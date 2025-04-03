@@ -59,4 +59,4 @@ export async function handleComponentLibrary(req: NextApiRequest, res: NextApiRe
       return handleApiError(error, res);
     }
   }
-  export { handleComponentById as default } from 'src/pages/api/components/[id]';
+  export default handleComponentLibrary;

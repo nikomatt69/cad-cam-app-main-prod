@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, FC } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useCADStore } from 'src/store/cadStore';
@@ -18,8 +18,11 @@ import {
 } from '@/src/components/cam/toolpathUtils/toolpathUtils';
 import { ViewCube as EnhancedViewCube } from '@/src/components/cam/toolpath-viewer/ViewCube';
 import { createToolFromLibrary, animateToolRotation, addCuttingGlow, applyRealisticMaterial } from '@/src/lib/toolVisualization';
+import { useFixedCyclesProcessor } from 'src/hooks/useFixedCyclesProcessor';
+import { FixedCycleType, FixedCycleParams } from 'src/components/cam/toolpathUtils/fixedCycles/fixedCyclesParser';
+import { FixedCycleInfoPanel } from 'src/components/cam/FixedCyclesUIRenderer';
 
-export interface ToolpathVisualizerProps {
+interface ToolpathVisualizerProps {
   width: string;
   height: string;
   gcode: string;
@@ -181,7 +184,12 @@ const ViewCube: React.FC<ViewCubeProps> = ({ currentView, onViewChange, size = 7
   );
 };
 
-const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
+interface ToolpathVisualizerState {
+  lastView: string;
+  lastStatsUpdate: number;
+}
+
+const ToolpathVisualizer: FC<ToolpathVisualizerProps> = ({
   width,
   height,
   gcode,
@@ -191,7 +199,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   onSimulationComplete,
   onSimulationProgress,
   onToolChange
-}) => {
+}: ToolpathVisualizerProps) => {
   // Refs for Three.js elements
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -208,7 +216,9 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const toolpathPointsRef = useRef<ToolpathPoint[]>([]);
   const animateToolRef = useRef<(() => void) | null>(null);
   const [internalSelectedTool, setInternalSelectedTool] = useState<string | null>(selectedTool);
-  
+  const [currentGCode, setCurrentGCode] = useState<string[]>([]);
+  const [showFixedCyclesInfo, setShowFixedCyclesInfo] = useState<boolean>(true);
+  const [selectedCycleIndex, setSelectedCycleIndex] = useState<number>(-1);
   // State for UI and visualization
   const [currentView, setCurrentView] = useState<string>('isometric');
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
@@ -227,7 +237,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<'info' | 'settings' | 'tools'>('info');
   const [highlightMode, setHighlightMode] = useState<'none' | 'rapid' | 'cut' | 'depth'>('none');
-
+  const [showCycleDetails, setShowCycleDetails] = useState<boolean>(false);
   const [currentLine, setCurrentLine] = useState(0);
   const [statistics, setStatistics] = useState<Statistics>({
     triangleCount: 0,
@@ -245,29 +255,212 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   const simulationSpeedRef = useRef(1);
   // Get workpiece data from CAD store
   const { workpiece, viewMode: cadViewMode, gridVisible, axisVisible } = useCADStore();
-  
+  const [showPointLabels, setShowPointLabels] = useState(false);
   // Use optimization hooks
   const sceneRefForHooks = sceneRef as React.RefObject<THREE.Scene>;
   const cameraRefForHooks = cameraRef as React.RefObject<THREE.Camera>;
-  
-  const { optimizeScene, 
-   
-    memoryWarning,
-    disposeUnusedResources  } = useThreePerformanceVisualizer(sceneRefForHooks);
-    const {
-      applyLOD,
-      statistics: lodStatistics,
-      temporarilyRestoreFullDetail
-    } = useLOD(sceneRefForHooks, cameraRefForHooks, {
-      highDetailThreshold: 150,          // Distanza per alta qualità
-      mediumDetailThreshold: 500,        // Distanza per qualità media
-      lowDetailReduction: 0.2,           // Riduzione geometria per oggetti lontani
-      mediumDetailReduction: 0.5,        // Riduzione geometria per oggetti a media distanza
-     // Aggiorna ogni frame se in simulazione, altrimenti ogni 100ms
-      optimizeTextures: true,            // Ottimizza texture per oggetti distanti
-          // Libera memoria automaticamente
-           // Più ampio del frustum normale per evitare popping
+  const { 
+    processedToolpath, 
+    detectedCycles, 
+    isProcessing: isProcessingCycles 
+  } = useFixedCyclesProcessor({
+    gcode: currentGCode,
+    enabled: true,
+    onToolpathUpdate: useCallback((toolpath: ToolpathPoint[]) => {
+      // Aggiorna solo se il numero di punti è effettivamente cambiato
+      if (toolpath.length !== toolpathPointsRef.current.length) {
+        toolpathPointsRef.current = toolpath;
+        console.log('Toolpath aggiornato con cicli fissi:', toolpath.length, 'punti');
+      }
+    }, []) // Empty dependency array since we're using ref
+  });
+
+  const lastViewRef = useRef<string>('');
+  const lastStatsUpdateRef = useRef<number>(Date.now());
+
+  // Sposta l'effetto che gestisce il rendering del toolpath fuori dal componente principale
+  const renderToolpath = useCallback(() => {
+    if (!toolpathRef.current || !sceneRef.current || !rendererRef.current || !cameraRef.current) return;
+
+    // Pulizia di oggetti esistenti
+    while (toolpathRef.current.children.length > 0) {
+      toolpathRef.current.remove(toolpathRef.current.children[0]);
+    }
+    
+    // Utilizza processedToolpath se disponibile, altrimenti utilizza il percorso originale
+    const pointsToRender = processedToolpath.length > 0 ? processedToolpath : toolpathPointsRef.current;
+    
+    if (pointsToRender.length > 0) {
+      let lastPoint = null;
+      
+      // Renderizza il percorso
+      for (let i = 0; i < pointsToRender.length; i++) {
+        const point = pointsToRender[i];
+        
+        if (lastPoint) {
+          // Scegli il colore in base al tipo di movimento
+          const color = point.type === 'rapid' ? 0xff0000 : 
+                       point.type === 'dwell' ? 0x0000ff :
+                       0x00ff00;
+          
+          // Crea una linea tra i punti
+          const material = new THREE.LineBasicMaterial({ color, linewidth: 2 });
+          const geometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(lastPoint.x, lastPoint.y, lastPoint.z),
+            new THREE.Vector3(point.x, point.y, point.z)
+          ]);
+          
+          const line = new THREE.Line(geometry, material);
+          toolpathRef.current?.add(line);
+          
+          // Per i punti di sosta (dwell), aggiungi un indicatore visivo
+          if (point.type === 'dwell') {
+            const sphereGeom = new THREE.SphereGeometry(0.5);
+            const sphereMat = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+            const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+            sphere.position.set(point.x, point.y, point.z);
+            toolpathRef.current?.add(sphere);
+          }
+        }
+        
+        lastPoint = point;
+      }
+    }
+    
+    // Aggiorna la scena solo una volta dopo aver completato il rendering
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+  }, [processedToolpath]);
+
+  // Usa un effetto separato per il rendering del toolpath
+  useEffect(() => {
+    if (processedToolpath.length > 0) {
+      renderToolpath();
+    }
+  }, [processedToolpath, renderToolpath]);
+
+  const renderFixedCycleVisualization = (cycle: any) => {
+    if (!sceneRef.current || !cycle || !cycle.params) return;
+    
+    // Crea un nuovo gruppo per la visualizzazione
+    const cycleGroup = new THREE.Group();
+    cycleGroup.name = 'fixedCycleVisualization';
+    
+    // Ottieni i parametri del ciclo
+    const { x = 0, y = 0, z = 0, r = 0 } = cycle.params;
+    
+    // Aggiungi cerchio per indicare l'area del ciclo
+    const circleGeom = new THREE.CircleGeometry(5, 32);
+    const circleMat = new THREE.MeshBasicMaterial({ 
+      color: 0x4287f5,
+      opacity: 0.3,
+      transparent: true,
+      side: THREE.DoubleSide
     });
+    const circle = new THREE.Mesh(circleGeom, circleMat);
+    circle.position.set(x, y, r);
+    circle.rotation.x = -Math.PI / 2; // Ruota per renderlo orizzontale
+    cycleGroup.add(circle);
+    
+    // Aggiungi linea verticale per indicare la profondità
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x4287f5 });
+    const lineGeom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, y, r),
+      new THREE.Vector3(x, y, z)
+    ]);
+    const line = new THREE.Line(lineGeom, lineMat);
+    cycleGroup.add(line);
+    
+    // Aggiungi sfera alla profondità finale
+    const sphereGeom = new THREE.SphereGeometry(1);
+    const sphereMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+    sphere.position.set(x, y, z);
+    cycleGroup.add(sphere);
+    
+    // Aggiungi testo per il tipo di ciclo
+    // Nota: In Three.js, il testo richiede risorse aggiuntive, per semplicità
+    // qui usiamo solo geometrie primitive
+    
+    // Rimuovi visualizzazioni precedenti
+    const previousVis = sceneRef.current.getObjectByName('fixedCycleVisualization');
+    if (previousVis) sceneRef.current.remove(previousVis);
+    
+    // Aggiungi il nuovo gruppo alla scena
+    sceneRef.current.add(cycleGroup);
+    
+    // Aggiorna la visualizzazione
+    if (rendererRef.current && cameraRef.current) {
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedCycleIndex >= 0 && detectedCycles[selectedCycleIndex]) {
+      renderFixedCycleVisualization(detectedCycles[selectedCycleIndex]);
+    } else {
+      // Rimuovi la visualizzazione se nessun ciclo è selezionato
+      if (sceneRef.current) {
+        const previousVis = sceneRef.current.getObjectByName('fixedCycleVisualization');
+        if (previousVis) sceneRef.current.remove(previousVis);
+        
+        if (rendererRef.current && cameraRef.current) {
+          rendererRef.current.render(sceneRef.current, cameraRef.current);
+        }
+      }
+    }
+  }, [selectedCycleIndex, detectedCycles]);
+
+
+  const focusCameraOnPosition = useCallback((position: {x: number, y: number, z: number}) => {
+    if (!cameraRef.current || !controlsRef.current) return;
+    
+    if (controlsRef.current.target) {
+      controlsRef.current.target.set(position.x, position.y, position.z);
+      
+      const cameraDistance = 50;
+      const cameraPosition = new THREE.Vector3(
+        position.x + cameraDistance,
+        position.y + cameraDistance,
+        position.z + cameraDistance
+      );
+      cameraRef.current.position.copy(cameraPosition);
+      
+      controlsRef.current.update();
+      
+      if (rendererRef.current && sceneRef.current) {
+        rendererRef.current.render(sceneRef.current, cameraRef.current);
+      }
+    }
+  }, []);
+  
+ 
+    const { optimizeScene, 
+     
+      memoryWarning,
+      disposeUnusedResources  } = useThreePerformanceVisualizer(sceneRefForHooks);
+      const {
+        applyLOD,
+        statistics: lodStatistics,
+        temporarilyRestoreFullDetail
+      } = useLOD(sceneRefForHooks, cameraRefForHooks, {
+        highDetailThreshold: 150,          // Distanza per alta qualità
+        mediumDetailThreshold: 500,        // Distanza per qualità media
+        lowDetailReduction: 0.2,           // Riduzione geometria per oggetti lontani
+        mediumDetailReduction: 0.5,        // Riduzione geometria per oggetti a media distanza
+       // Aggiorna ogni frame se in simulazione, altrimenti ogni 100ms
+        optimizeTextures: true,            // Ottimizza texture per oggetti distanti
+            // Libera memoria automaticamente
+             // Più ampio del frustum normale per evitare popping
+      });
+
+    useEffect(() => {
+      if (gcode) {
+        // Dividi il G-code in righe
+        const lines = gcode.split('\n').map(line => line.trim());
+        setCurrentGCode(lines);
+      }
+    }, [gcode]);
+    
   useEffect(() => {
     if (memoryWarning) {
       console.warn('Alta memoria utilizzata: considera di eseguire disposeUnusedResources()');
@@ -397,15 +590,17 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     
     // Animation loop
     const animate = () => {
+      if (!isPlaying && !controlsRef.current?.enabled) {
+        return; // Stop animation if not playing and controls are not being used
+      }
+      
       animationFrameRef.current = requestAnimationFrame(animate);
       
       if (controlsRef.current) {
         controlsRef.current.update();
       }
-      if (isPlaying && animateToolRef.current) {
-        animateToolRef.current();
-      }
-      // Update tool position during simulation
+      
+      // Only update tool if playing and necessary
       if (isPlaying && toolpathPointsRef.current.length > 0 && toolRef.current) {
         updateToolPosition();
       }
@@ -413,26 +608,34 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
       // Render with active camera
       let activeCamera: THREE.Camera | null = cameraRef.current;
       
-      switch (currentView) {
-        case 'top':
-          activeCamera = topCameraRef.current;
-          break;
-        case 'front':
-          activeCamera = frontCameraRef.current;
-          break;
-        case 'right':
-          activeCamera = rightCameraRef.current;
-          break;
-        default:
-          activeCamera = cameraRef.current;
+      // Only update camera if view has changed
+      if (lastViewRef.current !== currentView) {
+        switch (currentView) {
+          case 'top':
+            activeCamera = topCameraRef.current;
+            break;
+          case 'front':
+            activeCamera = frontCameraRef.current;
+            break;
+          case 'right':
+            activeCamera = rightCameraRef.current;
+            break;
+          default:
+            activeCamera = cameraRef.current;
+        }
+        lastViewRef.current = currentView;
       }
       
+      // Only render if necessary
       if (rendererRef.current && activeCamera && sceneRef.current) {
         rendererRef.current.render(sceneRef.current, activeCamera);
       }
       
-      // Update statistics
-      updateStatistics();
+      // Update statistics less frequently
+      if (Date.now() - lastStatsUpdateRef.current > 1000) { // Update every second
+        updateStatistics();
+        lastStatsUpdateRef.current = Date.now();
+      }
     };
     
     animate();
@@ -482,11 +685,30 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
       
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
       
-      if (rendererRef.current && containerRef.current) {
-        containerRef.current.removeChild(rendererRef.current.domElement);
+      if (rendererRef.current) {
         rendererRef.current.dispose();
+        rendererRef.current.forceContextLoss();
+        if (rendererRef.current.domElement.parentNode) {
+          rendererRef.current.domElement.parentNode.removeChild(rendererRef.current.domElement);
+        }
+        rendererRef.current = null;
+      }
+
+      // Clear all refs
+      sceneRef.current = null;
+      cameraRef.current = null;
+      controlsRef.current = null;
+      toolRef.current = null;
+      topCameraRef.current = null;
+      frontCameraRef.current = null;
+      rightCameraRef.current = null;
+      
+      // Clear memory
+      if (typeof window !== 'undefined' && window.gc) {
+        window.gc();
       }
     };
   }, [optimizeScene, gridVisible, axisVisible, viewMode]);
@@ -561,7 +783,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     let objectCount = 0;
     
     // Count triangles and objects
-    sceneRef.current.traverse((object) => {
+    sceneRef.current?.traverse((object) => {
       objectCount++;
       
       if (object instanceof THREE.Mesh) {
@@ -1416,29 +1638,123 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   }, [gcode]);
 
   // Effetto per gestire l'animazione del percorso utensile
+  
+
   useEffect(() => {
     if (!isSimulating || !toolRef.current || toolpathPointsRef.current.length <= 1) return;
     
-    let lastTimestamp = 0;
-    const animateToolPath = (timestamp: number) => {
-      if (!lastTimestamp) lastTimestamp = timestamp;
+    let startTime = 0;
+    const animationDuration = (point: ToolpathPoint) => {
+      // G0 (rapid) movements remain fast - 1 second
+      if (point.type === 'G0' || point.type === 'rapid' || point.isRapid) {
+        return 5000;
+      }
+      if( THREE.Points ){return 5000}
+      // G1 (cutting) movements are extremely slow - 10 seconds
+      else if (point.type === 'G1' || point.type === 'cutting') {
+        return 10000;
+      }
       
-      const deltaTime = timestamp - lastTimestamp;
-      if (deltaTime > 360 / (0.6  * simulationSpeedRef.current)) {
-        if (currentLine < toolpathPointsRef.current.length - 1) {
-          const currentPoint = toolpathPointsRef.current[currentLine];
-          const nextPoint = toolpathPointsRef.current[currentLine + 1];
-          
-          if (toolRef.current) {
-            toolRef.current.position.set(currentPoint.x, currentPoint.y, currentPoint.z);
+      // Default duration for other movements
+      return 5000;
+    };
+    
+    const animateToolPath = (timestamp: number) => {
+      if (!toolpathPointsRef.current || currentLine >= toolpathPointsRef.current.length - 1) {
+        // We've reached the end of the toolpath - stop the simulation
+        
+        // Reset tool to starting position
+        if (toolRef.current && toolpathPointsRef.current && toolpathPointsRef.current.length > 0) {
+          const firstPoint = toolpathPointsRef.current[0];
+          toolRef.current.position.set(firstPoint.x, firstPoint.y, firstPoint.z);
+        }
+        
+        // Reset current line index
+        setCurrentLine(0);
+        
+        // Call the completion callback
+        if (onSimulationComplete) {
+          onSimulationComplete();
+        }
+        return;
+      }
+      
+      // Ensure we have valid points to work with
+      const startPoint = toolpathPointsRef.current[currentLine];
+      const endPoint = toolpathPointsRef.current[currentLine + 1];
+      
+      if (!startPoint || !endPoint) return;
+      
+      if (!startTime) startTime = timestamp;
+      
+      // Determine animation duration based on the move type
+      const moveDuration = animationDuration(startPoint);
+      const elapsedTime = timestamp - startTime;
+      const progress = Math.min(elapsedTime / moveDuration, 1);
+      
+      if (toolRef.current) {
+        // Interpolate position between start and end points
+        toolRef.current.position.set(
+          startPoint.x + (endPoint.x - startPoint.x) * progress,
+          startPoint.y + (endPoint.y - startPoint.y) * progress,
+          startPoint.z + (endPoint.z - startPoint.z) * progress
+        );
+        
+        // Change tool color or add effect based on movement type
+        if (startPoint.type === 'G1' || startPoint.type === 'cutting') {
+          // Add intense visual feedback for cutting operations
+          if (toolRef.current.children.length > 0) {
+            const cuttingPart = toolRef.current.children[0];
+            if (cuttingPart && cuttingPart instanceof THREE.Mesh) {
+              const material = cuttingPart.material as THREE.MeshStandardMaterial;
+              if (material) {
+                material.emissive = new THREE.Color(0x00ff00);
+                material.emissiveIntensity = 0.8;
+              }
+            }
           }
-          
-          setCurrentLine(prev => prev + 1);
-          lastTimestamp = timestamp;
+        } else {
+          // Reset visual feedback for rapid movements
+          if (toolRef.current.children.length > 0) {
+            const cuttingPart = toolRef.current.children[0];
+            if (cuttingPart && cuttingPart instanceof THREE.Mesh) {
+              const material = cuttingPart.material as THREE.MeshStandardMaterial;
+              if (material) {
+                material.emissive = new THREE.Color(0x000000);
+                material.emissiveIntensity = 0;
+              }
+            }
+          }
         }
       }
       
-      if (currentLine < toolpathPointsRef.current.length - 1 && isSimulating) {
+      // Move to next line segment when current animation completes
+      if (progress === 1) {
+        if (currentLine < toolpathPointsRef.current.length - 2) {
+          setCurrentLine(prev => prev + 1);
+          startTime = timestamp;
+        } else {
+          // We've reached the end of the toolpath - stop the simulation
+          
+          // Reset tool to starting position
+          if (toolRef.current && toolpathPointsRef.current && toolpathPointsRef.current.length > 0) {
+            const firstPoint = toolpathPointsRef.current[0];
+            toolRef.current.position.set(firstPoint.x, firstPoint.y, firstPoint.z);
+          }
+          
+          // Reset current line index
+          setCurrentLine(0);
+          
+          // Call the completion callback
+          if (onSimulationComplete) {
+            onSimulationComplete();
+          }
+          return;
+        }
+      }
+      
+      if (isSimulating) {
+        applyLOD(); // Apply level of detail optimizations
         requestAnimationFrame(animateToolPath);
       }
     };
@@ -1448,9 +1764,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [isSimulating, currentLine]);
-
- 
+  }, [isSimulating, currentLine, onSimulationComplete]);
 
   // Create the enhanced toolpath visualization
   const createEnhancedToolpathVisualization = (
@@ -2142,7 +2456,7 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
         workpiece.width || 100,
         workpiece.height || 100,
         workpiece.depth || 20
-      );
+      );    
       
       // Create material
       const material = new THREE.MeshStandardMaterial({
@@ -2389,6 +2703,155 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
   // Get current point
   const currentPoint = getCurrentPointInfo();
   
+  // Funzioni specifiche per visualizzare tutti i toolpath points
+  
+  // Visualizza tutti i punti nel percorso
+  const showAllToolpathPoints = useCallback(() => {
+    if (!sceneRef.current || toolpathPointsRef.current.length === 0) return;
+    
+    // Rimuovi eventuali marker esistenti
+    const existingMarkers = sceneRef.current.getObjectByName('AllPointsMarkers');
+    if (existingMarkers) {
+      sceneRef.current.remove(existingMarkers);
+    }
+    
+    // Crea un nuovo gruppo per contenere tutti i marker dei punti
+    const allPointsGroup = new THREE.Group();
+    allPointsGroup.name = 'AllPointsMarkers';
+    
+    // Aggiungi un marker per ogni punto
+    toolpathPointsRef.current.forEach((point, index) => {
+      // Crea una sfera per rappresentare il punto
+      const markerGeometry = new THREE.SphereGeometry(0.7, 8, 8);
+      
+      // Colore basato sul tipo di punto
+      let markerColor: number;
+      if (point.isRapid || point.type === 'G0') {
+        markerColor = 0xFF0000; // Rosso per movimenti rapidi
+      } else if (point.isArc) {
+        markerColor = 0x0000FF; // Blu per archi
+      } else if (point.isFixedCycle) {
+        markerColor = 0xFF00FF; // Magenta per cicli fissi
+      } else if (point.isShape) {
+        markerColor = 0x00FFFF; // Ciano per forme
+      } else {
+        markerColor = 0x00FF00; // Verde per tagli normali
+      }
+      
+      const markerMaterial = new THREE.MeshBasicMaterial({
+        color: markerColor,
+        transparent: true,
+        opacity: 0.8
+      });
+      
+      const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+      marker.position.set(point.x, point.y, point.z);
+      
+      // Aggiungi metadati al marker per identificazione
+      marker.userData = {
+        pointIndex: index,
+        pointType: point.type || 'unknown',
+        isRapid: point.isRapid,
+        isArc: point.isArc,
+        isFixedCycle: point.isFixedCycle,
+        isShape: point.isShape,
+        coordinates: { x: point.x, y: point.y, z: point.z },
+        feedrate: point.feedrate
+      };
+      
+      // Aggiungi etichetta con il numero del punto
+      if (showPointLabels) {
+        addPointLabel(marker, index, point);
+      }
+      
+      allPointsGroup.add(marker);
+    });
+    
+    // Aggiungi il gruppo alla scena
+    sceneRef.current.add(allPointsGroup);
+    
+    // Aggiorna la visualizzazione
+    if (rendererRef.current && cameraRef.current) {
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
+    }
+  }, [showPointLabels]);
+  
+  // Stato per mostrare/nascondere le etichette dei punti
+
+  
+  // Aggiunge un'etichetta a un punto
+  const addPointLabel = (marker: THREE.Mesh, index: number, point: ToolpathPoint) => {
+    // Crea un canvas per l'etichetta
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    
+    // Imposta dimensioni e stile
+    canvas.width = 64;
+    canvas.height = 32;
+    context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.font = '24px Arial';
+    context.fillStyle = 'white';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(index.toString(), canvas.width / 2, canvas.height / 2);
+    
+    // Crea texture e sprite
+    const texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+    
+    const spriteMaterial = new THREE.SpriteMaterial({ 
+      map: texture,
+      transparent: true
+    });
+    
+    const sprite = new THREE.Sprite(spriteMaterial);
+    sprite.scale.set(5, 2.5, 1);
+    sprite.position.set(0, 3, 0); // Posiziona sopra il marker
+    
+    // Aggiungi lo sprite al marker
+    marker.add(sprite);
+  };
+  
+  // Toggle per mostrare/nascondere tutti i punti
+  const [showAllPoints, setShowAllPoints] = useState(false);
+  
+  // Effetto per gestire la visualizzazione di tutti i punti
+  useEffect(() => {
+    if (showAllPoints) {
+      showAllToolpathPoints();
+    } else {
+      // Rimuovi i marker quando non devono essere visualizzati
+      if (sceneRef.current) {
+        const markers = sceneRef.current.getObjectByName('AllPointsMarkers');
+        if (markers) {
+          sceneRef.current.remove(markers);
+        }
+      }
+    }
+  }, [showAllPoints, showAllToolpathPoints, toolpathPointsRef.current, showPointLabels]);
+  
+  // Seleziona un punto specifico per l'analisi
+  const [selectedPointIndex, setSelectedPointIndex] = useState<number>(-1);
+  
+  // Focus su un punto specifico
+  const focusOnPoint = useCallback((index: number) => {
+    if (index < 0 || index >= toolpathPointsRef.current.length || !toolpathPointsRef.current[index]) return;
+    
+    setSelectedPointIndex(index);
+    
+    const point = toolpathPointsRef.current[index];
+    focusCameraOnPosition({
+      x: point.x,
+      y: point.y,
+      z: point.z
+    });
+    
+    // Mostra informazioni sul punto
+    console.log(`Point ${index}:`, point);
+  }, [focusCameraOnPosition]);
+
   return (
     <div 
       className="relative w-full h-full bg-gray-900 overflow-hidden"
@@ -2590,6 +3053,91 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
               <Layers size={18} />
             </button>
             
+            {/* Button to show all points */}
+            <button 
+              className={`p-1.5 rounded-md focus:outline-none ${
+                showAllPoints ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'
+              }`}
+              onClick={() => setShowAllPoints(!showAllPoints)}
+              title={showAllPoints ? "Hide All Points" : "Show All Points"}
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="18" 
+                height="18" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <circle cx="8" cy="8" r="3"></circle>
+                <circle cx="16" cy="16" r="3"></circle>
+                <line x1="3" y1="3" x2="21" y2="21"></line>
+              </svg>
+            </button>
+  
+            {/* Only show this when all points are visible */}
+            {showAllPoints && (
+              <button 
+                className={`p-1.5 rounded-md focus:outline-none ${
+                  showPointLabels ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'
+                }`}
+                onClick={() => setShowPointLabels(!showPointLabels)}
+                title={showPointLabels ? "Hide Point Labels" : "Show Point Labels"}
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="18" 
+                  height="18" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <text x="8" y="15" style={{ font: '9px sans-serif', fill: 'currentColor' }}>123</text>
+                </svg>
+              </button>
+            )}
+  
+  <button 
+    className={`px-3 py-1 rounded text-sm ${
+      showFixedCyclesInfo ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'
+    }`}
+    onClick={() => setShowFixedCyclesInfo(!showFixedCyclesInfo)}
+    title={showFixedCyclesInfo ? 'Nascondi pannello cicli fissi' : 'Mostra pannello cicli fissi'}
+  >
+    Cicli Fissi
+  </button>
+  
+  <button 
+    className="px-3 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300"
+    onClick={() => {
+      // Resetta la selezione e la vista
+      setSelectedCycleIndex(-1);
+      
+      // Ripristina la vista della camera
+      if (controlsRef.current) {
+        controlsRef.current.reset();
+      }
+    }}
+    title="Reimposta vista"
+  >
+    Reset Vista
+  </button>
+  <button 
+  className="ml-2 px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
+  onClick={() => {
+    setSelectedCycleIndex(0);
+    setShowCycleDetails(true);
+  }}
+>
+  Dettagli
+</button>
             <div className="h-5 border-l border-gray-600 mx-1" />
             
             {/* Utility buttons */}
@@ -2763,6 +3311,33 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
               </>
             )}
           </div>
+
+          {/* Solo se è stato selezionato un punto */}
+          {selectedPointIndex >= 0 && selectedPointIndex < toolpathPointsRef.current.length && (
+            <div className="mt-4 border-t border-gray-600 pt-2">
+              <div className="font-medium mb-1">Selected Point #{selectedPointIndex}</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <div className="text-gray-400">X:</div>
+                <div className="font-mono">{toolpathPointsRef.current[selectedPointIndex].x.toFixed(3)}</div>
+                
+                <div className="text-gray-400">Y:</div>
+                <div className="font-mono">{toolpathPointsRef.current[selectedPointIndex].y.toFixed(3)}</div>
+                
+                <div className="text-gray-400">Z:</div>
+                <div className="font-mono">{toolpathPointsRef.current[selectedPointIndex].z.toFixed(3)}</div>
+                
+                <div className="text-gray-400">Type:</div>
+                <div className="font-mono">{toolpathPointsRef.current[selectedPointIndex].type || 'N/A'}</div>
+                
+                {toolpathPointsRef.current[selectedPointIndex].feedrate && (
+                  <>
+                    <div className="text-gray-400">Feedrate:</div>
+                    <div className="font-mono">{toolpathPointsRef.current[selectedPointIndex].feedrate} mm/min</div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
       
@@ -2939,6 +3514,141 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
                   </div>
                 </div>
                 
+                {/* Toolpath Points Visualization Settings */}
+                <div className="space-y-2 border-t border-gray-700 pt-3 mt-2">
+                  <h4 className="text-sm font-medium text-blue-400 mb-2">Toolpath Points</h4>
+                  
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm">Show All Points</label>
+                    <div className="relative inline-block w-10 align-middle select-none">
+                      <input
+                        type="checkbox"
+                        checked={showAllPoints}
+                        onChange={() => setShowAllPoints(!showAllPoints)}
+                        className="sr-only"
+                        id="all-points-toggle"
+                      />
+                      <label
+                        htmlFor="all-points-toggle"
+                        className={`block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer ${
+                          showAllPoints ? 'bg-blue-600' : 'bg-gray-600'
+                        }`}
+                      >
+                        <span
+                          className={`block h-5 w-5 rounded-full bg-white shadow transform transition-transform ${
+                            showAllPoints ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  
+                  {showAllPoints && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm">Show Point Labels</label>
+                        <div className="relative inline-block w-10 align-middle select-none">
+                          <input
+                            type="checkbox"
+                            checked={showPointLabels}
+                            onChange={() => setShowPointLabels(!showPointLabels)}
+                            className="sr-only"
+                            id="labels-toggle"
+                          />
+                          <label
+                            htmlFor="labels-toggle"
+                            className={`block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer ${
+                              showPointLabels ? 'bg-blue-600' : 'bg-gray-600'
+                            }`}
+                          >
+                            <span
+                              className={`block h-5 w-5 rounded-full bg-white shadow transform transition-transform ${
+                                showPointLabels ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm mt-2">Filter Points:</div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <button 
+                          className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
+                          onClick={() => console.log('Showing only rapid moves')}
+                        >
+                          Rapid Moves
+                        </button>
+                        <button 
+                          className="bg-green-500 text-white p-1 rounded hover:bg-green-600"
+                          onClick={() => console.log('Showing only cutting moves')}
+                        >
+                          Cutting Moves
+                        </button>
+                        <button 
+                          className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
+                          onClick={() => console.log('Showing only arcs')}
+                        >
+                          Arcs
+                        </button>
+                        <button 
+                          className="bg-purple-500 text-white p-1 rounded hover:bg-purple-600"
+                          onClick={() => console.log('Showing only fixed cycles')}
+                        >
+                          Fixed Cycles
+                        </button>
+                      </div>
+                      
+                      {selectedPointIndex >= 0 && (
+                        <div className="bg-gray-700 p-2 rounded mt-3">
+                          <div className="text-sm font-medium">Selected Point #{selectedPointIndex}</div>
+                          <div className="mt-1 grid grid-cols-2 gap-x-2 text-xs">
+                            <div className="text-gray-400">X:</div>
+                            <div>{toolpathPointsRef.current[selectedPointIndex]?.x.toFixed(3) || 'N/A'}</div>
+                            <div className="text-gray-400">Y:</div>
+                            <div>{toolpathPointsRef.current[selectedPointIndex]?.y.toFixed(3) || 'N/A'}</div>
+                            <div className="text-gray-400">Z:</div>
+                            <div>{toolpathPointsRef.current[selectedPointIndex]?.z.toFixed(3) || 'N/A'}</div>
+                          </div>
+                          <div className="mt-2 flex justify-between">
+                            <button
+                              className="text-xs bg-gray-600 hover:bg-gray-500 text-white p-1 rounded"
+                              onClick={() => focusOnPoint(selectedPointIndex - 1)}
+                              disabled={selectedPointIndex <= 0}
+                            >
+                              Previous
+                            </button>
+                            <button
+                              className="text-xs bg-gray-600 hover:bg-gray-500 text-white p-1 rounded"
+                              onClick={() => focusOnPoint(selectedPointIndex + 1)}
+                              disabled={selectedPointIndex >= toolpathPointsRef.current.length - 1}
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="mt-2">
+                        <button
+                          className="w-full text-xs bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded"
+                          onClick={() => {
+                            // Implementa la navigazione Jump to Point
+                            const pointIndex = prompt('Enter point number (0-' + (toolpathPointsRef.current.length - 1) + '):');
+                            if (pointIndex && !isNaN(parseInt(pointIndex))) {
+                              const index = parseInt(pointIndex);
+                              if (index >= 0 && index < toolpathPointsRef.current.length) {
+                                focusOnPoint(index);
+                              }
+                            }
+                          }}
+                        >
+                          Jump to Point...
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
                 <div className="space-y-1">
                   <label className="text-sm block">Highlight Mode</label>
                   <select 
@@ -3102,7 +3812,66 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
               </div>
             </div>
           )}
-          
+          {showCycleDetails && selectedCycleIndex >= 0 && detectedCycles[selectedCycleIndex] && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-150">
+    <div className="bg-white rounded-lg p-6 max-w-md w-full">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-medium">Dettagli Ciclo Fisso</h3>
+        <button 
+          className="text-gray-500 hover:text-gray-800"
+          onClick={() => setShowCycleDetails(false)}
+        >
+          &times;
+        </button>
+      </div>
+      
+      <div className="space-y-3">
+        <div>
+          <span className="font-medium">Type:</span> {detectedCycles[selectedCycleIndex].type}
+        </div>
+        <div>
+          <span className="font-medium">G-code:</span> 
+          <pre className="mt-1 bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+            {detectedCycles[selectedCycleIndex].gCode}
+          </pre>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <span className="font-medium">Position X:</span> {detectedCycles[selectedCycleIndex].params.x}
+          </div>
+          <div>
+            <span className="font-medium">Position Y:</span> {detectedCycles[selectedCycleIndex].params.y}
+          </div>
+          <div>
+            <span className="font-medium">Depth Z:</span> {detectedCycles[selectedCycleIndex].params.z}
+          </div>
+          <div>
+            <span className="font-medium">Plane R:</span> {detectedCycles[selectedCycleIndex].params.r}
+          </div>
+          {detectedCycles[selectedCycleIndex].params.q && (
+            <div>
+              <span className="font-medium">Increment Q:</span> {detectedCycles[selectedCycleIndex].params.q}
+            </div>
+          )}
+          {detectedCycles[selectedCycleIndex].params.p && (
+            <div>
+              <span className="font-medium">Time P:</span> {detectedCycles[selectedCycleIndex].params.p}s
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="mt-6 flex justify-end">
+        <button 
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={() => setShowCycleDetails(false)}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
           {/* Tools panel */}
           {activePanel === 'tools' && (
             <div className="space-y-3">
@@ -3199,6 +3968,63 @@ const ToolpathVisualizer: React.FC<ToolpathVisualizerProps> = ({
           <div>Triangles: {statistics.triangleCount.toLocaleString()}</div>
           <div>Objects: {statistics.objectCount}</div>
           <div>Memory: {statistics.memory}MB</div>
+        </div>
+      )}
+
+      {/* Toolpath Points quick info */}
+      {showAllPoints && (
+        <div className="absolute bottom-16 right-4 bg-gray-800 bg-opacity-90 text-white p-3 rounded-md text-xs z-10">
+          <div className="flex items-center mb-2">
+            <span className="font-medium">Toolpath Points Legend</span>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <div className="flex items-center">
+              <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+              <span>Rapid Moves</span>
+            </div>
+            <div className="flex items-center">
+              <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+              <span>Cutting Moves</span>
+            </div>
+            <div className="flex items-center">
+              <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+              <span>Arc Moves</span>
+            </div>
+            <div className="flex items-center">
+              <span className="inline-block w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+              <span>Fixed Cycles</span>
+            </div>
+          </div>
+          
+          <div className="mt-2 text-right">
+            <span className="mr-2">Total Points: {toolpathPointsRef.current.length}</span>
+            <button 
+              className="bg-blue-600 hover:bg-blue-700 px-2 py-0.5 rounded text-xs inline-flex items-center"
+              onClick={() => {
+                // Jump to point dialog
+                const pointIndex = prompt('Enter point number (0-' + (toolpathPointsRef.current.length - 1) + '):');
+                if (pointIndex && !isNaN(parseInt(pointIndex))) {
+                  const index = parseInt(pointIndex);
+                  if (index >= 0 && index < toolpathPointsRef.current.length) {
+                    focusOnPoint(index);
+                  }
+                }
+              }}
+            >
+              Jump to Point
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Point selection tooltip */}
+      {selectedPointIndex >= 0 && showAllPoints && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-75 text-white px-3 py-2 rounded-md text-xs z-20 pointer-events-none">
+          <div className="font-medium">Point #{selectedPointIndex}</div>
+          <div>X: {toolpathPointsRef.current[selectedPointIndex]?.x.toFixed(3)}</div>
+          <div>Y: {toolpathPointsRef.current[selectedPointIndex]?.y.toFixed(3)}</div>
+          <div>Z: {toolpathPointsRef.current[selectedPointIndex]?.z.toFixed(3)}</div>
+          <div>Type: {toolpathPointsRef.current[selectedPointIndex]?.type || 'Unknown'}</div>
         </div>
       )}
     </div>

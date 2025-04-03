@@ -196,6 +196,9 @@ export function createComponentPreview(component: any): THREE.Object3D | null {
   if (component.data?.geometry?.elements) {
     // Standard library component format
     elements = component.data.geometry.elements;
+  } else if (component.elements && Array.isArray(component.elements)) {
+    // Component with root level elements array
+    elements = component.elements;
   } else if (component.properties) {
     // Direct properties format from LibraryItem
     elements = [component.properties];

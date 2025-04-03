@@ -1,17 +1,33 @@
-// src/contexts/AIContextProvider.tsx
+// src/components/ai/ai-new/AIContextProvider.tsx - Aggiornato per supportare OpenAI
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { AIState, AIMode, AIHistoryItem, AISettings, AIModelType, TextToCADRequest } from '@/src/types/AITypes';
+import { 
+  AIMode, 
+  AIHistoryItem, 
+  AISettings, 
+  AIModelType, 
+  TextToCADRequest, 
+  AIState, 
+  AIProviderType, 
+  AIRequest, 
+  AIResponse, 
+  AIServiceConfig, 
+  AIPerformanceMetrics, 
+  GCodeOptimizationRequest, 
+  DesignAnalysisRequest,
+  TokenUsage
+} from '@/src/types/AITypes';
 import { unifiedAIService } from '@/src/lib/ai/ai-new/unifiedAIService';
 import { aiAnalytics } from '@/src/lib/ai/ai-new/aiAnalytics';
 import { aiCache } from '@/src/lib/ai/ai-new/aiCache';
-import { AI_MODELS, AI_MODES, aiConfigManager } from '@/src/lib/ai/ai-new/aiConfigManager';
+import { AI_MODELS, AI_MODES, aiConfigManager, MODEL_CAPABILITIES } from '@/src/lib/ai/ai-new/aiConfigManager';
 import { useContextStore } from '@/src/store/contextStore';
+import { openaiService } from '@/src/lib/ai/openaiService';
 
 // Stato iniziale dell'AI
 const initialState: AIState = {
   isEnabled: true,
-  currentModel: AI_MODELS.CLAUDE_SONNET,
+  currentModel: AI_MODELS.CLAUDE_SONNET_7,
   temperature: 0.7,
   isProcessing: false,
   mode: 'general',
@@ -26,14 +42,16 @@ const initialState: AIState = {
     autoSuggest: true,
     cacheEnabled: true,
     analyticsEnabled: true,
-    maxTokens: 4000,
+    maxTokens: 6000,
     mcpEnabled: true,
     mcpStrategy: 'balanced',
     mcpCacheLifetime: 3600,
     suggestThreshold: 0.7,
     customPrompts: {},
     autoModelSelection: true,
-    costOptimization: true
+    costOptimization: true,
+    multiProviderEnabled: true,
+    preferredProvider: 'claude'
   },
   performance: {
     averageResponseTime: 0,
@@ -59,7 +77,8 @@ type AIAction =
   | { type: 'TOGGLE_ASSISTANT_VISIBILITY'; payload: boolean }
   | { type: 'TOGGLE_ASSISTANT_PANEL'; payload: boolean }
   | { type: 'SET_SUGGESTIONS'; payload: any[] }
-  | { type: 'RECORD_ASSISTANT_ACTION'; payload: string };
+  | { type: 'RECORD_ASSISTANT_ACTION'; payload: string }
+  | { type: 'SET_PROVIDER'; payload: AIProviderType };
 
 // Reducer per gestire lo stato dell'AI
 function aiReducer(state: AIState, action: AIAction): AIState {
@@ -118,6 +137,15 @@ function aiReducer(state: AIState, action: AIAction): AIState {
         ...state, 
         assistant: { ...state.assistant, lastAction: action.payload } 
       };
+    case 'SET_PROVIDER':
+      // Quando imposta il provider, aggiorna anche la preferenza nelle impostazioni
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          preferredProvider: action.payload
+        }
+      };
     default:
       return state;
   }
@@ -138,6 +166,9 @@ interface AIContextType {
   toggleAssistantPanel: () => void;
   // Selezione del modello
   selectOptimalModel: (taskComplexity: 'low' | 'medium' | 'high') => AIModelType;
+  // Gestione del provider
+  setProvider: (provider: AIProviderType) => void;
+  getProviderForModel: (model: AIModelType) => AIProviderType;
   // Chat dell'assistente
   sendAssistantMessage: (message: string) => Promise<any>;
 }
@@ -151,11 +182,53 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const router = useRouter();
   const { getActiveContexts } = useContextStore();
 
+  /**
+   * Imposta il provider AI preferito
+   */
+  const setProvider = (provider: AIProviderType): void => {
+    dispatch({ type: 'SET_PROVIDER', payload: provider });
+    
+    // Aggiorna il model se necessario
+    const currentModel = state.currentModel;
+    const currentProviderType = getProviderForModel(currentModel);
+    
+    // Normalize providers for comparison
+    const normalizedCurrentProvider = currentProviderType.toLowerCase();
+    const normalizedNewProvider = provider.toLowerCase();
+    
+    // Se il modello attuale non è compatibile con il nuovo provider, seleziona un nuovo modello
+    if (normalizedCurrentProvider !== normalizedNewProvider) {
+      // Convert to the format expected by MODEL_CAPABILITIES
+      const providerKey = normalizedNewProvider === 'openai' ? 'OPENAI' : 'CLAUDE';
+      
+      const models = Object.entries(MODEL_CAPABILITIES)
+        .filter(([_, capability]) => capability.provider === provider)
+        .map(([model]) => model as AIModelType);
+      
+      if (models.length > 0) {
+        dispatch({ type: 'SET_MODEL', payload: models[0] });
+      }
+    }
+  };
+
+  /**
+   * Ottiene il provider associato a un modello
+   */
+  const getProviderForModel = (model: AIModelType): AIProviderType => {
+    // Get the provider in the format expected by the rest of the application
+    return MODEL_CAPABILITIES[model]?.provider as AIProviderType;
+  };
+
   // Seleziona il modello ottimale in base alla complessità del task
   const selectOptimalModel = (taskComplexity: 'low' | 'medium' | 'high'): AIModelType => {
     if (!state.settings.autoModelSelection) return state.currentModel;
-
-    return aiConfigManager.selectOptimalModel(taskComplexity);
+    
+    // Considera il provider preferito nelle impostazioni (se multi-provider è abilitato)
+    const preferredProvider = state.settings.multiProviderEnabled
+      ? state.settings.preferredProvider
+      : getProviderForModel(state.currentModel);
+    
+    return aiConfigManager.selectOptimalModel(taskComplexity, preferredProvider as 'CLAUDE' | 'OPENAI');
   };
 
   // Monitora le prestazioni dell'AI
@@ -195,6 +268,36 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [router.pathname]);
 
+  // Aggiorna la configurazione quando cambiano le impostazioni
+  useEffect(() => {
+    // Aggiorna la configurazione AI
+    aiConfigManager.updateConfig({
+      defaultModel: state.currentModel,
+      maxTokens: state.settings.maxTokens,
+      mcpEnabled: state.settings.mcpEnabled,
+      mcpStrategy: state.settings.mcpStrategy,
+      mcpCacheLifetime: state.settings.mcpCacheLifetime * 1000, // Convert to ms
+      openaiApiKey: state.settings.openaiApiKey || '',
+      openaiOrgId: state.settings.openaiOrgId || ''
+    });
+    
+    // Aggiorna anche il servizio OpenAI direttamente
+    if (state.settings.openaiApiKey) {
+      openaiService.setApiKey(state.settings.openaiApiKey);
+    }
+    if (state.settings.openaiOrgId) {
+      openaiService.setOrganizationId(state.settings.openaiOrgId);
+    }
+  }, [
+    state.currentModel, 
+    state.settings.maxTokens,
+    state.settings.mcpEnabled,
+    state.settings.mcpStrategy,
+    state.settings.mcpCacheLifetime,
+    state.settings.openaiApiKey,
+    state.settings.openaiOrgId
+  ]);
+
   // Conversione da testo a elementi CAD
   const textToCAD = async (description: string, constraints?: any, providedContext?: string[]) => {
     if (!state.isEnabled) return { success: false, data: null, error: 'AI is disabled' };
@@ -202,7 +305,14 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     dispatch({ type: 'START_PROCESSING' });
     
     try {
-      const model = selectOptimalModel('medium');
+      // Selezione intelligente del modello
+      let model = state.currentModel;
+      const provider = state.settings.preferredProvider;
+      
+      if (state.settings.autoModelSelection) {
+        model = selectOptimalModel('medium');
+      }
+      
       const startTime = Date.now();
       
       // Ottieni il contesto attivo
@@ -215,15 +325,16 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ];
       
       // Prepara i dati per la richiesta con contesto
-      const requestWithContext = {
+      const requestWithContext: TextToCADRequest = {
         description,
         constraints,
         complexity: 'moderate',
         style: 'precise',
-        context: contextTexts.length > 0 ? contextTexts : undefined
+        context: contextTexts.length > 0 ? contextTexts : undefined,
+        
       };
       
-      const result = await unifiedAIService.textToCADElements(requestWithContext as TextToCADRequest);
+      const result = await unifiedAIService.textToCADElements(requestWithContext);
       
       const processingTime = Date.now() - startTime;
       
@@ -237,13 +348,14 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             timestamp: Date.now(),
             prompt: description,
             result: result.data,
-            modelUsed: model,
+            modelUsed: result.model || model,
             processingTime,
-            tokenUsage: {
-              prompt: result.usage?.promptTokens || 0,
-              completion: result.usage?.completionTokens || 0, 
-              total: result.usage?.totalTokens || 0
-            }
+            tokenUsage: result.usage ? {
+              prompt: result.usage.promptTokens,
+              completion: result.usage.completionTokens,
+              total: result.usage.totalTokens
+            } : undefined,
+            
           }
         });
       }
@@ -268,6 +380,7 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     try {
       const model = selectOptimalModel('medium');
+      const provider = state.settings.preferredProvider;
       const startTime = Date.now();
       
       const result = await unifiedAIService.optimizeGCode(gcode, machineType);
@@ -282,13 +395,14 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             type: 'gcode_optimization',
             timestamp: Date.now(),
             prompt: `Optimize G-code for ${machineType}`,
-            modelUsed: model,
+            modelUsed: result.model || model,
             processingTime,
-            tokenUsage: {
-              prompt: result.usage?.promptTokens || 0,
-              completion: result.usage?.completionTokens || 0,
-              total: result.usage?.totalTokens || 0
-            }
+            tokenUsage: result.usage ? {
+              prompt: result.usage.promptTokens,
+              completion: result.usage.completionTokens,
+              total: result.usage.totalTokens
+            } : undefined,
+           
           }
         });
       }
@@ -313,6 +427,7 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     try {
       const model = selectOptimalModel('high');
+      const provider = state.settings.preferredProvider;
       const startTime = Date.now();
       
       const result = await unifiedAIService.analyzeDesign(elements);
@@ -327,13 +442,14 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             type: 'design_analysis',
             timestamp: Date.now(),
             result: result.data,
-            modelUsed: model,
+            modelUsed: result.model || model,
             processingTime,
-            tokenUsage: {
-              prompt: result.usage?.promptTokens || 0,
-              completion: result.usage?.completionTokens || 0,
-              total: result.usage?.totalTokens || 0
-            }
+            tokenUsage: result.usage ? {
+              prompt: result.usage.promptTokens,
+              completion: result.usage.completionTokens,
+              total: result.usage.totalTokens
+            } : undefined,
+       
           }
         });
       }
@@ -358,6 +474,7 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     try {
       const model = selectOptimalModel('low');
+      const provider = state.settings.preferredProvider;
       
       const result = await unifiedAIService.generateSuggestions(context, state.mode);
       
@@ -392,13 +509,15 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           timestamp: Date.now(),
           prompt: message,
           result: result.data,
-          modelUsed: state.currentModel,
+          modelUsed: result.model || state.currentModel,
           processingTime: result.processingTime || 0,
           tokenUsage: result.usage ? {
             prompt: result.usage.promptTokens,
-            completion: result.usage.completionTokens, 
+            completion: result.usage.completionTokens,
             total: result.usage.totalTokens
-          } : undefined
+          } : undefined,
+          
+      
         };
         
         dispatch({ type: 'ADD_TO_HISTORY', payload: action });
@@ -445,6 +564,8 @@ export const AIContextProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     hideAssistant,
     toggleAssistantPanel,
     selectOptimalModel,
+    setProvider,
+    getProviderForModel,
     sendAssistantMessage
   };
 

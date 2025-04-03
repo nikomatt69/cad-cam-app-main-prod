@@ -106,7 +106,7 @@ export default function ProjectDrawingsList({ projectId }: ProjectDrawingsListPr
       </div>
       
       {drawings.length === 0 ? (
-        <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-6 text-center">
+        <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg p-6 text-center">
           <File size={48} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No drawings yet</h3>
           <p className="text-gray-600 mb-4">
@@ -124,7 +124,7 @@ export default function ProjectDrawingsList({ projectId }: ProjectDrawingsListPr
           {drawings.map((drawing) => (
             <div
               key={drawing.id}
-              className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+              className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => window.location.href = `/cad?drawingId=${drawing.id}`}
             >
               <div className="h-48 bg-gray-100 flex items-center justify-center">

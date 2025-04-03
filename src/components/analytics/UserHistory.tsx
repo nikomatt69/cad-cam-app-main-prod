@@ -141,7 +141,7 @@ export const UserHistory: React.FC<UserHistoryProps> = ({
       
       {/* Filters panel */}
       {showFilters && (
-        <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow rounded-lg p-4 mb-4">
+        <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow rounded-lg p-4 mb-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date Range</h3>
@@ -211,7 +211,7 @@ export const UserHistory: React.FC<UserHistoryProps> = ({
       )}
       
       {/* Activity history list */}
-      <div className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow rounded-lg">
+      <div className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow rounded-lg">
         {history.logs?.length === 0 ? (
           <div className="p-6 text-center">
             <Activity className="h-12 w-12 text-gray-400 mx-auto mb-2" />

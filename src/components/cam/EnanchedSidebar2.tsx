@@ -168,6 +168,12 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
             current: router.pathname.startsWith('/tools') 
           },
           { 
+            name: 'Toolpaths', 
+            href: '/toolpaths', 
+            icon: <Tool size={16} />, 
+            current: router.pathname.startsWith('/toolpaths') 
+          },
+          { 
             name: 'DrawingTools', 
             href: '/drawing-instruments', 
             icon: <Server size={16} />, 
@@ -261,6 +267,12 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
         href: '/privacy', 
         icon: <BookOpen size={20} />, 
         current: router.pathname.startsWith('/privacy') 
+      },
+      { 
+        name: 'Docs', 
+        href: 'https://docs.cadcamfun.xyz', 
+        icon: <BookOpen size={20} />, 
+        current: router.pathname.startsWith('https://docs.cadcamfun.xyz') 
       }
     ];
   };
@@ -390,16 +402,7 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
        {activeSidebarTab === 'tools' && (
   <>
     <ToolPanel />
-    <div className="mt-6 pt-4 border-t border-gray-200">
-      <ComponentsBrowserLocal/>
-      <LibraryMenu onSelectComponent={(component) => {
-            setSelectedLibraryComponent(component);
-            // Se la prop onSelectComponent esiste, chiamala
-            if (onSelectComponent) {
-              onSelectComponent(component);
-            }
-          }} />
-        </div>
+    
        </>
         )}
         {activeSidebarTab === 'layers' && <LayerManager />}
@@ -445,7 +448,7 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
                       Show Grid
                     </span>
                     <span className={`h-4 w-8 rounded-full ${gridVisible ? 'bg-blue-600' : 'bg-gray-300'} relative transition-colors duration-200 ease-in-out`}>
-                      <span className={`absolute top-0.5 left-0.5 inline-block h-3 w-3 rounded-full bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow transform ${gridVisible ? 'translate-x-4' : ''} transition-transform duration-200 ease-in-out`}></span>
+                      <span className={`absolute top-0.5 left-0.5 inline-block h-3 w-3 rounded-full bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow transform ${gridVisible ? 'translate-x-4' : ''} transition-transform duration-200 ease-in-out`}></span>
                     </span>
                   </button>
                   <button
@@ -457,7 +460,7 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
                       Show Axis
                     </span>
                     <span className={`h-4 w-8 rounded-full ${axisVisible ? 'bg-blue-600' : 'bg-gray-300'} relative transition-colors duration-200 ease-in-out`}>
-                      <span className={`absolute top-0.5 left-0.5 inline-block h-3 w-3 rounded-full bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow transform ${axisVisible ? 'translate-x-4' : ''} transition-transform duration-200 ease-in-out`}></span>
+                      <span className={`absolute top-0.5 left-0.5 inline-block h-3 w-3 rounded-full bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow transform ${axisVisible ? 'translate-x-4' : ''} transition-transform duration-200 ease-in-out`}></span>
                     </span>
                   </button>
                 </div>
@@ -479,7 +482,7 @@ const EnhancedSidebar2: React.FC<EnhancedSidebarProps> = ({
       
       {/* Sidebar */}
       <div
-        className={`flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-2 mr-0.5 border-gray-300  rounded-xl border-r transition-all duration-300 ease-in-out h-full flex flex-col ${
+        className={`flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-2 mr-0.5 border-gray-300  rounded-xl border-r transition-all duration-300 ease-in-out h-full flex flex-col ${
           isOpen ? 'w-80' : 'w-20'
         }`}
       >

@@ -152,7 +152,7 @@ export default function MaterialsList() {
         </div>
         
         {/* Search */}
-        <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-md p-4 mb-6">
+        <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-md p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
@@ -173,7 +173,7 @@ export default function MaterialsList() {
         
         {/* Materials List */}
         {materials.length === 0 ? (
-          <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-6 text-center">
+          <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg p-6 text-center">
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">M</span>
             </div>
@@ -199,7 +199,7 @@ export default function MaterialsList() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {materials.map((material) => (
-              <div key={material.id} className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden">
+              <div key={material.id} className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden">
                 <div className="p-6">
                   <div className="flex items-center mb-4">
                     <div 
@@ -254,7 +254,7 @@ export default function MaterialsList() {
         {/* Material Modal */}
         {(showModal || selectedMaterial) && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-lg shadow-xl max-w-md w-full">
               <div className="px-6 py-4 border-b">
                 <h3 className="text-lg font-medium text-gray-900">
                   {selectedMaterial ? 'Edit Material' : 'Create New Material'}

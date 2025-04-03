@@ -24,10 +24,13 @@ import { AIModelType } from '@/src/types/AITypes';
 import AIDesignAssistant from '../AIDesignAssistant';
 import AIToolpathOptimizer from '../AIToolpathOptimizer';
 import MCPInsightsPanel from './MCPSettingsPage';
+import OpenAISetupPanel from './OpenAISetupPanel';
+import AIProviderBadge from './AIProviderBadge';
+import AIProviderSelector from './AIProviderSelector';
 
 
 // Tipi di tool AI disponibili
-type AITool = 'textToCad' | 'designAssistant' | 'toolpathOptimizer' | 'settings' | 'analytics' | 'mpc';
+type AITool = 'textToCad' | 'designAssistant' | 'toolpathOptimizer' | 'settings' | 'analytics' | 'mpc' | 'openai' | 'badge' | 'provider';
 
 interface AIHubProps {
   initialTool?: AITool;
@@ -64,37 +67,55 @@ const AIHub: React.FC<AIHubProps> = ({
       id: 'textToCad' as AITool, 
       name: 'Text to CAD', 
       icon: <PenTool size={15} />,
-      description: 'Converti descrizioni testuali in elementi 3D'
+      description: 'Convert text descriptions to 3D elements'
     },
     { 
       id: 'designAssistant' as AITool, 
-      name: 'Assistente Design', 
+      name: 'Design Assistant', 
       icon: <Cpu size={15} />,
-      description: 'Ottieni suggerimenti AI per i tuoi design'
+      description: 'Get AI suggestions for your designs'
     },
     { 
       id: 'toolpathOptimizer' as AITool, 
-      name: 'Ottimizzatore Toolpath', 
+      name: 'Toolpath Optimizer', 
       icon: <Tool size={15} />,
-      description: 'Ottimizza parametri di lavorazione'
+      description: 'Optimize machining parameters'
     },
     { 
       id: 'analytics' as AITool, 
       name: 'Analytics AI', 
       icon: <BarChart2 size={15} />,
-      description: 'Visualizza statistiche di utilizzo AI'
+      description: 'View AI usage statistics'
     },
     { 
       id: 'settings' as AITool, 
-      name: 'Impostazioni AI', 
+      name: 'AI Settings', 
       icon: <Settings size={15} />,
-      description: 'Configura comportamento AI'
+      description: 'Configure AI behavior'
     },
     { 
       id: 'mpc' as AITool, 
-      name: 'Impostazioni MPC AI', 
+      name: 'MPC Settings', 
       icon: <Settings size={15} />,
-      description: 'Configura comportamento MPC AI'
+      description: 'Configure MPC AI behavior'
+    },
+    { 
+      id: 'openai' as AITool, 
+      name: 'OpenAI Setup', 
+      icon: <Settings size={15} />,
+      description: 'Configure OpenAI AI behavior'
+    },
+    { 
+      id: 'provider' as AITool, 
+      name: 'AI Provider', 
+      icon: <Settings size={15} />,
+      description: 'Configure AI provider behavior'
+    },  
+    { 
+      id: 'badge' as AITool, 
+      name: 'AI Badge', 
+      icon: <Settings size={15} />,
+      description: 'Configure AI badge behavior'
     },
   ];
 
@@ -114,7 +135,7 @@ const AIHub: React.FC<AIHubProps> = ({
   // Selettore del modello AI
   const renderModelSelector = () => (
     <div className="mb-4 flex flex-col px-4">
-      <label className="text-xs text-gray-600 dark:text-gray-400 mb-1">Modello AI</label>
+      <label className="text-xs text-gray-600 dark:text-gray-400 mb-1">AI Model</label>
       <select
         value={state.currentModel}
         onChange={(e) => dispatch({ 
@@ -143,38 +164,46 @@ const AIHub: React.FC<AIHubProps> = ({
         return <AIToolpathOptimizer />;
         case 'mpc':
           return <MCPInsightsPanel />;
+      case 'settings':
+        return <AISettingsPanel />;
+      case 'openai':
+        return <OpenAISetupPanel />;
+      case 'badge':
+        return <AIProviderBadge />;  
+      case 'provider':
+        return <AIProviderSelector />;
       case 'analytics':
         return (
           <div className="p-4 space-y-4">
             <h2 className="text-lg font-semibold flex items-center">
               <BarChart2 size={20} className="mr-2 text-blue-500" />
-              Statistiche AI
+              AI Statistics
             </h2>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Tempo medio risposta</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Response Time</h3>
                 <p className="text-2xl font-bold">{Math.round(performance.averageResponseTime)}ms</p>
               </div>
               
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Tasso di successo</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Success Rate</h3>
                 <p className="text-2xl font-bold">{Math.round(performance.successRate)}%</p>
               </div>
               
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Token usati</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Token Used</h3>
                 <p className="text-2xl font-bold">{performance.tokenUsage.toLocaleString()}</p>
               </div>
               
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Richieste totali</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Requests</h3>
                 <p className="text-2xl font-bold">{performance.totalRequests || 0}</p>
               </div>
             </div>
             
             <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Utilizzo modelli</h3>
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Model Usage</h3>
               <div className="space-y-2">
                 {Object.entries(MODEL_CAPABILITIES).map(([model, _]) => {
                   const usageCount = performance.modelUsage?.[model as AIModelType] || 0;
@@ -200,19 +229,19 @@ const AIHub: React.FC<AIHubProps> = ({
       case 'settings':
         return <AISettingsPanel />;
       default:
-        return <div>Seleziona uno strumento AI</div>;
+        return <div>Select an AI tool</div>;
     }
   };
   
   return (
-    <div className={`relative bg-white dark:bg-gray-800 rounded-lg border-0 flex h-[600px] ${className || ''}`}>
+    <div className={`relative bg-white dark:bg-gray-800 rounded-lg border-0 flex h-[800px] ${className || ''}`}>
       
       
       {/* Pulsante di collasso/espansione */}
       <button
         className="absolute -left-1 top-24 transform -translate-y-1/2 bg-blue-600 text-white rounded-full p-1 shadow-md z-10"
         onClick={() => setIsOpen(!isOpen)}
-        title={isOpen ? "Nascondi pannello" : "Mostra pannello"}
+        title={isOpen ? "Hide Panel" : "Show Panel"}
       >
         <ChevronRight size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -238,7 +267,7 @@ const AIHub: React.FC<AIHubProps> = ({
                   <button
                     onClick={onClose}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                    title="Chiudi"
+                    title="Close"
                   >
                     <X size={20} />
                   </button>

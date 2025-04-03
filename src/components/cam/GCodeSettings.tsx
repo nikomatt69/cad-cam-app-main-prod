@@ -74,7 +74,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
 
   return (
     <div className="p-4 bg-gray-50 rounded-lg">
-      <h2 className="text-xl font-bold mb-4">Impostazioni G-code</h2>
+      <h2 className="text-xl font-bold mb-4">G-code Settings</h2> 
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Controller selection */}
@@ -94,7 +94,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
         
         {/* Program name */}
         <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">Nome programma</label>
+          <label className="block text-sm font-medium mb-1">Program Name</label>
           <input
             type="text"
             name="programName"
@@ -106,7 +106,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
         
         {/* Tool number */}
         <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">Numero utensile</label>
+          <label className="block text-sm font-medium mb-1">Tool Number</label>
           <input
             type="number"
             name="toolNumber"
@@ -120,7 +120,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
         
         {/* Spindle speed */}
         <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">Velocità mandrino (RPM)</label>
+          <label className="block text-sm font-medium mb-1">Spindle Speed (RPM)</label>
           <input
             type="number"
             name="spindleSpeed"
@@ -135,7 +135,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
         
         {/* Feedrate */}
         <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">Velocità di avanzamento (mm/min)</label>
+          <label className="block text-sm font-medium mb-1">Feedrate (mm/min)</label>
           <input
             type="number"
             name="feedrate"
@@ -150,7 +150,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
         
         {/* Plunge rate */}
         <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">Velocità di penetrazione (mm/min)</label>
+          <label className="block text-sm font-medium mb-1">Plunge Rate (mm/min)</label>
           <input
             type="number"
             name="plungerate"
@@ -165,7 +165,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
         
         {/* Safe height */}
         <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">Altezza di sicurezza (mm)</label>
+          <label className="block text-sm font-medium mb-1">Safe Height (mm)</label>
           <input
             type="number"
             name="safeHeight"
@@ -180,7 +180,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
 
         {settings.controller === 'heidenhain' && (
           <div className="mb-3">
-            <label className="block text-sm font-medium mb-1">Tolleranza alta precisione (mm)</label>
+            <label className="block text-sm font-medium mb-1">High Precision Tolerance (mm)</label>
             <input
               type="number"
               name="radiusCompensationValue"
@@ -209,7 +209,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
               onChange={handleInputChange}
               className="h-4 w-4"
             />
-            <span>Unità metriche (mm)</span>
+            <span>Metric Units (mm)</span>
           </label>
         </div>
         
@@ -222,7 +222,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
               onChange={handleInputChange}
               className="h-4 w-4"
             />
-            <span>Coordinate assolute</span>
+            <span>Absolute Coordinates</span>
           </label>
         </div>
         
@@ -235,7 +235,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
               onChange={handleInputChange}
               className="h-4 w-4"
             />
-            <span>Ottimizza movimenti rapidi</span>
+            <span>Optimize Rapid Moves</span>
           </label>
         </div>
         
@@ -248,7 +248,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
               onChange={handleInputChange}
               className="h-4 w-4"
             />
-            <span>Includi commenti</span>
+            <span>Include Comments</span>
           </label>
         </div>
         
@@ -261,7 +261,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
               onChange={handleInputChange}
               className="h-4 w-4"
             />
-            <span>Abilita refrigerante</span>
+            <span>Enable Coolant</span>
           </label>
         </div>
         
@@ -275,7 +275,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
                 onChange={handleInputChange}
                 className="h-4 w-4"
               />
-              <span>Usa alta precisione</span>
+              <span>Use High Precision</span>
             </label>
           </div>
         )}
@@ -289,7 +289,7 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
               onChange={handleInputChange}
               className="h-4 w-4"
             />
-            <span>Compensazione raggio utensile</span>
+            <span>Tool Radius Compensation</span>
           </label>
         </div>
       </div>
@@ -297,15 +297,15 @@ const GCodeSettings: React.FC<GCodeSettingsProps> = ({ onSettingsChange, initial
       {/* Controller-specific notes */}
       <div className="mt-4 p-3 bg-blue-50 rounded text-sm">
         {settings.controller === 'fanuc' && (
-          <p>Formato Fanuc: Il G-code sarà generato in formato Fanuc standard con comandi G0, G1, G2/G3 e comandi M standard.</p>
+          <p>Fanuc Format: The G-code will be generated in Fanuc standard format with G0, G1, G2/G3 commands and standard M commands.</p>
         )}
         
         {settings.controller === 'heidenhain' && (
-          <p>Formato Heidenhain: Il G-code sarà adattato alla sintassi Heidenhain, con cicli e formati specifici per questo controllo.</p>
+          <p>Heidenhain Format: The G-code will be adapted to the Heidenhain syntax, with specific cycles and formats for this controller.</p>
         )}
         
         {settings.controller === 'generic' && (
-          <p>Formato generico: Il G-code sarà generato in formato standard RS-274D (G-code), compatibile con la maggior parte dei controlli numerici.</p>
+          <p>Generic Format: The G-code will be generated in standard RS-274D (G-code) format, compatible with most CNC controllers.</p>
         )}
       </div>
     </div>

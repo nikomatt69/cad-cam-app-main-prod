@@ -7,7 +7,9 @@ import {
   createMachineConfig, 
   updateMachineConfig, 
   deleteMachineConfig,
-  MachineConfig
+  MachineConfig,
+  UpdateMachineConfigDto,
+  CreateMachineConfigDto
 } from 'src/lib/api/machineConfigApi';
 
 const MachineConfigManager: React.FC = () => {
@@ -33,10 +35,15 @@ const MachineConfigManager: React.FC = () => {
     const fetchMachineConfigs = async () => {
       try {
         setIsLoading(true);
-        const data = await getMachineConfigs();
-        setMachineConfigs(data);
+        const response = await getMachineConfigs();
+        if (response && response.data) {
+          setMachineConfigs(Array.isArray(response.data) ? response.data : []);
+        } else {
+          setMachineConfigs([]);
+        }
       } catch (error) {
         console.error('Errore nel caricamento delle configurazioni macchina:', error);
+        setMachineConfigs([]); // Set empty array on error
       } finally {
         setIsLoading(false);
       }
@@ -60,12 +67,12 @@ const MachineConfigManager: React.FC = () => {
     setEditingConfig(config);
     setFormState({
       name: config.name,
-      type: config.config.type,
-      volumeX: config.config.workVolume?.x || 200,
-      volumeY: config.config.workVolume?.y || 200,
-      volumeZ: config.config.workVolume?.z || 100,
-      maxSpindleSpeed: config.config.maxSpindleSpeed || 10000,
-      maxFeedRate: config.config.maxFeedRate || 5000
+      type: config.type || 'mill',
+      volumeX: config.config?.workVolume?.x || 200,
+      volumeY: config.config?.workVolume?.y || 200,
+      volumeZ: config.config?.workVolume?.z || 100,
+      maxSpindleSpeed: config.config?.maxSpindleSpeed || 10000,
+      maxFeedRate: config.config?.maxFeedRate || 5000
     });
   };
 
@@ -91,15 +98,23 @@ const MachineConfigManager: React.FC = () => {
       
       if (isEditing && editingConfig) {
         // Update existing config
-        const updatedConfig = await updateMachineConfig(editingConfig.id, configData);
+        const updatedConfig = await updateMachineConfig(editingConfig.id, configData as UpdateMachineConfigDto);
         
         setMachineConfigs(prev => prev.map(config => 
           config.id === editingConfig.id ? updatedConfig : config
         ));
+
+        // Update selected machine if it was the one being edited
+        if (selectedMachine?.id === editingConfig.id) {
+          setSelectedMachine(updatedConfig);
+        }
       } else {
         // Create new config
-        const newConfig = await createMachineConfig(configData);
-        setMachineConfigs(prev => [...prev, newConfig]);
+        const newConfig = await createMachineConfig(configData as CreateMachineConfigDto);
+        const response = await getMachineConfigs();
+        if (response && response.data) {
+          setMachineConfigs(Array.isArray(response.data) ? response.data : []);
+        }
       }
       
       // Reset form
@@ -147,7 +162,7 @@ const MachineConfigManager: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg p-4 space-y-4">
+    <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg p-4 space-y-4">
       <h3 className="text-lg font-medium text-gray-900">Configurazioni Macchina</h3>
       
       {/* Form per aggiungere/modificare configurazioni */}
@@ -286,13 +301,13 @@ const MachineConfigManager: React.FC = () => {
                   <div>
                     <h5 className="font-medium">{config.name}</h5>
                     <p className="text-xs text-gray-500">
-                      {config.config.type.charAt(0).toUpperCase() + config.config.type.slice(1)} • 
+                      {config.type.charAt(0).toUpperCase() + config.type.slice(1)} • 
                       Volume: {config.config.workVolume?.x}×{config.config.workVolume?.y}×{config.config.workVolume?.z} mm
                     </p>
                   </div>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => setSelectedMachine({ ...config, config: { ...config.config, type: config.config.type || '' } })}
+                      onClick={() => setSelectedMachine({ ...config, config: { ...config.config, type: config.type || '' } })}
                       className={`px-2 py-1 text-xs rounded ${selectedMachine?.id === config.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                     >
                       {selectedMachine?.id === config.id ? 'Selezionata' : 'Seleziona'}

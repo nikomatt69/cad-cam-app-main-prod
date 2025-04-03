@@ -88,7 +88,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
     return (
       <button
         onClick={onToggle}
-        className="flex items-center justify-center p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-md transition-colors"
+        className="flex items-center justify-center p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-800/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-md transition-colors"
       >
         <File size={16} className="mr-2" />
         <span className="text-sm font-medium">Mostra Contesto</span>

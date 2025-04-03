@@ -408,7 +408,7 @@ const renderSidebarContent = () => {
                       Show Grid
                     </span>
                     <span className={`h-4 w-8 rounded-full ${gridVisible ? 'bg-blue-600' : 'bg-gray-300'} relative transition-colors duration-200 ease-in-out`}>
-                      <span className={`absolute top-0.5 left-0.5 inline-block h-3 w-3 rounded-full bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow transform ${gridVisible ? 'translate-x-4' : ''} transition-transform duration-200 ease-in-out`}></span>
+                      <span className={`absolute top-0.5 left-0.5 inline-block h-3 w-3 rounded-full bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow transform ${gridVisible ? 'translate-x-4' : ''} transition-transform duration-200 ease-in-out`}></span>
                     </span>
                   </button>
                   <button
@@ -420,7 +420,7 @@ const renderSidebarContent = () => {
                       Show Axis
                     </span>
                     <span className={`h-4 w-8 rounded-full ${axisVisible ? 'bg-blue-600' : 'bg-gray-300'} relative transition-colors duration-200 ease-in-out`}>
-                      <span className={`absolute top-0.5 left-0.5 inline-block h-3 w-3 rounded-full bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow transform ${axisVisible ? 'translate-x-4' : ''} transition-transform duration-200 ease-in-out`}></span>
+                      <span className={`absolute top-0.5 left-0.5 inline-block h-3 w-3 rounded-full bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow transform ${axisVisible ? 'translate-x-4' : ''} transition-transform duration-200 ease-in-out`}></span>
                     </span>
                   </button>
                 </div>
@@ -468,7 +468,7 @@ return (
     {/* Sidebar */}
     <motion.div
       ref={sidebarRef}
-      className={`flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white border-2 border-gray-300 rounded-xl transition-all duration-300 ease-in-out h-full flex flex-col ${
+      className={`flex-shrink-0 bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white border-2 border-gray-300 rounded-xl transition-all duration-300 ease-in-out h-full flex flex-col ${
         position === 'left' ? 'border-r mr-0.5' : 'border-l ml-0.5'
       } ${isOpen ? 'w-80' : 'w-16'}`}
       style={{ 

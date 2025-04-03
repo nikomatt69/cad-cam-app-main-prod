@@ -597,7 +597,7 @@ export default function ComponentsList() {
                 </div>
                 
                 {filters.search && (
-                  <div className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full flex items-center">
+                  <div className="text-xs bg-blue-50 dark:bg-blue-800/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full flex items-center">
                     Search: {filters.search}
                     <button
                       onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
@@ -944,7 +944,7 @@ export default function ComponentsList() {
                   <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
                     {/* Display a preview of the CAD element if available */}
                     {cadElementData && (
-                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md">
+                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-800/30 rounded-md">
                         <div className="flex items-center text-sm text-blue-700 dark:text-blue-300 font-medium mb-2">
                           <Cpu size={16} className="mr-2" />
                           Creating from CAD Element

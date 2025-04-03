@@ -172,7 +172,7 @@ const FanucPostProcessor: React.FC<FanucPostProcessorProps> = ({
   };
 
   return (
-    <div className="w-full bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white rounded-lg shadow-md overflow-hidden">
+    <div className="w-full bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white rounded-lg shadow-md overflow-hidden">
       {/* Header */}
       <div className="bg-gray-50 border-b border-gray-200 p-4">
         <h2 className="text-lg font-medium text-gray-900">Fanuc Post-Processor</h2>

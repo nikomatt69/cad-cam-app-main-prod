@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import React, { useState } from 'react';
 import { useSubscription } from 'src/contexts/SubscriptionContext';
 import { SUBSCRIPTION_PLANS, PLAN_FEATURES } from 'src/lib/stripe';
@@ -147,14 +148,14 @@ export default function SubscriptionSettings() {
               )}
             </>
           )}
-          
-          {!hasPaidPlan && (
-            <a
+              
+              {!hasPaidPlan && (
+            <Link
               href="/pricing"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Upgrade Plan
-            </a>
+            </Link>
           )}
         </div>
       </div>

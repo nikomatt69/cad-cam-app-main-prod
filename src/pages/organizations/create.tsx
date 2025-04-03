@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Layout from 'src/components/layout/Layout';
+import { DynamicLayout } from 'src/components/dynamic-imports';
 import { ArrowLeft, Users } from 'react-feather';
 import Loading from '@/src/components/ui/Loading';
 import Metatags from '@/src/components/layout/Metatags';
@@ -77,7 +77,7 @@ export default function CreateOrganizationPage() {
   return (
     <>
       <Metatags title={'Create Organization'} />
-      <Layout>
+      <DynamicLayout>
         <div className="p-6">
           <div className="mb-6 flex items-center">
             <button
@@ -90,7 +90,7 @@ export default function CreateOrganizationPage() {
           </div>
           
           <div className="max-w-3xl mx-auto">
-            <div className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white shadow-md rounded-lg overflow-hidden">
+            <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden">
               <div className="p-6">
                 <div className="flex items-center mb-6">
                   <div className="mr-4 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -150,7 +150,7 @@ export default function CreateOrganizationPage() {
                         <button
                           type="button"
                           onClick={() => router.back()}
-                          className="bg-[#F8FBFF]  dark:bg-gray-600 dark:text-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           Cancel
                         </button>
@@ -169,7 +169,7 @@ export default function CreateOrganizationPage() {
             </div>
           </div>
         </div>
-      </Layout>
+      </DynamicLayout>
     </>
   );
 }

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // src/hooks/useLibrary.ts
 import { useState, useEffect } from 'react';
-import {libraryService , LibraryItem }from '../components/cam/LibraryManagerUI'
+import { libraryService, LibraryItem } from '../components/cam/LibraryManagerUI';
 import { useSession } from 'next-auth/react';
 
 interface UseLibraryReturn {
@@ -29,12 +29,18 @@ interface UseLibraryReturn {
   tools: LibraryItem[];
   isLoadingTools: boolean;
   errorTools: Error | null;
+
+  // Machine Configs
+  machineConfigs: LibraryItem[];
+  isLoadingMachineConfigs: boolean;
+  errorMachineConfigs: Error | null;
   
   // Search Functions
   searchCadComponents: (query: string) => LibraryItem[];
   searchUserComponents: (query: string) => LibraryItem[];
   searchMaterials: (query: string) => LibraryItem[];
   searchTools: (query: string) => LibraryItem[];
+  searchMachineConfigs: (query: string) => LibraryItem[];
   
   // Add to CAD
   addComponentToCAD: (item: LibraryItem) => string | null;
@@ -43,6 +49,7 @@ interface UseLibraryReturn {
   refreshUserComponents: () => Promise<void>;
   refreshMaterials: () => Promise<void>;
   refreshTools: () => Promise<void>;
+  refreshMachineConfigs: () => Promise<void>;
 }
 
 export function useLibrary(): UseLibraryReturn {
@@ -55,6 +62,7 @@ export function useLibrary(): UseLibraryReturn {
   const [predefinedComponents, setPredefinedComponents] = useState<LibraryItem[]>([]);
   const [materials, setMaterials] = useState<LibraryItem[]>([]);
   const [tools, setTools] = useState<LibraryItem[]>([]);
+  const [machineConfigs, setMachineConfigs] = useState<LibraryItem[]>([]);
   
   // Loading states
   const [isLoadingCadComponents, setIsLoadingCadComponents] = useState(true);
@@ -62,6 +70,7 @@ export function useLibrary(): UseLibraryReturn {
   const [isLoadingPredefinedComponents, setIsLoadingPredefinedComponents] = useState(true);
   const [isLoadingMaterials, setIsLoadingMaterials] = useState(true);
   const [isLoadingTools, setIsLoadingTools] = useState(true);
+  const [isLoadingMachineConfigs, setIsLoadingMachineConfigs] = useState(true);
   
   // Error states
   const [errorCadComponents, setErrorCadComponents] = useState<Error | null>(null);
@@ -69,6 +78,7 @@ export function useLibrary(): UseLibraryReturn {
   const [errorPredefinedComponents, setErrorPredefinedComponents] = useState<Error | null>(null);
   const [errorMaterials, setErrorMaterials] = useState<Error | null>(null);
   const [errorTools, setErrorTools] = useState<Error | null>(null);
+  const [errorMachineConfigs, setErrorMachineConfigs] = useState<Error | null>(null);
   
   // Initialize the library
   useEffect(() => {
@@ -108,10 +118,14 @@ export function useLibrary(): UseLibraryReturn {
           
           // Load tools
           await refreshTools();
+
+          // Load machine configs
+          await refreshMachineConfigs();
         } else {
           setIsLoadingUserComponents(false);
           setIsLoadingMaterials(false);
           setIsLoadingTools(false);
+          setIsLoadingMachineConfigs(false);
         }
       } catch (error) {
         console.error('Failed to initialize library service:', error);
@@ -165,6 +179,22 @@ export function useLibrary(): UseLibraryReturn {
       setIsLoadingTools(false);
     }
   };
+
+  const refreshMachineConfigs = async () => {
+    if (!userId) return;
+    
+    setIsLoadingMachineConfigs(true);
+    try {
+      const configs = libraryService.getUserMachineConfigs(userId);
+      setMachineConfigs(Array.isArray(configs) ? configs : []);
+    } catch (error) {
+      console.error('Error loading machine configurations:', error);
+      setErrorMachineConfigs(error as Error);
+      setMachineConfigs([]);
+    } finally {
+      setIsLoadingMachineConfigs(false);
+    }
+  };
   
   // Search functions
   const searchCadComponents = (query: string): LibraryItem[] => {
@@ -198,6 +228,11 @@ export function useLibrary(): UseLibraryReturn {
     );
     return [...userTools, ...predefinedTools];
   };
+
+  const searchMachineConfigs = (query: string): LibraryItem[] => {
+    if (!userId) return [];
+    return libraryService.getUserMachineConfigs(userId, query);
+  };
   
   // Add component to CAD function
   const addComponentToCAD = (item: LibraryItem): string | null => {
@@ -224,16 +259,22 @@ export function useLibrary(): UseLibraryReturn {
     tools,
     isLoadingTools,
     errorTools,
+
+    machineConfigs,
+    isLoadingMachineConfigs,
+    errorMachineConfigs,
     
     searchCadComponents,
     searchUserComponents,
     searchMaterials,
     searchTools,
+    searchMachineConfigs,
     
     addComponentToCAD,
     
     refreshUserComponents,
     refreshMaterials,
-    refreshTools
+    refreshTools,
+    refreshMachineConfigs
   };
 }

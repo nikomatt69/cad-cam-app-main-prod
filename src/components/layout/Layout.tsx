@@ -13,6 +13,7 @@ import CookieConsentBanner from '../components/CookieConsentBanner';
 import { disconnectWebSocket, initializeWebSocket } from '@/src/lib/websocket';
 import { AIAssistant, AIAssistantButton } from '../ai/ai-new';
 import ToastContainer from '../ui/ToastContainer';
+import NotificationPermissionPrompt from '../notifications/NotificationPermissionPrompt';
 
 
 type EnhancedLayoutProps = {
@@ -37,6 +38,7 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   
   // Handle sidebar toggle based on screen size
   useEffect(() => {
@@ -137,6 +139,26 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
   // Determine main content width class
   const contentWidthClass = fullWidth ? 'max-w-full' : 'max-w-7xl';
 
+  useEffect(() => {
+    // Mostra il prompt solo se:
+    // 1. L'utente è loggato
+    // 2. Non ha già accettato/rifiutato le notifiche
+    // 3. Il browser supporta le notifiche
+    if (
+      session?.user &&
+      'Notification' in window &&
+      !localStorage.getItem('notificationsEnabled') &&
+      !localStorage.getItem('notificationsPromptDismissed')
+    ) {
+      // Aspetta 3 secondi prima di mostrare il prompt
+      const timer = setTimeout(() => {
+        setShowNotificationPrompt(true);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [session]);
+
   return (
     <div className="h-screen rounded-xl bg-gray dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col">
       {!hideNav && 
@@ -169,7 +191,7 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
           
           {/* Breadcrumbs - Hide on very small screens */}
           {showBreadcrumbs && breadcrumbs.length > 0 && (
-            <nav className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-sm px-3 py-2 sm:px-4 sm:py-3 flex-shrink-0 hidden sm:block">
+            <nav className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-sm px-3 py-2 sm:px-4 sm:py-3 flex-shrink-0 hidden sm:block">
               <ol className="flex text-xs sm:text-sm overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pb-1">
                 {breadcrumbs.map((breadcrumb, index) => (
                   <li key={breadcrumb.href} className="flex items-center whitespace-nowrap">
@@ -219,7 +241,7 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
             />
             <ToastContainer />
             {/* Footer */}
-            <footer className="bg-[#F8FBFF] dark:bg-gray-600 dark:text-white shadow-inner mt-6 sm:mt-8 pb-16 sm:pb-0">
+            <footer className="bg-[#F8FBFF] dark:bg-gray-800 dark:text-white shadow-inner mt-6 sm:mt-8 pb-16 sm:pb-0">
               <div className="max-w-7xl mx-auto px-3 py-4 sm:px-6 sm:py-6 text-center sm:text-left">
                 <div className="flex flex-col md:flex-row justify-between items-center">
                   <div className="mb-3 md:mb-0">
@@ -257,6 +279,12 @@ const EnhancedLayout: React.FC<EnhancedLayoutProps> = ({
       
       {/* Cookie Consent Banner - at the very bottom with bottom padding for mobile */}
       <CookieConsentBanner />
+      
+      {showNotificationPrompt && (
+        <NotificationPermissionPrompt
+          onClose={() => setShowNotificationPrompt(false)}
+        />
+      )}
     </div>
   );
 };

@@ -10,88 +10,58 @@ export const promptTemplates = {
    * Text-to-CAD prompts for converting textual descriptions to CAD elements
    */
   textToCAD: {
-    system: `Sei un ingegnere CAD esperto specializzato in progettazione meccanica, industriale e architettonica di precisione. Il tuo compito è convertire descrizioni testuali in elementi CAD 3D dettagliati e precisi.
-  
-  Output SOLO array JSON validi di elementi CAD con specifiche ingegneristiche precise e senza commenti.
-  
-  TIPI DI ELEMENTI DISPONIBILI (tutti con unità in millimetri):
-  
-  1. PRIMITIVE DI BASE:
-  - cube: width, height, depth, position{x,y,z}, roundedCorners(bool), cornerRadius
-  - sphere: radius, position{x,y,z}, segments
-  - cylinder: radius, height, position{x,y,z}, segments, capped(bool)
-  - cone: radiusBottom, radiusTop, height, position{x,y,z}, segments
-  - torus: radius, tubeRadius, position{x,y,z}, tubularSegments, radialSegments
-  
-  2. PRIMITIVE AVANZATE:
-  - pyramid: baseWidth, baseDepth, height, position{x,y,z}, sides
-  - prism: radius, height, position{x,y,z}, sides
-  - hemisphere: radius, position{x,y,z}, segments, direction("up"/"down")
-  - ellipsoid: radiusX, radiusY, radiusZ, position{x,y,z}
-  - capsule: radius, height, position{x,y,z}, direction("x"/"y"/"z")
-  
-  3. OPERAZIONI DI TRASFORMAZIONE:
-  - extrusion: profile(array di Point2D), depth, position{x,y,z}, taper, bevel
-  - revolution: profile(array di Point2D), angle, axis, position{x,y,z}
-  - sweep: profile(array di Point2D), path(array di Point3D), position{x,y,z}
-  - loft: profiles(array di array di Point2D), positions(array di Point3D)
-  
-  4. OPERAZIONI BOOLEANE:
-  - boolean-union: operands(array di ID elementi)
-  - boolean-subtract: operands(array di ID elementi)
-  - boolean-intersect: operands(array di ID elementi)
-  
-  5. ELEMENTI SPECIALI:
-  - gear: moduleValue, teeth, pressureAngle, thickness, position{x,y,z}
-  - thread: diameter, pitch, length, handedness, position{x,y,z}
-  - fillet: radius, edges(array di ID bordi)
-  - chamfer: distance, angle, edges(array di ID bordi)
-  - text3d: text, height, depth, position{x,y,z}, font
-  
-  6. COMPONENTI STANDARD:
-  - screw: standard, size, length, grade, position{x,y,z}, rotation{x,y,z}
-  - nut: standard, size, grade, position{x,y,z}, rotation{x,y,z}
-  - bolt: standard, size, length, grade, position{x,y,z}, rotation{x,y,z}
-  - washer: standard, size, position{x,y,z}, rotation{x,y,z}
-  - rivet: standard, size, length, position{x,y,z}, rotation{x,y,z}
-  
-  7. ELEMENTI ARCHITETTONICI:
-  - wall: length, height, thickness, position{x,y,z}, openings(array)
-  - floor: width, length, thickness, position{x,y,z}
-  - roof: width, length, height, style, position{x,y,z}
-  - window: width, height, thickness, style, position{x,y,z}
-  - door: width, height, thickness, style, position{x,y,z}
-  
-  Per TUTTI gli elementi, includi anche:
-  - id: identificatore unico
-  - name: nome descrittivo dell'elemento
-  - material: {type, name, density, color}
-  - color: codice hex o nome colore
-  - surfaceFinish: finitura superficiale (Ra, Rz, ecc.)
-  - tolerance: tolleranza in mm
-  - metadata: proprietà aggiuntive in formato key-value
-  
-  PROPRIETÀ MATERIALI (obbligatorie):
-  - type: categoria del materiale (metal, plastic, wood, ceramic, composite)
-  - name: nome specifico (e.g., "AISI 304", "ABS", "Oak")
-  - density: densità in kg/m³
-  - color: codice colore hex
-  - Se metallo: youngsModulus, tensileStrength, thermalConductivity
-  - Se plastica: melting_point, flexural_modulus
-  - Se legno: grain_direction, moisture_content
-  - Se ceramica: compressive_strength, thermal_expansion
-  
-  Assegna a ogni elemento un ID unico e sensato che rifletta la sua funzione (es. "base_plate_01", "mounting_bracket_left").`,
-  
-    user: `Crea un modello CAD 3D di alta precisione basato su questa descrizione tecnica:
-  
-  {{description}}
-  
-  Genera un array completo di elementi CAD con parametri dettagliati e tecnicamente precisi. Utilizza la più ampia varietà di tipi di elementi necessari per rappresentare accuratamente il modello, inclusi elementi avanzati, operazioni booleane e componenti standard ove appropriato.
-  
-  Specifica tutte le dimensioni in millimetri con precisione a 2 decimali, includi dettagli di materiale completi, e assegna tolleranze appropriate per ciascun elemento in base alla sua funzione.
-  
-  Formatta la risposta SOLO come un array JSON valido senza spiegazioni o commenti.`
+    system: `You are a specialized CAD modeling AI assistant. Your task is to convert textual descriptions into valid 3D CAD elements that can be rendered in a web-based CAD application.
+
+Output only valid JSON arrays of CAD elements without explanation or commentary.
+
+Guidelines:
+- Create geometrically valid elements with realistic dimensions, proportions, and spatial relationships
+- Use a coherent design approach with {{complexity}} complexity 
+- Apply a {{style}} design style
+- Ensure all elements include required properties for their type
+- Position elements appropriately in 3D space with proper relative positions
+- Use consistent units (mm) and scale
+- For complex assemblies, use hierarchical organization
+
+Element Types & Required Properties:
+// Basic Primitives
+- cube: x, y, z (center position), width, height, depth, color (hex), wireframe (bool)
+- sphere: x, y, z (center position), radius, segments, color (hex), wireframe (bool)
+- cylinder: x, y, z (center position), radius, height, segments, color (hex), wireframe (bool)
+- cone: x, y, z (base center position), radius, height, segments, color (hex), wireframe (bool)
+- torus: x, y, z (center position), radius, tube, radialSegments, tubularSegments, color (hex), wireframe (bool)
+
+// Advanced Primitives
+- pyramid: x, y, z (center position), baseWidth, baseDepth, height, color (hex), wireframe (bool)
+- prism: x, y, z (center position), radius, height, sides, color (hex), wireframe (bool)
+- hemisphere: x, y, z (center position), radius, segments, direction ("up"/"down"), color (hex), wireframe (bool)
+- ellipsoid: x, y, z (center position), radiusX, radiusY, radiusZ, segments, color (hex), wireframe (bool)
+- capsule: x, y, z (center position), radius, height, direction ("x"/"y"/"z"), color (hex), wireframe (bool)
+
+// 2D Elements
+- circle: x, y, z (center position), radius, segments, color (hex), linewidth
+- rectangle: x, y, z (center position), width, height, color (hex), linewidth
+- triangle: x, y, z (center position), points (array of {x,y}), color (hex), linewidth
+- polygon: x, y, z (center position), sides, radius, points (array of {x,y}), color (hex), wireframe (bool)
+- ellipse: x, y, z (center position), radiusX, radiusY, segments, color (hex), linewidth
+- arc: x, y, z (center position), radius, startAngle, endAngle, segments, color (hex), linewidth
+
+// Curves
+- line: x1, y1, z1, x2, y2, z2, color (hex), linewidth
+- spline: points (array of {x,y,z}), color (hex), linewidth
+
+All elements can optionally include:
+- rotation: {x, y, z} in degrees
+- name: descriptive string
+- description: additional information
+
+Think of each element as a precise engineering specification.`,
+
+    user: `Create a 3D CAD model based on this description:
+
+{{description}}
+
+Generate a complete array of CAD elements that form this model. Each element must include all required properties for its type. Format your response ONLY as a valid JSON array without any explanations or commentary.`
   },
 
   /**

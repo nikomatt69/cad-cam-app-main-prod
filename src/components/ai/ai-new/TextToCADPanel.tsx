@@ -230,10 +230,10 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
           <div className="flex justify-end mb-2">
             <button
               onClick={toggleContextPanel}
-              className="flex items-center justify-center p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-md transition-colors"
+              className="flex items-center justify-center p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-800/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-md transition-colors"
             >
               <File size={16} className="mr-2" />
-              <span className="text-sm font-medium">Contesto</span>
+              <span className="text-sm font-medium">Context</span>
               {activeContextIds.length > 0 && (
                 <span className="ml-1 bg-blue-600 text-white dark:bg-blue-500 text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {activeContextIds.length}
@@ -246,14 +246,14 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
         {/* Input descrizione */}
         <div>
           <label htmlFor="cad-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Descrivi cosa vuoi creare
+            Describe what you want to create
           </label>
           <textarea
             id="cad-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
-            placeholder="Descrivi il modello 3D che vuoi creare..."
+            placeholder="Describe the 3D model you want to create..."
             rows={4}
             disabled={generationStatus === 'generating'}
           />
@@ -264,19 +264,19 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
               className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded"
               onClick={() => setDescription("Un assemblaggio meccanico con una piastra base, quattro fori di montaggio e un cilindro centrale con un albero")}
             >
-              Assemblaggio meccanico
+              Mechanical assembly
             </button>
             <button 
               className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded"
               onClick={() => setDescription("Una semplice sedia con quattro gambe, una seduta e uno schienale")}
             >
-              Arredamento
+              Furniture
             </button>
             <button 
               className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded"
               onClick={() => setDescription("Un braccio robotico con tre giunti e una pinza all'estremità")}
             >
-              Robotica
+              Robotics
             </button>
           </div>
         </div>
@@ -284,7 +284,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
         {/* Preset di vincoli */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Preset di vincoli
+            Constraints preset
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {CONSTRAINT_PRESETS.map((preset) => (
@@ -293,7 +293,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
                 onClick={() => setSelectedPreset(selectedPreset === preset.id ? null : preset.id)}
                 className={`p-2 border rounded-md cursor-pointer transition-colors ${
                   selectedPreset === preset.id 
-                    ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700' 
+                    ? 'bg-blue-50 border-blue-300 dark:bg-blue-800/30 dark:border-blue-700' 
                     : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600'
                 }`}
               >
@@ -312,12 +312,12 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
           <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
             <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center">
               <File size={14} className="mr-1" />
-              {activeContextIds.length} {activeContextIds.length === 1 ? 'file di contesto attivo' : 'file di contesto attivi'}
+              {activeContextIds.length} {activeContextIds.length === 1 ? 'active context file' : 'active context files'}
               <button 
                 onClick={toggleContextPanel} 
                 className="ml-2 text-xs underline"
               >
-                Gestisci
+                Manage
               </button>
             </p>
           </div>
@@ -331,7 +331,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
               className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 flex items-center"
             >
               <Check size={16} className="mr-2" />
-              Aggiungi al Canvas
+              Add to Canvas
             </button>
           )}
           
@@ -341,7 +341,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
               className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 flex items-center"
             >
               <RefreshCw size={16} className="mr-2" />
-              Nuova Generazione
+              New Generation
             </button>
           ) : (
             <button
@@ -349,19 +349,19 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
               disabled={isGenerateDisabled}
               className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${
                 isGenerateDisabled
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400'
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
               {generationStatus === 'generating' ? (
                 <>
                   <Loader size={16} className="mr-2 animate-spin" />
-                  Generazione in corso...
+                  Generating...
                 </>
               ) : (
                 <>
                   <PenTool size={16} className="mr-2" />
-                  Genera Modello
+                  Generate Model
                 </>
               )}
             </button>
@@ -373,7 +373,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
           <AIProcessingIndicator 
             status="processing" 
             progress={progress}
-            message="L'IA sta generando il tuo modello 3D..." 
+            message="The AI is generating your 3D model..." 
           />
         )}
         
@@ -405,7 +405,7 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
         {generationHistory.length > 0 && (
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
             <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-              Generazioni Recenti
+              Recent Generations
             </h3>
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {generationHistory.map((item) => (
@@ -422,9 +422,9 @@ const TextToCADPanel: React.FC<TextToCADPanelProps> = ({
                     </span>
                     <button
                       onClick={() => handleAddFromHistory(item)}
-                      className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded text-xs hover:bg-blue-100 dark:hover:bg-blue-800/50"
+                      className="px-2 py-1 bg-blue-50 dark:bg-blue-800/30 text-blue-600 dark:text-blue-300 rounded text-xs hover:bg-blue-100 dark:hover:bg-blue-800/50"
                     >
-                      Aggiungi
+                      Add
                     </button>
                   </div>
                 </div>

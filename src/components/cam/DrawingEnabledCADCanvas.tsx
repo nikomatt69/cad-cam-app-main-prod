@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import CADCanvas from 'src/components/cad/CADCanvas';
+import { DynamicCADCanvas } from '@/src/components/dynamic-imports';
 import DrawingToolbar from './DrawingToolbar';
 import { useDrawingTools } from '../../hooks/useDrawingTools';
 import { 
@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { useElementsStore } from '../../store/elementsStore';
 import { useCADStore } from '../../store/cadStore';
 import { useLayerStore } from '../../store/layerStore';
+import CADCanvas from '../cad/CADCanvas';
 
 interface DrawingEnabledCADCanvasProps {
   width?: string | number;

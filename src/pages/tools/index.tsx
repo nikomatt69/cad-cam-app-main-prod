@@ -16,7 +16,7 @@ import {
   List
 } from 'react-feather';
 import Link from 'next/link';
-import Layout from '@/src/components/layout/Layout';
+
 import PredefinedLibrary from '@/src/components/library/PredefinedLibrary';
 import LocalToolsLibraryView from '@/src/components/library/LocalToolsLibraryView';
 import Loading from '@/src/components/ui/Loading';
@@ -26,6 +26,7 @@ import Metatags from '@/src/components/layout/Metatags';
 import ExportImportControls from '@/src/components/components/ExportImportControls';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import dynamic from 'next/dynamic';
 
 interface ToolFilterState {
   type: string;
@@ -33,7 +34,10 @@ interface ToolFilterState {
   search: string;
   diameter: string;
 }
-
+const Layout = dynamic(
+  () => import('@/src/components/layout/Layout'),
+  { ssr: false }
+);  
 export default function ToolsList() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -609,7 +613,7 @@ export default function ToolsList() {
                   >
                     <div className="p-6">
                       <div className="flex items-center mb-4">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-800/30 flex items-center justify-center mr-3">
                           <span className="text-xl">{getToolIcon(tool.type)}</span>
                         </div>
                         <div>
@@ -710,7 +714,7 @@ export default function ToolsList() {
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                          <div className="flex-shrink-0 h-10 w-10 bg-blue-100 dark:bg-blue-800/30 rounded-full flex items-center justify-center">
                             <span className="text-xl">{getToolIcon(tool.type)}</span>
                           </div>
                           <div className="ml-4">

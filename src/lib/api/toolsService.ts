@@ -234,7 +234,7 @@ export class ToolsService {
       const canDelete = tool.ownerId === userId || (tool.organization && await this.checkOrganizationPermission(userId, tool.organizationId as string, true));
       
       // Get usage info
-      const usage = await prisma.toolPath.count({
+      const usage = await prisma.toolpath.count({
         where: {
           toolId: id
         }
@@ -393,7 +393,7 @@ export class ToolsService {
       }
       
       // Check if tool is in use
-      const toolpathsUsingTool = await prisma.toolPath.count({
+      const toolpathsUsingTool = await prisma.toolpath.count({
         where: {
           toolId: id
         }
