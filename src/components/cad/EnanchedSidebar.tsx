@@ -12,7 +12,8 @@ import {
   User,
   BarChart2,
   Activity,
-  Airplay
+  Airplay,
+  Globe
 } from 'react-feather';
 import { useCADStore } from 'src/store/cadStore';
 import ToolPanel from './ToolPanel';
@@ -78,22 +79,22 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
         current: router.pathname === '/' 
       },
       {
-        name: 'Progetti',
+        name: 'Projects',
         href: '#',
         icon: <FileText size={20} />,
         current: router.pathname.startsWith('/projects'),
         children: [
           { 
-            name: 'Tutti i progetti', 
+            name: 'All Projects', 
             href: '/projects', 
             icon: <FileText size={16} />, 
             current: router.pathname === '/projects' 
           },
           { 
-            name: 'Nuovi Progetti', 
-            href: '/projects/index', 
+            name: 'New Project', 
+            href: '/projects', 
             icon: <PlusSquare size={16} />, 
-            current: router.pathname === '/projects/index' 
+            current: router.pathname === '/projects' 
           }
         ]
       },
@@ -110,24 +111,18 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
         current: router.pathname === '/cam' 
       },
       {
-        name: 'Risorse',
+        name: 'Resources',
         href: '#',
         icon: <Package size={20} />,
-        current: ['/components', '/materials', '/machine','/library'].some(path => 
+        current: ['/components', '/materials', '/machine','/tools','/drawing-instruments','/library'].some(path => 
           router.pathname.startsWith(path)
         ),
         children: [
           { 
-            name: 'Libreria', 
+            name: 'Library', 
             href: '/library', 
             icon: <BookOpen size={16} />, 
             current: router.pathname.startsWith('/library') 
-          },
-          { 
-            name: 'Componenti', 
-            href: '/components', 
-            icon: <Package size={16} />, 
-            current: router.pathname.startsWith('/components') 
           },
           { 
             name: 'Toolpaths', 
@@ -136,38 +131,48 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
             current: router.pathname.startsWith('/toolpaths') 
           },
           { 
-            name: 'Materiali', 
+            name: 'Components', 
+            href: '/components', 
+            icon: <Package size={16} />, 
+            current: router.pathname.startsWith('/components')
+          },
+          { 
+            name: 'Materials', 
             href: '/materials', 
             icon: <Database size={16} />, 
             current: router.pathname.startsWith('/materials') 
           },
           { 
-            name: 'Configurazioni', 
+            name: 'Configurations', 
             href: '/machine', 
             icon: <Server size={16} />, 
             current: router.pathname.startsWith('/machine') 
+          },
+          { 
+            name: 'Tools', 
+            href: '/tools', 
+            icon: <Tool size={16} />, 
+            current: router.pathname.startsWith('/tools') 
           }
         ]
       },
       { 
         name: 'Organization', 
         href: '/organizations', 
-        icon: <Users size={16} />, 
-        current: router.pathname === `/organizations/${fetchOrganizationById}` 
+        icon: <Users size={20} />, 
+        current: router.pathname.startsWith('/organizations')
       },
       { 
-        name: 'Pricing', 
-        href: '#', 
-        icon: <DollarSign size={20} />, 
-        current: router.pathname.startsWith('#'),
-        disable: true
+        name: 'Website', 
+        href: 'https://site.cadcamfun.xyz', 
+        icon: <Globe  size={20} />, 
+        current: router.pathname.startsWith('https://site.cadcamfun.xyz')
       },
       { 
         name: 'AI', 
         href: '/ai', 
         icon: <Airplay size={20} />, 
-        current: router.pathname.startsWith('/ai'),
-        
+        current: router.pathname.startsWith('/ai')
       },
       {
         name: 'Analytics',
@@ -186,60 +191,34 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
             href: '/analytics/history', 
             icon: <Activity size={16} />, 
             current: router.pathname === '/analytics/history' 
-          },
-          // Admin-only item (will need to be conditionally rendered)
-          { 
-            name: 'Admin Analytics', 
-            href: '/admin/analytics', 
-            icon: <Users size={16} />, 
-            current: router.pathname === '/admin/analytics' 
           }
         ]
-      },
-      {
-        name: 'Impostazioni',
-        href: '#',
-        icon: <Settings size={20} />,
-        current: router.pathname.startsWith('/settings'),
-        children: [
-          { 
-            name: 'Profilo', 
-            href: '/profile', 
-            icon: <User size={16} />, 
-            current: router.pathname === ('/profile' )
-          },
-          { 
-            name: 'Preferenze', 
-            href: '/settings', 
-            icon: <Settings size={16} />, 
-            current: router.pathname === ('/settings' )
-          },
-          { 
-            name: 'Subscription', 
-            href: '#' , 
-            icon: <DollarSign size={20} />, 
-            current: router.pathname === ('#' ),
-            disable: true
-          }
-        ]
-      },
-      { 
-        name: 'Terms', 
-        href: '/terms', 
-        icon: <HelpCircle size={20} />, 
-        current: router.pathname.startsWith('/terms') 
-      },
-      { 
-        name: 'Privacy', 
-        href: '/privacy', 
-        icon: <BookOpen size={20} />, 
-        current: router.pathname.startsWith('/privacy') 
       },
       { 
         name: 'Docs', 
         href: 'https://docs.cadcamfun.xyz', 
         icon: <BookOpen size={20} />, 
         current: router.pathname.startsWith('https://docs.cadcamfun.xyz') 
+      },
+      {
+        name: 'Settings',
+        href: '#',
+        icon: <Settings size={20} />,
+        current: router.pathname.startsWith('/settings') || router.pathname === '/profile',
+        children: [
+          { 
+            name: 'Profile', 
+            href: '/profile', 
+            icon: <User size={16} />, 
+            current: router.pathname === '/profile'
+          },
+          { 
+            name: 'Preferences', 
+            href: '/settings', 
+            icon: <Settings size={16} />, 
+            current: router.pathname === '/settings'
+          }
+        ]
       }
     ];
   };

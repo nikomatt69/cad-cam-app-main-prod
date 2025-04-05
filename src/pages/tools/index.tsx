@@ -27,6 +27,7 @@ import ExportImportControls from '@/src/components/components/ExportImportContro
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
+import ExportImportToolpathsControls from '@/src/components/cam/ToolpathControls';
 
 interface ToolFilterState {
   type: string;
@@ -416,7 +417,7 @@ export default function ToolsList() {
           </div>
           
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
-            <ExportImportControls entityType="tools" />
+            <ExportImportToolpathsControls entityType="tools" />
           </div>
           
           {/* Search and filters */}

@@ -1,0 +1,24 @@
+{
+    "id": "cad-helper-tools",
+    "name": "CAD Helper Tools",
+    "version": "1.0.0",
+    "description": "Essential tools for advanced CAD operations including 3-point circles, symmetry tools, and precision measurements",
+    "author": "CAD/CAM FUN Team",
+    "entryPoint": "index.ts",
+    "icon": "tools.svg",
+    "homepage": "https://cadcamfun.xyz/cad-helper-tools",
+    "repository": "https://github.com/nikomatt69//plugins/cad-helper-tools",
+    "dependencies": {},
+    "permissions": [
+      "ui:addToolbar",
+      "ui:addSidebar",
+      "cad:read",
+      "cad:write"
+    ],
+    "extensionPoints": [
+      "toolbar",
+      "sidebar",
+      "cadTool"
+    ],
+    "minAppVersion": "1.0.0"
+  }

@@ -6,7 +6,8 @@ import {
   Home, Grid, Tool, Package, Users, Settings, 
   FileText, Server, Database, HelpCircle, BookOpen,
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
-  PlusSquare, DollarSign, User, BarChart2, Activity, Airplay, X
+  PlusSquare, DollarSign, User, BarChart2, Activity, Airplay, X,
+  Globe
 } from 'react-feather';
 import { fetchOrganizationById } from '@/src/lib/api/organizations';
 import Image from 'next/image';
@@ -143,7 +144,12 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({ isOpen, setIsOpen }) 
         icon: <Users size={20} />, 
         current: router.pathname.startsWith('/organizations')
       },
-      
+      { 
+        name: 'Website', 
+        href: 'https://site.cadcamfun.xyz', 
+        icon: <Globe  size={20} />, 
+        current: router.pathname.startsWith('https://site.cadcamfun.xyz')
+      },
       { 
         name: 'AI', 
         href: '/ai', 

@@ -27,6 +27,7 @@ import ViewportMeta from '../components/layout/ViewportMeta';
 import { AIContextProvider } from '../components/ai/ai-new/AIContextProvider';
 import { AIAssistant } from '../components/ai/ai-new';
 import { CursorProvider } from '../contexts/CursorContext';
+import { PluginRegistry } from '../plugins/core/PluginRegistry';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -47,7 +48,20 @@ export default function App({ Component, pageProps: { session, ...pageProps }, r
     }
   }, []);
 
-
+  useEffect(() => {
+    const initPlugins = async () => {
+      try {
+        const registry = PluginRegistry.getInstance();
+        await registry.initialize();
+        console.log('Plugin system initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize plugin system:', error);
+      }
+    };
+    
+    initPlugins();
+  }, []);
+  
   return (
     
     <ErrorBoundary>

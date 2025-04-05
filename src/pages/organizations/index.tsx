@@ -127,7 +127,7 @@ export default function OrganizationsList() {
             <Link key={org.id} href={`/organizations/${org.id}`} passHref>
               <div className="bg-[#F8FBFF]  dark:bg-gray-800 dark:text-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
                 <div className="h-16 bg-blue-600 flex items-center justify-center">
-                  <Cloud size={32} className="text-white" />
+                  <Users size={32} className="text-white" />
                 </div>
                 
                 <div className="p-6">

@@ -5,7 +5,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false, // Abilita la modalità strict di React per controlli aggiuntivi
+  reactStrictMode: true,
 
   
   // Configurazione per le API di Next.js
@@ -29,9 +29,42 @@ const nextConfig = {
   
  
   // Configurazione di webpack per Next.js
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     // Imposta il fallback di risoluzione dei moduli per il modulo fs su false
-    config.resolve.fallback = { fs: false ,tls: false,net: false};
+    config.resolve.fallback = { fs: false, tls: false, net: false };
+
+    // Exclude plugin files from Next.js handling to prevent global CSS import errors
+    config.module.rules.push({
+      test: /\.module\.css$/,
+      include: /public\/plugins/,
+      use: [
+        {
+          // Use a custom loader for plugin CSS modules
+          loader: 'null-loader',
+        },
+      ],
+    });
+
+    // Handle plugin TypeScript files
+    config.module.rules.push({
+      test: /\.(ts|tsx)$/,
+      include: /public\/plugins/,
+      use: [
+        {
+          loader: 'ts-loader',
+          options: {
+            transpileOnly: true,
+            compilerOptions: {
+              module: 'esnext',
+              moduleResolution: 'node',
+              target: 'es2015',
+              jsx: 'preserve',
+            },
+          },
+        },
+      ],
+    });
+
     return config;
   },
 
@@ -48,6 +81,10 @@ const nextConfig = {
       {
         source: '/og-image/:path*',
         destination: '/api/og-image/:path*',
+      },
+      {
+        source: '/plugins/:path*',
+        destination: '/public/plugins/:path*',
       },
     ];
   },
@@ -124,7 +161,33 @@ const nextConfig = {
         headers: [
           { key: 'Cache-Control', value: 'private, no-cache, no-store, must-revalidate' }
         ]
-      }
+      },
+      {
+        source: '/plugins/:path*/dist/index.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/plugins/:path*/dist/styles.module.css',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/css',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
     ];
   }
 };

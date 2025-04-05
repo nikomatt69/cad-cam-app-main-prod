@@ -28,6 +28,15 @@ import { useAI } from '../components/ai/ai-new/AIContextProvider';
 import CADCanvas from '../components/cad/CADCanvas';
 import DrawingEnabledCADCanvas from '../components/cam/DrawingEnabledCADCanvas';
 import { AIHub, AIProcessingIndicator, TextToCADPanel } from '../components/ai/ai-new';
+import { PluginAPI } from '@/src/plugins/core/types';
+import { PluginManager } from '@/src/plugins/core/PluginManager';
+import { usePluginStore } from '@/src/store/pluginStore';
+// Add interface for window augmentation (if not already present globally)
+// This is needed for the component exposure workaround
+interface CustomWindow extends Window {
+  __pluginComponents?: Record<string, Record<string, React.ComponentType<any>>>;
+}
+declare const window: CustomWindow;
 
 export default function CADPage() {
   const { data: session, status } = useSession();
@@ -269,6 +278,150 @@ export default function CADPage() {
     }
   }, [showUnifiedLibrary, sidebarOpen]);
 
+  const { plugins, getExtensionsByType } = usePluginStore();
+  const pluginManager = PluginManager.getInstance(); // Get manager instance
+
+  // Effect to handle communication with external plugin UI windows
+  useEffect(() => {
+    const handlePluginMessages = async (event: MessageEvent) => {
+      // Basic security check: verify origin in production!
+      // if (event.origin !== window.location.origin) return;
+
+      const { data } = event;
+      console.log('[Main CAD] Received message:', data);
+
+      // --- Handle Request for Plugin Component ---
+      if (data.type === 'requestPluginComponent' && data.pluginId && event.source) {
+        const sourceWindow = event.source as Window;
+        const pluginId = data.pluginId as string;
+        const componentType = data.componentType || 'sidebar'; // Default to sidebar
+
+        try {
+          const plugin = plugins[pluginId];
+          if (!plugin || !plugin.enabled) {
+            throw new Error('Plugin not found or not enabled.');
+          }
+
+          const extensions = getExtensionsByType(componentType);
+          const targetExtension = extensions.find(ext => ext.id.startsWith(`${pluginId}:`));
+
+          if (!targetExtension || !targetExtension.component) {
+            throw new Error(`No component of type '${componentType}' found for plugin ${pluginId}.`);
+          }
+
+          // ** WORKAROUND: Expose component globally **
+          if (!window.__pluginComponents) {
+            window.__pluginComponents = {};
+          }
+          if (!window.__pluginComponents[pluginId]) {
+            window.__pluginComponents[pluginId] = {};
+          }
+          // Use a stable name, e.g., the component function's name or the extension ID part
+          const componentName = targetExtension.component.name || targetExtension.id.split(':').pop() || 'PluginUI';
+          window.__pluginComponents[pluginId][componentName] = targetExtension.component;
+          console.log(`[Main CAD] Exposed component ${componentName} for plugin ${pluginId}`);
+
+          // Respond to the plugin window
+          sourceWindow.postMessage(
+            {
+              type: 'pluginComponentResponse',
+              pluginId,
+              success: true,
+              componentName: componentName,
+            },
+            '*' // Target origin
+          );
+        } catch (error: any) {
+          console.error(`[Main CAD] Error providing component to plugin ${pluginId}:`, error);
+          sourceWindow.postMessage(
+            {
+              type: 'pluginComponentResponse',
+              pluginId,
+              success: false,
+              error: error.message || 'Failed to get component.',
+            },
+            '*' // Target origin
+          );
+        }
+      }
+
+      // --- Handle API Call from Plugin Window ---
+      else if (data.type === 'pluginApiCall' && data.pluginId && data.messageId && data.method && event.source) {
+        const sourceWindow = event.source as Window;
+        const { pluginId, messageId, method, args } = data;
+
+        try {
+          const plugin = plugins[pluginId];
+          if (!plugin || !plugin.enabled) {
+            throw new Error('Plugin not found or not enabled when handling API call.');
+          }
+
+          // Get the actual API instance for this plugin
+          // Assuming createPluginAPI gives the full, real API
+          const realApi = pluginManager.createPluginAPI(pluginId);
+
+          if (typeof (realApi as any)[method] !== 'function') {
+            throw new Error(`API method '${method}' does not exist.`);
+          }
+
+          console.log(`[Main CAD] Executing API call ${method} for ${pluginId} with args:`, args);
+          // Execute the actual API method
+          const result = await (realApi as any)[method](...(args || []));
+
+          console.log(`[Main CAD] API call ${method} result:`, result);
+          // Send the result back
+          sourceWindow.postMessage(
+            {
+              type: 'pluginApiResponse',
+              pluginId,
+              messageId,
+              success: true,
+              result,
+            },
+            '*' // Target origin
+          );
+        } catch (error: any) {
+          console.error(`[Main CAD] Error executing API call ${method} for plugin ${pluginId}:`, error);
+          sourceWindow.postMessage(
+            {
+              type: 'pluginApiResponse',
+              pluginId,
+              messageId,
+              success: false,
+              error: error.message || 'Failed to execute API method.',
+            },
+            '*' // Target origin
+          );
+        }
+      }
+
+      // --- Handle Event Subscription/Unsubscription (Simplified Placeholder) ---
+      else if (data.type === 'subscribePluginEvent' && data.pluginId && data.eventType && data.handlerId) {
+        console.log(`[Main CAD] Plugin ${data.pluginId} requested subscription to ${data.eventType} (Handler ID: ${data.handlerId}) - Not fully implemented.`);
+        // TODO: Register this subscription internally, potentially mapping handlerId to the sourceWindow
+      }
+      else if (data.type === 'unsubscribePluginEvent' && data.pluginId && data.eventType && data.handlerId) {
+        console.log(`[Main CAD] Plugin ${data.pluginId} requested unsubscription from ${data.eventType} (Handler ID: ${data.handlerId}) - Not fully implemented.`);
+        // TODO: Remove internal subscription registration
+      }
+
+       // --- Handle Window Closing --- // Optional
+      else if (data.type === 'pluginWindowClosing' && data.pluginId) {
+         console.log(`[Main CAD] Plugin window for ${data.pluginId} is closing.`);
+         // Perform any necessary cleanup related to this plugin window
+      }
+
+    };
+
+    window.addEventListener('message', handlePluginMessages);
+
+    return () => {
+      window.removeEventListener('message', handlePluginMessages);
+      // Clean up the global component registry on unmount (optional)
+      // delete window.__pluginComponents;
+    };
+  }, [plugins, getExtensionsByType, pluginManager]); // Add dependencies
+
   if (status === 'loading') {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -277,11 +430,7 @@ export default function CADPage() {
     );
   }
 
-  if (status === 'unauthenticated') {
-    router.push('/auth/signin');
-    return null;
-  }
-
+  
   
  
   

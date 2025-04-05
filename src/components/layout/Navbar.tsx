@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
-import { Sun, Moon, Bell, Settings, User, LogOut, Menu, X } from 'react-feather';
+import { Sun, Moon, Bell, Settings, User, LogOut, Menu, X, Users, Globe, BookOpen } from 'react-feather';
 import useUserProfileStore from 'src/store/userProfileStore';
 import NotificationCenter from '../notifications/NotificationCenter';
 import OrganizationChatPage from '@/src/pages/organizations/[id]/chat';
@@ -169,7 +169,32 @@ const Navbar = () => {
                     <Settings size={16} className="mr-2" />
                     Settings
                   </Link>
-                  
+
+                  <Link
+                    href="/organizations"
+                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                    role="menuitem"
+                  >
+                    <Users size={16} className="mr-2" />
+                    Organizations
+                  </Link>
+                  <Link
+                    href="https://site.cadcamfun.xyz"
+                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                    role="menuitem"
+                  >
+                    <Globe size={16} className="mr-2" />
+                   Website
+                  </Link>
+                  <Link
+                    href="https://docs.cadcamfun.xyz"
+                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                    role="menuitem"
+                  >
+                    <BookOpen size={16} className="mr-2" />
+                   Documentation
+                  </Link>
+
                   <button
                     onClick={() => signOut()}
                     className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"

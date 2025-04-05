@@ -25,6 +25,7 @@ import ExportImportControls from '@/src/components/components/ExportImportContro
 import Metatags from '@/src/components/layout/Metatags';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import ExportImportToolpathsControls from '@/src/components/cam/ToolpathControls';
 
 interface MaterialsFilterState {
   search: string;
@@ -356,7 +357,7 @@ export default function MaterialsList() {
           </div>
           
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
-            <ExportImportControls entityType="materials" />
+            <ExportImportToolpathsControls entityType="materials" />
           </div>
           
           {/* Search and filters */}

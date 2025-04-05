@@ -81,7 +81,7 @@ const NotificationPermissionPrompt: React.FC<NotificationPermissionPromptProps> 
 
       const subscription = await swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: VAPID_PUBLIC_KEY
+        applicationServerKey: VAPID_PUBLIC_KEY!
       });
 
       // Here you would typically send the subscription to your server

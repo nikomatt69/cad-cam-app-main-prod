@@ -46,7 +46,7 @@ const AIBottomSheet: FC<Props> = () => {
       <BottomSheet 
         isOpen={isOpen} 
         onClose={handleClose}
-        height="78vh"
+        height="68vh"
         className="bg-gray-100 dark:bg-gray-900"
       >
         <div className="flex flex-col h-full">

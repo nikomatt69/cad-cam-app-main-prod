@@ -1,4 +1,3 @@
-// src/components/cad/EnhancedToolbar.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Save, 
@@ -13,7 +12,10 @@ import {
   MousePointer,
   ChevronDown,
   Copy,
-  BookOpen
+  BookOpen,
+  Package,
+  Settings,
+  ExternalLink
 } from 'react-feather';
 import { useRouter } from 'next/router';
 import { useElementsStore } from 'src/store/elementsStore';
@@ -23,8 +25,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import AIAssistantButton from '../ai/ai-new/AIAssistantButton';
 import AIModal from '../components/AIModal';
-import {isMobile} from 'react-device-detect'
+import { isMobile } from 'react-device-detect';
 import AIBottomSheet from '../components/AIBottomSheet';
+import { UIExtensionPoint } from '@/src/plugins/extensions/UIExtensionPoint';
+import { usePluginStore } from '@/src/plugins/core/PluginStore';
+import { ExtensionDefinition } from '@/src/plugins/core/types';
+import { useToolState } from '@/src/store/toolStore';
+
 interface EnhancedToolbarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -39,6 +46,204 @@ interface EnhancedToolbarProps {
   setSelectedLibraryComponent: (componentId: string | null) => void;
   setIsPlacingComponent?: (isPlacing: boolean) => void;
 }
+
+// Custom plugin button component that matches your app's styling
+const PluginButton: React.FC<{
+  extension: ExtensionDefinition;
+  isActive: boolean;
+  onClick: () => void;
+}> = ({ extension, isActive, onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1.5 border shadow-sm rounded-md flex items-center ${
+        isActive 
+          ? 'bg-blue-50 dark:bg-blue-900 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300' 
+          : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+      }`}
+      title={extension.metadata?.tooltip || extension.metadata?.name || ''}
+    >
+      {extension.metadata?.icon ? (
+        <span className="flex items-center">
+          {typeof extension.metadata.icon === 'string' ? (
+            // Use a predefined icon if available
+            <span className="mr-1.5">
+              {extension.metadata.icon === 'circle' && <div className="w-4 h-4 rounded-full border-2 border-current" />}
+              {extension.metadata.icon === 'symmetry' && <span className="flex"><ArrowLeft size={14} /><ArrowRight size={14} /></span>}
+              {extension.metadata.icon === 'tools' && <Tool size={16} />}
+              {extension.metadata.icon === 'settings' && <Settings size={16} />}
+              {extension.metadata.icon === 'package' && <Package size={16} />}
+            </span>
+          ) : (
+            // Render the icon component
+            <span className="mr-1.5">{extension.metadata.icon}</span>
+          )}
+          {extension.metadata?.label && <span className="text-sm">{extension.metadata.label}</span>}
+        </span>
+      ) : (
+        <span className="text-sm">{extension.metadata?.name || 'Plugin Tool'}</span>
+      )}
+    </button>
+  );
+};
+
+// Plugin dropdown component that matches your app's styling
+const PluginDropdown: React.FC<{
+  groupName: string;
+  extensions: ExtensionDefinition[];
+  activeTool: string | null;
+  onSelectTool: (toolId: string) => void;
+}> = ({ groupName, extensions, activeTool, onSelectTool }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Find an active extension in the group
+  const activeExtension = extensions.find(ext => ext.id === activeTool);
+  
+  
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`px-3 py-1.5 border shadow-sm rounded-md flex items-center ${
+          activeExtension 
+            ? 'bg-blue-50 dark:bg-blue-900 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300' 
+            : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+        }`}
+      >
+        <span className="text-sm mr-1">{groupName}</span>
+        <ChevronDown size={14} />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute left-0 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50">
+          <div className="py-1">
+            {extensions.map(extension => (
+              <button
+                key={extension.id}
+                onClick={() => {
+                  onSelectTool(extension.id);
+                  setIsOpen(false);
+                }}
+                className={`w-full px-4 py-2 text-left text-sm ${
+                  extension.id === activeTool
+                    ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                <div className="flex items-center">
+                  {extension.metadata?.icon && (
+                    <span className="mr-2">
+                      {typeof extension.metadata.icon === 'string' ? (
+                        <span>
+                          {extension.metadata.icon === 'circle' && <div className="w-4 h-4 rounded-full border-2 border-current" />}
+                          {extension.metadata.icon === 'symmetry' && <span className="flex"><ArrowLeft size={14} /><ArrowRight size={14} /></span>}
+                          {extension.metadata.icon === 'tools' && <Tool size={14} />}
+                        </span>
+                      ) : (
+                        <span>{extension.metadata.icon}</span>
+                      )}
+                    </span>
+                  )}
+                  <span>{extension.metadata?.name || extension.id}</span>
+                </div>
+                {extension.metadata?.description && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {extension.metadata.description}
+                  </p>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Enhanced UIExtensionPoint component that uses your styling
+const EnhancedUIExtensionPoint: React.FC<{
+  type: 'toolbar' | 'sidebar' | 'modal' | 'contextMenu';
+  position?: 'left' | 'right' | 'center';
+}> = ({ type, position = 'left' }) => {
+  const extensions = usePluginStore(state => state.getExtensionsByType(type));
+  const { activeTool, setActiveTool } = useToolState();
+  
+  // Filter extensions by position if specified
+  const filteredExtensions = extensions.filter(ext => {
+    if (!position) return true;
+    return ext.metadata?.position === position || !ext.metadata?.position;
+  });
+  
+  // Group extensions by their group metadata
+  const groupedExtensions = filteredExtensions.reduce<Record<string, ExtensionDefinition[]>>(
+    (groups, extension) => {
+      const group = extension.metadata?.group || 'default';
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      groups[group].push(extension);
+      return groups;
+    },
+    {}
+  );
+  
+  const handleToolSelect = (toolId: string) => {
+    setActiveTool(toolId);
+    
+    // Get the extension
+    const extension = extensions.find(ext => ext.id === toolId);
+    
+    // Call any activation handler if provided
+    if (extension && extension.handler) {
+      extension.handler();
+    }
+  };
+  
+  return (
+    <>
+      {Object.entries(groupedExtensions).map(([groupName, groupExtensions]) => {
+        // If there's only one extension in the group, render it as a button
+        if (groupExtensions.length === 1) {
+          const extension = groupExtensions[0];
+          return (
+            <PluginButton
+              key={extension.id}
+              extension={extension}
+              isActive={activeTool === extension.id}
+              onClick={() => handleToolSelect(extension.id)}
+            />
+          );
+        }
+        
+        // If there are multiple extensions in the group, render as dropdown
+        return (
+          <PluginDropdown
+            key={groupName}
+            groupName={groupName}
+            extensions={groupExtensions}
+            activeTool={activeTool}
+            onSelectTool={handleToolSelect}
+          />
+        );
+      })}
+    </>
+  );
+};
 
 const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
   sidebarOpen,
@@ -56,21 +261,31 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
 }) => {
   const router = useRouter();
   const { elements, selectedElement, undo, redo, selectedElements } = useElementsStore();
-  // Simply add a helper function to create selection data
+  const [showPluginsMenu, setShowPluginsMenu] = useState(false);
+  const pluginsMenuRef = useRef<HTMLDivElement>(null);
+  
+  // Get active plugins
+  const activePlugins = usePluginStore(state => state.activePlugins);
+  const plugins = usePluginStore(state => state.plugins);
+  
+  // Create selection data
   const createSelectionData = () => {
-    // Return data with the selected elements based on selectedElements IDs
     return {
       elements: elements.filter(element => selectedElements.includes(element.id)),
     };
   };
+  
   const [showElementsPopup, setShowElementsPopup] = useState(false);
   const elementsPopupRef = useRef<HTMLDivElement>(null);
   
-  // Close popup when clicking outside
+  // Close popups when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (elementsPopupRef.current && !elementsPopupRef.current.contains(event.target as Node)) {
         setShowElementsPopup(false);
+      }
+      if (pluginsMenuRef.current && !pluginsMenuRef.current.contains(event.target as Node)) {
+        setShowPluginsMenu(false);
       }
     }
     
@@ -125,6 +340,19 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
   // Get selected elements data
   const selectionData = createSelectionData();
   const selectedElementsCount = selectionData?.elements?.length || 0;
+  
+  // Navigate to plugin manager
+  const handleOpenPluginManager = () => {
+    router.push('/plugin-manager');
+  };
+
+  // Function to open plugin UI in a new window
+  const openPluginUIWindow = (pluginId: string) => {
+    const url = `/plugin-ui/${pluginId}`;
+    // Define features for the new window (size, position, etc.)
+    const windowFeatures = 'width=400,height=600,left=100,top=100,resizable=yes,scrollbars=yes';
+    window.open(url, `plugin-ui-${pluginId}`, windowFeatures);
+  };
 
   return (
     <div className="bg-white dark:bg-gray-900 border-b w-full px-4 py-2 rounded-xl flex items-center justify-between">
@@ -135,45 +363,42 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
         >
           <Menu size={20} className="text-gray-600 dark:text-gray-400" />
         </button>
-        {isMobile ?  <Link href="/" className="">
-              <div className="">
-                
-                
-              </div>
-            </Link> :<Link href="/" className="flex  items-center">
-              <div className="flex-shrink-0 flex  items-center">
-                <img
-                  className=" h-14 w-auto"
-                  src="/logo.png"
-                  alt="CAD/CAM FUN"
-                />
-                
-              </div>
-            </Link> }
+        {isMobile ? 
+          <Link href="/" className="">
+            <div className=""></div>
+          </Link> 
+        : 
+          <Link href="/" className="flex items-center">
+            <div className="flex-shrink-0 flex items-center">
+              <img
+                className="h-14 w-auto"
+                src="/logo.png"
+                alt="CAD/CAM FUN"
+              />
+            </div>
+          </Link>
+        }
         <div className="ml-6 flex items-center space-x-2">
           <button
             onClick={handleSaveProject}
             className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md shadow-sm flex items-center"
             title="Save Project"
           >
-            <Save size={16} className=" text-gray-600 dark:text-gray-400" />
-            
+            <Save size={16} className="text-gray-600 dark:text-gray-400" />
           </button>
           <button
             onClick={() => { setDialogMode('import'); setShowImportExportDialog(true); }}
             className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md shadow-sm flex items-center"
             title="Import Project"
           >
-            <Upload size={16} className=" text-gray-600 dark:text-gray-400" />
-            
+            <Upload size={16} className="text-gray-600 dark:text-gray-400" />
           </button>
           <button
             onClick={() => setShowUnifiedLibrary(true)}
             className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md shadow-sm flex items-center"
             title="Unified Library"
           >
-            <BookOpen size={16} className=" text-gray-600 dark:text-gray-400" />
-            
+            <BookOpen size={16} className="text-gray-600 dark:text-gray-400" />
           </button>
           
           {/* Create Component from Selected Element button - only shows when element is selected */}
@@ -214,13 +439,95 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             title={showFloatingToolbar ? "Hide Floating Toolbar" : "Show Floating Toolbar"}
           >
             <Tool size={16} className="" />
-            
           </button>
-      
+          
+          {/* Plugin manager button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowPluginsMenu(!showPluginsMenu)}
+              className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md shadow-sm flex items-center"
+              title="Plugins"
+            >
+              <Package size={16} className="text-gray-600 dark:text-gray-400 mr-1" />
+              <span className="text-sm">Plugins</span>
+              <ChevronDown size={14} className="ml-1 text-gray-500" />
+              {activePlugins.length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-xs text-white">
+                  {activePlugins.length}
+                </span>
+              )}
+            </button>
+            
+            {showPluginsMenu && (
+              <div 
+                ref={pluginsMenuRef}
+                className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50"
+              >
+                <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    Installed Plugins ({activePlugins.length})
+                  </h3>
+                </div>
+                <div className="max-h-48 overflow-y-auto p-2">
+                  {activePlugins.length > 0 ? (
+                    <div className="space-y-1">
+                      {activePlugins.map(pluginId => {
+                        const plugin = plugins[pluginId];
+                        return (
+                          <div key={pluginId} className="flex items-center justify-between p-1.5 bg-gray-50 dark:bg-gray-700 rounded text-xs">
+                            <div className="flex items-center">
+                              <span className="font-medium">{plugin.manifest.name}</span>
+                              <span className="ml-2 text-gray-500 dark:text-gray-400">
+                                v{plugin.manifest.version}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                      No active plugins
+                    </div>
+                  )}
+                </div>
+                <div className="p-2 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    onClick={handleOpenPluginManager}
+                    className="w-full px-3 py-2 bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-md text-sm hover:bg-blue-100 dark:hover:bg-blue-800"
+                  >
+                    Manage Plugins
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* --- Example: Button to open CAD Helper Tools UI Window --- */}
+          {activePlugins.includes('cad-helper-tools') && (
+            <button
+              onClick={() => openPluginUIWindow('cad-helper-tools')}
+              className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900 border border-indigo-300 dark:border-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded-md shadow-sm flex items-center"
+              title="Open CAD Helper Tools Panel"
+            >
+              <Tool size={16} className="mr-1.5" />
+              <span className="text-sm">CAD Tools</span>
+              <ExternalLink size={14} className="ml-1" />
+            </button>
+          )}
+          {/* --- End Example --- */}
+          
           <AIBottomSheet />
+          
+          {/* Plugin toolbar extensions - left section */}
+          <div className="h-5 border-l border-gray-300 dark:border-gray-700 mx-1"></div>
+          <EnhancedUIExtensionPoint type="toolbar" position="left" />
         </div>
       </div>
       <div className="flex items-center space-x-2">
+        {/* Plugin toolbar extensions - right section */}
+        <EnhancedUIExtensionPoint type="toolbar" position="right" />
+
         {/* Indicator for selected component */}
         {selectedLibraryComponent && (
           <div className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 rounded-md flex items-center">
@@ -306,12 +613,12 @@ const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
                   </div>
                 ) : (
                   <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                   {selectedElement?.elements?.map && (
-          <div className="px-3 py-1.5 border border-green-200 dark:border-green-800 rounded-md flex items-center bg-green-50 dark:bg-green-900">
-            <span className="text-xs text-green-600 dark:text-green-300 mr-2">Selected:</span>
-            <span className="text-sm font-medium">{selectedElement.id.substring(0, 8)}...</span>
-          </div>
-        )}
+                    {selectedElement?.elements?.map && (
+                      <div className="px-3 py-1.5 border border-green-200 dark:border-green-800 rounded-md flex items-center bg-green-50 dark:bg-green-900">
+                        <span className="text-xs text-green-600 dark:text-green-300 mr-2">Selected:</span>
+                        <span className="text-sm font-medium">{selectedElement.id.substring(0, 8)}...</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
